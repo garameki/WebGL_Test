@@ -39,7 +39,7 @@ function start(){
 	canvas.style.position='absolute';
 	canvas.style.zIndex=100;
 	canvas.style.left='0px';
-	canvas.style.top='50px';
+	canvas.style.top='0px';
 	canvas.width=640;
 	canvas.height=480;
 
@@ -204,9 +204,9 @@ function drawScene(gl,oShader,angle){
 
 
 
-	var fieldOfView = 45 * Math.PI / 180;	//in radian;
+	var fieldOfView = 10 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-	var zNear = 0.1;
+	var zNear = 18;//0.01;
 	var zFar = 100.0;
 	makePMatrix(fieldOfView,aspect,zNear,zFar);//->_a (look like a face cf. b_a...フォントによるよね)
 	var projectionMatrix=new Float32Array(16);intoArrayFromA(projectionMatrix);
@@ -328,15 +328,33 @@ var makeTNorm = function MatrixTargetBecomeNormMatrix(){
 	_t41=0;_t42=0;_t43=0;_t44=1;
 }	
 
-var makePMatrix = function makePerspectiveMatrixInMatrixAnswer(fovy,aspect,near,far){
-	var f = 1.0 / Math.tan(fovy / 2);
+/**
+ *Make perspective matrix
+ *
+ *@param {number} fov radian
+ *@param {number} aspect width/height of screen
+ *@param {number} near ?nearest distance to be able to take 
+ *@param {number} far ?farthest distance to be able to take
+*/
+var makePMatrix = function makePerspectiveMatrixInMatrixAnswer(fov,aspect,near,far){
+	if(near == far){
+		PRINT2.innerHTML = PRINT2.innerHTML +"<br>" + "far equals to near in makePMatrix().";
+		return null;
+	}
+	var s = 1.0 / Math.tan(fov / 2);
 	var nf = 1 / (near - far);
 
-	_a11 = f / aspect;	_a12 = 0;	_a13 = 0;			_a14 = 0;
-	_a21 = 0;		_a22 = f;	_a23 = 0;			_a24 = 0;
-	_a31 = 0;		_a32 = 0;	_a33 = (near + far) * nf;	_a34 = -1;
-	_a41 = 0;		_a42 = 0;	_a43 = 2 * near * far * nf;	_a44 = 0;
+	_a11 = s;		_a12 = 0;	_a13 = 0;			_a14 = 0;
+	_a21 = 0;		_a22 = s;	_a23 = 0;			_a24 = 0;
+	_a31 = 0;		_a32 = 0;	_a33 = far * nf;		_a34 = -1;
+	_a41 = 0;		_a42 = 0;	_a43 = far*near * nf;		_a44 = 0;
+
+//not important _a43,i think
+
+PRINT2.innerHTML = near.toString() + "&nbsp;&nbsp;&nbsp;" + far.toString() + "&nbsp&nbsp&nbsp" + (far*near*nf).toString();
+//https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
 }
+
 
 var translateTByV = function MatrixTargetIsTranslatedByMatrixV(){
 
@@ -410,4 +428,9 @@ var moveAtoT = function MatrixAnswerMoveIntoMatrixTarget(){
 	 _t44=_a44;
 };
 </script>
-</head><body onload="start();"><div><p id="PRINT1">こんにちわ</p><canvas></canvas></div></body></html>
+</head><body onload="start();"><div>
+<p id="PRINT1" style="position:absolute;top:500px;left:0px">こんにちわ</p>
+<p id="PRINT2" style="position:absolute;top:530px;left:0px">こんにちわ</p>
+
+
+<canvas></canvas></div></body></html>
