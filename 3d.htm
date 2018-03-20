@@ -39,7 +39,7 @@ function start(){
 	canvas.style.position='absolute';
 	canvas.style.zIndex=100;
 	canvas.style.left='0px';
-	canvas.style.top='0px';
+	canvas.style.top='50px';
 	canvas.width=640;
 	canvas.height=480;
 
@@ -48,8 +48,13 @@ function start(){
 	initBuffers(gl);
 
 
+	var angle=0;
 	function render(timeStamp){
-		drawScene(gl,oShader);
+		angle+=1.0;
+		angle=Math.floor(angle*100)/100;
+		if(angle>360)angle=0;
+		PRINT1.innerText=angle;
+		drawScene(gl,oShader,angle);
 		window.requestAnimationFrame(render);
 	}
 	window.requestAnimationFrame(render);
@@ -156,11 +161,12 @@ function initBuffers(gl){
 		1,-1,0,
 		-1,1,0];
 */
+
 	var vertices = [//四角形だから4つの三次元座標
-		1,1,0,
-		1,-1,0,
-		-1,1,0,
-		1,-1,0];
+		1.0,1.0,0.0,
+		-1.0,1.0,0.0,
+		1.0,-1.0,0.0,
+		-1.0,-1.0,0.0];
 
 	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);
 
@@ -175,9 +181,10 @@ function initBuffers(gl){
 
 }
 
-function drawScene(gl,oShader){
+
+function drawScene(gl,oShader,angle){
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
-	gl.clearDepth(1.0);		//Clear everything
+	gl.clearDepth(1.0);			//Clear everything
 	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
 	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
 
@@ -196,17 +203,8 @@ function drawScene(gl,oShader){
 	*/
 
 
-//var angle=0;
-//var fieldOfView;
-//var hoge = setInterval(function(){
-//	angle+=1 * Math.PI / 180;;
-//	if(angle>2*Math.PI)angle=0;
-
-
-
 
 	var fieldOfView = 45 * Math.PI / 180;	//in radian;
-//	fieldOfView = angle * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	var zNear = 0.1;
 	var zFar = 100.0;
@@ -214,11 +212,23 @@ function drawScene(gl,oShader){
 	var projectionMatrix=new Float32Array(16);intoArrayFromA(projectionMatrix);
 //onsole.log("projectionMatrix=",projectionMatrix);
 
+	//単位行列
 	makeTNorm();//->_t
+
+	//移動
 	_v11 = -0.0;
 	_v21 =  0.0;
-	_v31 = -6.0;
+	_v31 = -10.0;
 	translateTByV();//->_a
+
+	moveAtoT();//->_t
+
+	//回転
+	_v11 = -1.0;
+	_v21 =  1.0;
+	_v31 = -1.0;
+	rotateTAroundV(angle*Math.PI/180);//->a
+
 	var modelViewMatrix = new Float32Array(16);intoArrayFromA(modelViewMatrix);
 //onsole.log("modelViewMatrix=",modelViewMatrix);
 
@@ -249,11 +259,9 @@ function drawScene(gl,oShader){
 
 	//Set the shader uniforms
 	var pUniform = gl.getUniformLocation(oShader.prog,"uProjectionMatrix");//""内は特殊言語の実装参照してる
-//onsole.log("pNumiform=",pUniform);
 	gl.uniformMatrix4fv(pUniform,false,new Float32Array(projectionMatrix));
 
 	var mvUniform = gl.getUniformLocation(oShader.prog,"uModelViewMatrix");//""内は特殊言語の実装参照してる
-//onsole.log("mvUniform=",mvUniform);
 	gl.uniformMatrix4fv(mvUniform,false,new Float32Array(modelViewMatrix));
  
 	var offset = 0;
@@ -268,7 +276,9 @@ function drawScene(gl,oShader){
 <script id="matrix-library" type='text/javascript'>
 var _t11,_t12,_t13,_t14,_t21,_t22,_t23,_t24,_t31,_t32,_t33,_t34,_t41,_t42,_t43,_t44;//target matrix
 var _a11,_a12,_a13,_a14,_a21,_a22,_a23,_a24,_a31,_a32,_a33,_a34,_a41,_a42,_a43,_a44;//answer matrix
-var _v11=void 0,_v21=void 0,_v31=void 0,_v41=void 0;//effect matrix
+var _v11=void 0,_v21=void 0,_v31=void 0;//effect matrix
+var _x11=void 0,_x21=void 0,_x31=void 0;//effect matrix
+
 
 var intoArrayFromT = function MatrixTargetIsStoredIntoArray(arr){
 	arr[0]=_t11;
@@ -333,34 +343,71 @@ var translateTByV = function MatrixTargetIsTranslatedByMatrixV(){
 	var x=_v11;
 	var y=_v21;
 	var z=_v31;
-	var w=1;
-
-//onsole.log(_t11);
-
 
 	_a11=_t11;					_a12=_t12;					_a13=_t13;					_a14=_t14;
 	_a21=_t21;					_a22=_t22;					_a23=_t23;					_a24=_t24;
 	_a31=_t31;					_a32=_t32;					_a33=_t33;					_a34=_t34;
-	_a41=_t11*x + _t21*y + _t31*z + _t41*w;		_a42=_t12*x + _t22*y + _t32*z + _t42*w;		_a43=_t13*x + _t23*y + _t33*z + _t43*w;		_a44=_t14*x + _t24*y + _t34*z + _t44*w;
+	_a41=_t11*x + _t21*y + _t31*z + _t41;		_a42=_t12*x + _t22*y + _t32*z + _t42;		_a43=_t13*x + _t23*y + _t33*z + _t43;		_a44=_t14*x + _t24*y + _t34*z + _t44;
 }
 
+var rotateTAroundV = function MatrixTargetIsRotatedAroundV(rad){
+	var len = Math.sqrt(_v11*_v11 + _v21*_v21 + _v31*_v31);
+	if(len < 0.00001)return null;//????
+
+	var x = _v11/len;
+	var y = _v21/len;
+	var z = _v31/len;
+
+	var s = Math.sin(rad);
+	var c = Math.cos(rad);
+	var t = 1 - c;
+
+	var r11 = x*x*t+c;	var r12 = y*x*t+z*s;	var r13 = z*x*t-y*s;
+	var r21 = x*y*t-z*s;	var r22 = y*y*t+c;	var r23 = z*y*t+x*s;
+	var r31 = x*z*t+y*s;	var r32 = y*z*t-x*s;	var r33 = z*z*t+c;
+
+	_a11 = _t11 * r11 + _t21 * r12 + _t31 * r13;
+	_a12 = _t12 * r11 + _t22 * r12 + _t32 * r13;
+	_a13 = _t13 * r11 + _t23 * r12 + _t33 * r13;
+	_a14 = _t14 * r11 + _t24 * r12 + _t34 * r13;
+
+	_a21 = _t11 * r21 + _t21 * r22 + _t21 * r23;
+	_a22 = _t12 * r21 + _t22 * r22 + _t22 * r23;
+	_a23 = _t13 * r21 + _t23 * r22 + _t23 * r23;
+	_a24 = _t14 * r21 + _t24 * r22 + _t24 * r23;
+
+	_a31 = _t11 * r31 + _t11 * r32 + _t11 * r33;
+	_a32 = _t12 * r31 + _t12 * r32 + _t12 * r33;
+	_a33 = _t13 * r31 + _t13 * r32 + _t13 * r33;
+	_a34 = _t14 * r31 + _t14 * r32 + _t14 * r33;
+	
+	_a41 = _t41;
+	_a42 = _t42;
+	_a43 = _t43;
+	_a44 = _t44;
+}
+
+
+	
+
+
 var moveAtoT = function MatrixAnswerMoveIntoMatrixTarget(){
-	 _a11=_t11;
-	 _a12=_t12;
-	 _a13=_t13;
-	 _a14=_t14;
-	 _a21=_t21;
-	 _a22=_t22;
-	 _a23=_t23;
-	 _a24=_t24;
-	 _a31=_t31;
-	 _a32=_t32;
-	 _a33=_t33;
-	 _a34=_t34;
-	 _a41=_t41;
-	 _a42=_t42;
-	 _a43=_t43;
-	 _a44=_t44;
+	 _t11=_a11;
+	 _t12=_a12;
+	 _t13=_a13;
+	 _t14=_a14;
+	 _t21=_a21;
+	 _t22=_a22;
+	 _t23=_a23;
+	 _t24=_a24;
+	 _t31=_a31;
+	 _t32=_a32;
+	 _t33=_a33;
+	 _t34=_a34;
+	 _t41=_a41;
+	 _t42=_a42;
+	 _t43=_a43;
+	 _t44=_a44;
 };
 </script>
-</head><body onload="start();"><div><p>こんにちわ</p></div></body></html>
+</head><body onload="start();"><div><p id="PRINT1">こんにちわ</p><canvas></canvas></div></body></html>
