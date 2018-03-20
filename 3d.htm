@@ -1,0 +1,362 @@
+﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
+<link rel="sylesheet" href="">
+<!--Fragment shader program-->
+<script id="shader-fs" type="x-shader/x-fragment">
+	varying lowp vec4 vColor;
+
+	void main(void) {
+		gl_FragColor = vColor;
+	}
+</script>
+<!--Vertex shader program-->
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec4 aVertexPosition;
+	attribute vec4 aVertexColor;
+
+	uniform mat4 uModelViewMatrix;
+	uniform mat4 uProjectionMatrix;
+
+	varying lowp vec4 vColor;
+
+	void main(void) {
+		gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+		vColor = aVertexColor;
+	}
+</script>
+
+<script type='text/javascript'>
+
+function start(){
+	var canvas = document.createElement('canvas');
+	var gl=canvas.getContext("webgl");
+	if(!gl){
+		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
+		return;
+	}
+
+	document.getElementsByTagName('body')[0].appendChild(canvas);
+	canvas.id = "glcanvas";
+	canvas.style.position='absolute';
+	canvas.style.zIndex=100;
+	canvas.style.left='0px';
+	canvas.style.top='0px';
+	canvas.width=640;
+	canvas.height=480;
+
+
+	var oShader = initShaders(gl);
+	initBuffers(gl);
+	drawScene(gl,oShader);
+}
+
+function initShaders(gl) {
+	var fragmentShader = getShader(gl,"shader-fs");//プログラムをロードしてコンパイルして返す
+	var vertexShader = getShader(gl,"shader-vs");//プログラムをロードしてコンパイルして返す
+
+//onsole.log("fragmentShader=",fragmentShader);
+//onsole.log("vertexShader=",vertexShader);
+
+
+
+	//シェーダープログラムを作成
+
+	var shaderProgram = gl.createProgram();
+	gl.attachShader(shaderProgram,vertexShader);//シェーダーはどんどん追加するものである
+	gl.attachShader(shaderProgram,fragmentShader);
+	gl.linkProgram(shaderProgram);			//そしてリンクして使う
+
+	//シェーダープログラムを作成できない場合はアラートを表示
+
+	if(!gl.getProgramParameter(shaderProgram,gl.LINK_STATUS)){
+		alert("シェーダープログラムを初期化できません");
+		return null;
+	}
+
+	gl.useProgram(shaderProgram);//githubではdrawScene()内で実行
+
+//onsole.log("shaderProgram=",shaderProgram);
+
+	var vertexPosition = gl.getAttribLocation(shaderProgram,"aVertexPosition");//""内は特殊言語の実装参照してる
+	gl.enableVertexAttribArray(vertexPosition);//githubではdrawScene()内で実行
+
+	var colorPosition = gl.getAttribLocation(shaderProgram,"aVertexColor");
+	gl.enableVertexAttribArray(colorPosition);
+	//上の２ラインはPointではないので、gl.vertexAttribPointer(oShader.vPos,numCo...しない
+
+	return {
+		vPos:vertexPosition,
+		cPos:colorPosition,
+		prog:shaderProgram
+	}
+}
+
+function getShader(gl,id){
+	var shaderScript,theSource,currentChild,shader;
+
+	shaderScript = document.getElementById(id);
+
+	if(!shaderScript) {
+		return null;
+	}
+
+	theSource = "";
+	currentChild = shaderScript.firstChild;
+
+	while(currentChild) {
+		if(currentChild.nodeType == currentChild.TEXT_NODE){
+			theSource += currentChild.textContent;
+		}
+
+		currentChild = currentChild.nextSibling;
+//onsole.log("currentChild=",currentChild);
+//onsole.log("theSource",theSource);
+	}
+
+	if (shaderScript.type == "x-shader/x-fragment"){
+		shader = gl.createShader(gl.FRAGMENT_SHADER);
+	} else if (shaderScript.type == "x-shader/x-vertex"){
+		shader = gl.createShader(gl.VERTEX_SHADER);
+	} else {
+		// 未知のシェーダータイプ
+		return null;
+	}
+
+	gl.shaderSource(shader,theSource);
+
+//onsole.log("before compile shader=",shader,gl);
+	//シェーダープログラムをコンパイル
+	gl.compileShader(shader);
+//onsole.log("after compile shader=",shader,gl);
+
+	//コンパイルが成功したかを確認
+	if (!gl.getShaderParameter(shader,gl.COMPILE_STATUS)) {
+		alert("シェーダーのコンパイルでエラーが発生しました: " + gl.getShaderInfoLog(shader));
+		return null;
+	}
+
+	return shader;
+}
+
+
+function initBuffers(gl){
+	var squareVerticesBuffer = gl.createBuffer();//正方形のvertices
+	gl.bindBuffer(gl.ARRAY_BUFFER,squareVerticesBuffer);//bind①
+
+	//for 3D
+/*
+	var vertices = [//四角形だから4つの三次元座標
+		1,1,0,
+		-1,-1,0,
+		1,-1,0,
+		-1,1,0];
+*/
+	var vertices = [//四角形だから4つの三次元座標
+		1,1,0,
+		1,-1,0,
+		-1,1,0,
+		1,-1,0];
+
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);
+
+	var colors = [
+		1.0, 1.0, 1.0, 1.0,
+		1.0, 0.0, 0.0, 1.0,
+		0.0, 1.0, 0.0, 1.0,
+		0.0, 0.0, 1.0, 1.0
+	];
+
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(colors),gl.STATIC_DRAW);
+
+}
+
+function drawScene(gl,oShader){
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
+	gl.clearDepth(1.0);		//Clear everything
+	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
+	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
+
+	// カラーバッファや深度バッファをクリアする
+	//Clear the canvas before we start drawing on it
+
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	/*
+		Create a perspective matrix, a special matrix that is
+		used to simulate the distortion of perspective in a camera.
+		Our field of view is 45 degrees, with a (width/height)
+		ratio that matches the display size of the canvas
+		and we only want ot see objects between 0.1 units
+		and 100 units away from the camera.
+	*/
+
+
+//var angle=0;
+//var fieldOfView;
+//var hoge = setInterval(function(){
+//	angle+=1 * Math.PI / 180;;
+//	if(angle>2*Math.PI)angle=0;
+
+
+
+
+	var fieldOfView = 45 * Math.PI / 180;	//in radian;
+//	fieldOfView = angle * Math.PI / 180;	//in radian;
+	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+	var zNear = 0.1;
+	var zFar = 100.0;
+	makePMatrix(fieldOfView,aspect,zNear,zFar);//->_a (look like a face cf. b_a...フォントによるよね)
+	var projectionMatrix=new Float32Array(16);intoArrayFromA(projectionMatrix);
+//onsole.log("projectionMatrix=",projectionMatrix);
+
+	makeTNorm();//->_t
+	_v11 = -0.0;
+	_v21 =  0.0;
+	_v31 = -6.0;
+	translateTByV();//->_a
+	var modelViewMatrix = new Float32Array(16);intoArrayFromA(modelViewMatrix);
+//onsole.log("modelViewMatrix=",modelViewMatrix);
+
+
+	var numComponents = 3;//githubでは2//A GLint specifying the number of components per vertex attribute.Must be 1,2,3,or 4.
+	var type = gl.FLOAT;//A GLenum specifying the data type of each component in the array.Possible values:
+				//*gl.BYTE:signed 8-bit integer,with values in [-128,127]
+				//*gl.SHORT:signed 16-bit integer,with values in [-32768,32767]
+				//*gl.UNSIGNED_BYTE:
+				//*gl.UNSIGNED_SHORT:
+				//*gl.FLOAT:32-bit IEEE floating point number
+				//When using a WebGL 2 context,the fllowing values are available additionally:
+					//*gl.HALF_FLOAT:16-bit IEEE floating point nuber
+
+	var normalize = false;
+	var stride = 0;
+	var offset = 0;
+
+
+//onsole.log("gl=",gl);
+
+	gl.vertexAttribPointer(oShader.vPos,numComponents,type,normalize,stride,offset);
+	gl.vertexAttribPointer(oShader.cPos,numComponents,type,normalize,stride,offset);
+
+//○	gl.enableVertexAttribArray(vertexPositionAttribute);//initShader()内で実行済//githubではここで実行
+//○	gl.useProgram(__shaderProgram__);//initShader()内で実行済//githubではここで実行
+
+
+	//Set the shader uniforms
+	var pUniform = gl.getUniformLocation(oShader.prog,"uProjectionMatrix");//""内は特殊言語の実装参照してる
+//onsole.log("pNumiform=",pUniform);
+	gl.uniformMatrix4fv(pUniform,false,new Float32Array(projectionMatrix));
+
+	var mvUniform = gl.getUniformLocation(oShader.prog,"uModelViewMatrix");//""内は特殊言語の実装参照してる
+//onsole.log("mvUniform=",mvUniform);
+	gl.uniformMatrix4fv(mvUniform,false,new Float32Array(modelViewMatrix));
+ 
+	var offset = 0;
+	var vertexCount = 4;
+//var hoge=setInterval(function(){
+	gl.drawArrays(gl.TRIANGLE_STRIP,offset,vertexCount);
+//},100);
+
+}
+
+
+
+</script>
+<script id="matrix-library" type='text/javascript'>
+var _t11,_t12,_t13,_t14,_t21,_t22,_t23,_t24,_t31,_t32,_t33,_t34,_t41,_t42,_t43,_t44;//target matrix
+var _a11,_a12,_a13,_a14,_a21,_a22,_a23,_a24,_a31,_a32,_a33,_a34,_a41,_a42,_a43,_a44;//answer matrix
+var _v11=void 0,_v21=void 0,_v31=void 0,_v41=void 0;//effect matrix
+
+var intoArrayFromT = function MatrixTargetIsStoredIntoArray(arr){
+	arr[0]=_t11;
+	arr[1]=_t12;
+	arr[2]=_t13;
+	arr[3]=_t14;
+	arr[4]=_t21;
+	arr[5]=_t22;
+	arr[6]=_t23;
+	arr[7]=_t24;
+	arr[8]=_t31;
+	arr[9]=_t32;
+	arr[10]=_t33;
+	arr[11]=_t34;
+	arr[12]=_t41;
+	arr[13]=_t42;
+	arr[14]=_t43;
+	arr[15]=_t44;
+}
+var intoArrayFromA = function MatrixAnswerIsStoredIntoArray(arr){
+	arr[0]=_a11;
+	arr[1]=_a12;
+	arr[2]=_a13;
+	arr[3]=_a14;
+	arr[4]=_a21;
+	arr[5]=_a22;
+	arr[6]=_a23;
+	arr[7]=_a24;
+	arr[8]=_a31;
+	arr[9]=_a32;
+	arr[10]=_a33;
+	arr[11]=_a34;
+	arr[12]=_a41;
+	arr[13]=_a42;
+	arr[14]=_a43;
+	arr[15]=_a44;
+}
+var intoArrayFromV = function MatrixVIsStoredIntoArray(arr){
+	arr[0]=_v11;
+	arr[1]=_v21;
+	arr[2]=_v31;
+}
+var makeTNorm = function MatrixTargetBecomeNormMatrix(){
+	_t11=1;_t12=0;_t13=0;_t14=0;
+	_t21=0;_t22=1;_t23=0;_t24=0;
+	_t31=0;_t32=0;_t33=1;_t34=0;
+	_t41=0;_t42=0;_t43=0;_t44=1;
+}	
+
+var makePMatrix = function makePerspectiveMatrixInMatrixAnswer(fovy,aspect,near,far){
+	var f = 1.0 / Math.tan(fovy / 2);
+	var nf = 1 / (near - far);
+
+	_a11 = f / aspect;	_a12 = 0;	_a13 = 0;			_a14 = 0;
+	_a21 = 0;		_a22 = f;	_a23 = 0;			_a24 = 0;
+	_a31 = 0;		_a32 = 0;	_a33 = (near + far) * nf;	_a34 = -1;
+	_a41 = 0;		_a42 = 0;	_a43 = 2 * near * far * nf;	_a44 = 0;
+}
+
+var translateTByV = function MatrixTargetIsTranslatedByMatrixV(){
+
+	var x=_v11;
+	var y=_v21;
+	var z=_v31;
+	var w=1;
+
+//onsole.log(_t11);
+
+
+	_a11=_t11;					_a12=_t12;					_a13=_t13;					_a14=_t14;
+	_a21=_t21;					_a22=_t22;					_a23=_t23;					_a24=_t24;
+	_a31=_t31;					_a32=_t32;					_a33=_t33;					_a34=_t34;
+	_a41=_t11*x + _t21*y + _t31*z + _t41*w;		_a42=_t12*x + _t22*y + _t32*z + _t42*w;		_a43=_t13*x + _t23*y + _t33*z + _t43*w;		_a44=_t14*x + _t24*y + _t34*z + _t44*w;
+}
+
+var moveAtoT = function MatrixAnswerMoveIntoMatrixTarget(){
+	 _a11=_t11;
+	 _a12=_t12;
+	 _a13=_t13;
+	 _a14=_t14;
+	 _a21=_t21;
+	 _a22=_t22;
+	 _a23=_t23;
+	 _a24=_t24;
+	 _a31=_t31;
+	 _a32=_t32;
+	 _a33=_t33;
+	 _a34=_t34;
+	 _a41=_t41;
+	 _a42=_t42;
+	 _a43=_t43;
+	 _a44=_t44;
+};
+</script>
+</head><body onload="start();"><div><p>こんにちわ</p></div></body></html>
