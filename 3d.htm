@@ -46,7 +46,13 @@ function start(){
 
 	var oShader = initShaders(gl);
 	initBuffers(gl);
-	drawScene(gl,oShader);
+
+
+	function render(timeStamp){
+		drawScene(gl,oShader);
+		window.requestAnimationFrame(render);
+	}
+	window.requestAnimationFrame(render);
 }
 
 function initShaders(gl) {
@@ -252,9 +258,7 @@ function drawScene(gl,oShader){
  
 	var offset = 0;
 	var vertexCount = 4;
-//var hoge=setInterval(function(){
 	gl.drawArrays(gl.TRIANGLE_STRIP,offset,vertexCount);
-//},100);
 
 }
 
