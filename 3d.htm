@@ -47,8 +47,15 @@ function start(){
 	canvas.height=480;
 
 
+//	gl.clearColor(0.0, 0.0, 0.0, 0.5);	//Clear to black,fully opaque
+//	gl.clearDepth(1.0);			//Clear everything
+//	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
+//	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+
+
 	var oShader = initShaders(gl);
-	initBuffers(gl);
+	initBuffers(gl,oShader);
 
 
 	var angle=0;
@@ -150,7 +157,7 @@ function getShader(gl,id){
 }
 
 
-function initBuffers(gl){
+function initBuffers(gl,oShader){
 
 	//生成したバッファをWebGLBufferにバインドしたら、
 	//あとはそれにvertexのattributionをbufferDataを使って
@@ -164,11 +171,12 @@ function initBuffers(gl){
 		1.0,-1.0,-1.0,
 		-1.0,-1.0,-1.0,
 		-1.0,1.0,-1.0,
-		1.0,1.0,-1.0,
+		0.0,0.0,-0.0,
 		1.0,1.0,1.0,
 		1.0,-1.0,1.0,
 		-1.0,-1.0,1.0,
 		-1.0,1.0,1.0
+
 	];
 	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
 
@@ -176,28 +184,54 @@ function initBuffers(gl){
 		0.0, 1.0, 1.0, 1.0,
 		1.0, 0.0, 0.0, 1.0,
 		1.0, 1.0, 0.0, 1.0,
-		1.0, 0.0, 1.0, 1.0,
-		1.0, 1.0, 0.0, 1.0,
-		1.0, 1.0, 1.0, 1.0,
-		1.0, 1.0, 1.0, 1.0,
-		1.0, 1.0, 1.0, 1.0,
-		1.0, 1.0, 1.0, 1.0
+		1.0, 0.3, 1.0, 1.0,
+		0.0, 0.0, 0.0, 1.0,
+		0.0, 0.0, 1.0, 1.0,
+		0.5, 1.0, 1.0, 1.0,
+		0.6, 0.2, 0.4, 1.0,
+		1.0, 0.9, 0.5, 1.0
 	];
 	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(colors),gl.STATIC_DRAW);
 
+		//バッファにある頂点情報をsend
+		//send vertex information to WebGL script by using WebGLBuffer whitch has been stored vertex info by arrays
+	{
+	//var oShader.prop...specify the index of vertex attribute to be modifiedどのattributeを使うかを指定 
+	var numComponents = 1;//githubでは2//A GLint specifying the number of components per vertex attribute.Must be 1,2,3,or 4.上で指定したattribute毎のコンポーネントの数
+	var type = gl.FLOAT;//A GLenum specifying the data type of each component in the array.Possible values:
+				//*gl.BYTE:signed 8-bit integer,with values in [-128,127]
+				//*gl.SHORT:signed 16-bit integer,with values in [-32768,32767]
+				//*gl.UNSIGNED_BYTE:
+				//*gl.UNSIGNED_SHORT:
+				//*gl.FLOAT:32-bit IEEE floating point number
+				//When using a WebGL 2 context,the fllowing values are available additionally:
+					//*gl.HALF_FLOAT:16-bit IEEE floating point nuber
+
+	var normalize = false;
+	var stride = 0;
+	var offset = 0;
+
+
+		//WebGLBufferにstoreしておいた、位置と色の情報を取り出す
+		//WebGLBufferにjavascriptから配列で情報を渡し、WebGLBufferからWebGLスクリプトの変数に値を渡す
+		//array --> buffer --> uniform
+	numComponents = 3;//z座標を入れないでpositionsを作成した場合は2を指定してz座標には0が入るようにする
+	gl.vertexAttribPointer(oShader.positionLoc,numComponents,type,normalize,stride,offset);//attribute vec4 aVertexLocation;
+	numComponents = 4;//colorsは1つの頂点に4つのデータ(matrixの列数が4)だから。
+	gl.vertexAttribPointer(oShader.colorLoc,numComponents,type,normalize,stride,offset);//attribute vec4 aVertexColor;
+
+//○	gl.enableVertexAttribArray(vertexPositionAttribute);//initShader()内で実行済//githubではここで実行
+//○	gl.useProgram(__shaderProgram__);//initShader()内で実行済//githubではここで実行
+	}
 }
 
 
 function drawScene(gl,oShader,angle){
-	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
-	gl.clearDepth(1.0);			//Clear everything
-	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
-	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
 
 	// カラーバッファや深度バッファをクリアする
 	//Clear the canvas before we start drawing on it
 
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+//	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	/*
 		Create a perspective matrix, a special matrix that is
@@ -245,36 +279,9 @@ function drawScene(gl,oShader,angle){
 
 	}
 
-
-	//var oShader.prop...specify the index of vertex attribute to be modifiedどのattributeを使うかを指定 
-	var numComponents = 1;//githubでは2//A GLint specifying the number of components per vertex attribute.Must be 1,2,3,or 4.上で指定したattribute毎のコンポーネントの数
-	var type = gl.FLOAT;//A GLenum specifying the data type of each component in the array.Possible values:
-				//*gl.BYTE:signed 8-bit integer,with values in [-128,127]
-				//*gl.SHORT:signed 16-bit integer,with values in [-32768,32767]
-				//*gl.UNSIGNED_BYTE:
-				//*gl.UNSIGNED_SHORT:
-				//*gl.FLOAT:32-bit IEEE floating point number
-				//When using a WebGL 2 context,the fllowing values are available additionally:
-					//*gl.HALF_FLOAT:16-bit IEEE floating point nuber
-
-	var normalize = false;
-	var stride = 0;
-	var offset = 0;
-
-
-		//WebGLBufferにstoreしておいた、位置と色の情報を取り出す
-		//WebGLBufferにjavascriptから配列で情報を渡し、WebGLBufferからWebGLスクリプトの変数に値を渡す
-		//array --> buffer --> uniform
-	numComponents = 3;//z座標を入れないでpositionsを作成した場合は2を指定してz座標には0が入るようにする
-	gl.vertexAttribPointer(oShader.positionLoc,numComponents,type,normalize,stride,offset);//attribute vec4 aVertexLocation;
-	numComponents = 4;//colorsは1つの頂点に4つのデータ(matrixの列数が4)だから。
-	gl.vertexAttribPointer(oShader.colorLoc,numComponents,type,normalize,stride,offset);//attribute vec4 aVertexColor;
-
-//○	gl.enableVertexAttribArray(vertexPositionAttribute);//initShader()内で実行済//githubではここで実行
-//○	gl.useProgram(__shaderProgram__);//initShader()内で実行済//githubではここで実行
-
-
-		//Set the shader uniforms
+		//各行列をsend
+		//Set the shader uniforms culclated above and something
+	{
 	//uniform mat4 uProjectionMatrixへ値を転送
 	var pUniform = gl.getUniformLocation(oShader.prog,"uProjectionMatrix");//""内は特殊言語の実装参照してる
 	gl.uniformMatrix4fv(pUniform,false,new Float32Array(projectionMatrix));
@@ -283,23 +290,22 @@ function drawScene(gl,oShader,angle){
 	var mvUniform = gl.getUniformLocation(oShader.prog,"uModelViewMatrix");
 	gl.uniformMatrix4fv(mvUniform,false,new Float32Array(modelViewMatrix));
 
+	//uniform float uPointSizeFloatへ値を転送
 	var psUniform = gl.getUniformLocation(oShader.prog,"uPointSizeFloat");
 	gl.uniform1f(psUniform,10.0);
+	}
 
-	var offset = 0;
-
-
-
-
-	var vertexCount = 4;
 
 
 
 
-//	gl.drawArrays(gl.TRIANGLE_STRIP,offset,vertexCount);
+	var offset = 0;
+	var vertexCount = 9;
+
+	gl.drawArrays(gl.TRIANGLE_STRIP,offset,vertexCount);
 //	gl.drawArrays(gl.LINE_STRIP,offset,vertexCount);
 //	PRINT_INFO.innerHTML+=gl.hasOwnProperty("PointSize").toString()+"<br>";
-	gl.drawArrays(gl.POINTS,offset,vertexCount);
+//	gl.drawArrays(gl.POINTS,offset,vertexCount);
 
 }
 
