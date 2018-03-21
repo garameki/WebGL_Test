@@ -10,17 +10,20 @@
 </script>
 <!--Vertex shader program-->
 <script id="shader-vs" type="x-shader/x-vertex">
-	attribute vec4 aVertexPosition;
+	attribute vec3 aVertexPosition;
 	attribute vec4 aVertexColor;
 
 	uniform mat4 uModelViewMatrix;
 	uniform mat4 uProjectionMatrix;
 
+	uniform float uPointSizeFloat;
+
 	varying lowp vec4 vColor;
 
 	void main(void) {
-		gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+		gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
 		vColor = aVertexColor;
+		gl_PointSize = uPointSizeFloat;
 	}
 </script>
 
@@ -50,10 +53,11 @@ function start(){
 
 	var angle=0;
 	function render(timeStamp){
+		PRINT_INFO.innerHTML="";
 		angle+=1.0;
 		angle=Math.floor(angle*100)/100;
 		if(angle>360)angle=0;
-		PRINT1.innerText=angle;
+		PRINT_INFO.innerHTML+=angle.toString()+"<br>";
 		drawScene(gl,oShader,angle);
 		window.requestAnimationFrame(render);
 	}
@@ -69,34 +73,33 @@ function initShaders(gl) {
 
 
 
-	//シェーダープログラムを作成
-
+		//シェーダープログラムを作成
 	var shaderProgram = gl.createProgram();
-	gl.attachShader(shaderProgram,vertexShader);//シェーダーはどんどん追加するものである
+	gl.attachShader(shaderProgram,vertexShader);
 	gl.attachShader(shaderProgram,fragmentShader);
-	gl.linkProgram(shaderProgram);			//そしてリンクして使う
+	gl.linkProgram(shaderProgram);
 
 	//シェーダープログラムを作成できない場合はアラートを表示
-
 	if(!gl.getProgramParameter(shaderProgram,gl.LINK_STATUS)){
-		alert("シェーダープログラムを初期化できません");
+		alert("can't initialize the shader program");
 		return null;
 	}
 
 	gl.useProgram(shaderProgram);//githubではdrawScene()内で実行
 
-//onsole.log("shaderProgram=",shaderProgram);
+		//シェーダープログラムで使う配列変数を使用可能にする
+	//プログラムのどこにあるのかを取得
+	var positionLocation = gl.getAttribLocation(shaderProgram,"aVertexPosition");//""内は特殊言語の実装参照してる
+	var colorLocation = gl.getAttribLocation(shaderProgram,"aVertexColor");
 
-	var vertexPosition = gl.getAttribLocation(shaderProgram,"aVertexPosition");//""内は特殊言語の実装参照してる
-	gl.enableVertexAttribArray(vertexPosition);//githubではdrawScene()内で実行
+	//使ってもいいよリストに登録
+	gl.enableVertexAttribArray(positionLocation);//githubではdrawScene()内で実行
+	gl.enableVertexAttribArray(colorLocation);
 
-	var colorPosition = gl.getAttribLocation(shaderProgram,"aVertexColor");
-	gl.enableVertexAttribArray(colorPosition);
-	//上の２ラインはPointではないので、gl.vertexAttribPointer(oShader.vPos,numCo...しない
 
 	return {
-		vPos:vertexPosition,
-		cPos:colorPosition,
+		positionLoc:positionLocation,
+		colorLoc:colorLocation,
 		prog:shaderProgram
 	}
 }
@@ -119,8 +122,6 @@ function getShader(gl,id){
 		}
 
 		currentChild = currentChild.nextSibling;
-//onsole.log("currentChild=",currentChild);
-//onsole.log("theSource",theSource);
 	}
 
 	if (shaderScript.type == "x-shader/x-fragment"){
@@ -139,7 +140,7 @@ function getShader(gl,id){
 	gl.compileShader(shader);
 //onsole.log("after compile shader=",shader,gl);
 
-	//コンパイルが成功したかを確認
+	//whether or not success to compileコンパイルが成功したかを確認
 	if (!gl.getShaderParameter(shader,gl.COMPILE_STATUS)) {
 		alert("シェーダーのコンパイルでエラーが発生しました: " + gl.getShaderInfoLog(shader));
 		return null;
@@ -150,33 +151,38 @@ function getShader(gl,id){
 
 
 function initBuffers(gl){
-	var squareVerticesBuffer = gl.createBuffer();//正方形のvertices
-	gl.bindBuffer(gl.ARRAY_BUFFER,squareVerticesBuffer);//bind①
 
-	//for 3D
-/*
-	var vertices = [//四角形だから4つの三次元座標
-		1,1,0,
-		-1,-1,0,
-		1,-1,0,
-		-1,1,0];
-*/
+	//生成したバッファをWebGLBufferにバインドしたら、
+	//あとはそれにvertexのattributionをbufferDataを使って
+	//放り込んでゆくだけ
 
-	var vertices = [//四角形だから4つの三次元座標
-		1.0,1.0,0.0,
-		-1.0,1.0,0.0,
-		1.0,-1.0,0.0,
-		-1.0,-1.0,0.0];
+	var verticesBuffer = gl.createBuffer();//正方形のvertices
+	gl.bindBuffer(gl.ARRAY_BUFFER,verticesBuffer);
 
-	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);
+	var positions = [
+		1.0,1.0,-1.0,
+		1.0,-1.0,-1.0,
+		-1.0,-1.0,-1.0,
+		-1.0,1.0,-1.0,
+		1.0,1.0,-1.0,
+		1.0,1.0,1.0,
+		1.0,-1.0,1.0,
+		-1.0,-1.0,1.0,
+		-1.0,1.0,1.0
+	];
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
 
 	var colors = [
-		1.0, 1.0, 1.0, 1.0,
+		0.0, 1.0, 1.0, 1.0,
 		1.0, 0.0, 0.0, 1.0,
-		0.0, 1.0, 0.0, 1.0,
-		0.0, 0.0, 1.0, 1.0
+		1.0, 1.0, 0.0, 1.0,
+		1.0, 0.0, 1.0, 1.0,
+		1.0, 1.0, 0.0, 1.0,
+		1.0, 1.0, 1.0, 1.0,
+		1.0, 1.0, 1.0, 1.0,
+		1.0, 1.0, 1.0, 1.0,
+		1.0, 1.0, 1.0, 1.0
 	];
-
 	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(colors),gl.STATIC_DRAW);
 
 }
@@ -204,36 +210,44 @@ function drawScene(gl,oShader,angle){
 
 
 
+		//perspective matrix
+	{
 	var fieldOfView = 10 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-	var zNear = 18;//0.01;
+	var zNear = 0.01;
 	var zFar = 100.0;
 	makePMatrix(fieldOfView,aspect,zNear,zFar);//->_a (look like a face cf. b_a...フォントによるよね)
 	var projectionMatrix=new Float32Array(16);intoArrayFromA(projectionMatrix);
-//onsole.log("projectionMatrix=",projectionMatrix);
 
+	}
+
+		//model view matrix
+	{
 	//単位行列
 	makeTNorm();//->_t
 
 	//移動
 	_v11 = -0.0;
 	_v21 =  0.0;
-	_v31 = -10.0;
+	_v31 = -20.0;
 	translateTByV();//->_a
 
+	//Tに入れなおし
 	moveAtoT();//->_t
 
 	//回転
-	_v11 = -1.0;
+	_v11 = -0.0;
 	_v21 =  1.0;
 	_v31 = -1.0;
 	rotateTAroundV(angle*Math.PI/180);//->a
 
 	var modelViewMatrix = new Float32Array(16);intoArrayFromA(modelViewMatrix);
-//onsole.log("modelViewMatrix=",modelViewMatrix);
+
+	}
 
 
-	var numComponents = 3;//githubでは2//A GLint specifying the number of components per vertex attribute.Must be 1,2,3,or 4.
+	//var oShader.prop...specify the index of vertex attribute to be modifiedどのattributeを使うかを指定 
+	var numComponents = 1;//githubでは2//A GLint specifying the number of components per vertex attribute.Must be 1,2,3,or 4.上で指定したattribute毎のコンポーネントの数
 	var type = gl.FLOAT;//A GLenum specifying the data type of each component in the array.Possible values:
 				//*gl.BYTE:signed 8-bit integer,with values in [-128,127]
 				//*gl.SHORT:signed 16-bit integer,with values in [-32768,32767]
@@ -248,25 +262,44 @@ function drawScene(gl,oShader,angle){
 	var offset = 0;
 
 
-//onsole.log("gl=",gl);
-
-	gl.vertexAttribPointer(oShader.vPos,numComponents,type,normalize,stride,offset);
-	gl.vertexAttribPointer(oShader.cPos,numComponents,type,normalize,stride,offset);
+		//WebGLBufferにstoreしておいた、位置と色の情報を取り出す
+		//WebGLBufferにjavascriptから配列で情報を渡し、WebGLBufferからWebGLスクリプトの変数に値を渡す
+		//array --> buffer --> uniform
+	numComponents = 3;//z座標を入れないでpositionsを作成した場合は2を指定してz座標には0が入るようにする
+	gl.vertexAttribPointer(oShader.positionLoc,numComponents,type,normalize,stride,offset);//attribute vec4 aVertexLocation;
+	numComponents = 4;//colorsは1つの頂点に4つのデータ(matrixの列数が4)だから。
+	gl.vertexAttribPointer(oShader.colorLoc,numComponents,type,normalize,stride,offset);//attribute vec4 aVertexColor;
 
 //○	gl.enableVertexAttribArray(vertexPositionAttribute);//initShader()内で実行済//githubではここで実行
 //○	gl.useProgram(__shaderProgram__);//initShader()内で実行済//githubではここで実行
 
 
-	//Set the shader uniforms
+		//Set the shader uniforms
+	//uniform mat4 uProjectionMatrixへ値を転送
 	var pUniform = gl.getUniformLocation(oShader.prog,"uProjectionMatrix");//""内は特殊言語の実装参照してる
 	gl.uniformMatrix4fv(pUniform,false,new Float32Array(projectionMatrix));
 
-	var mvUniform = gl.getUniformLocation(oShader.prog,"uModelViewMatrix");//""内は特殊言語の実装参照してる
+	//uniform mat4 uModelViewMatrixへ値を転送
+	var mvUniform = gl.getUniformLocation(oShader.prog,"uModelViewMatrix");
 	gl.uniformMatrix4fv(mvUniform,false,new Float32Array(modelViewMatrix));
- 
+
+	var psUniform = gl.getUniformLocation(oShader.prog,"uPointSizeFloat");
+	gl.uniform1f(psUniform,10.0);
+
 	var offset = 0;
+
+
+
+
 	var vertexCount = 4;
-	gl.drawArrays(gl.TRIANGLE_STRIP,offset,vertexCount);
+
+
+
+
+//	gl.drawArrays(gl.TRIANGLE_STRIP,offset,vertexCount);
+//	gl.drawArrays(gl.LINE_STRIP,offset,vertexCount);
+//	PRINT_INFO.innerHTML+=gl.hasOwnProperty("PointSize").toString()+"<br>";
+	gl.drawArrays(gl.POINTS,offset,vertexCount);
 
 }
 
@@ -326,7 +359,15 @@ var makeTNorm = function MatrixTargetBecomeNormMatrix(){
 	_t21=0;_t22=1;_t23=0;_t24=0;
 	_t31=0;_t32=0;_t33=1;_t34=0;
 	_t41=0;_t42=0;_t43=0;_t44=1;
-}	
+}
+var makeTAll1 = function MatrixTargetBecomesAll_1_Matrix(){
+	_t11=1;_t12=1;_t13=1;_t14=1;
+	_t21=1;_t22=1;_t23=1;_t24=1;
+	_t31=1;_t32=1;_t33=1;_t34=1;
+	_t41=1;_t42=1;_t43=1;_t44=1;
+}
+	
+
 
 /**
  *Make perspective matrix
@@ -338,7 +379,7 @@ var makeTNorm = function MatrixTargetBecomeNormMatrix(){
 */
 var makePMatrix = function makePerspectiveMatrixInMatrixAnswer(fov,aspect,near,far){
 	if(near == far){
-		PRINT2.innerHTML = PRINT2.innerHTML +"<br>" + "far equals to near in makePMatrix().";
+		PRINT_CAUTION.innerHTML += "far equals to near in makePMatrix().<br>";
 		return null;
 	}
 	var s = 1.0 / Math.tan(fov / 2);
@@ -351,11 +392,18 @@ var makePMatrix = function makePerspectiveMatrixInMatrixAnswer(fov,aspect,near,f
 
 //not important _a43,i think
 
-PRINT2.innerHTML = near.toString() + "&nbsp;&nbsp;&nbsp;" + far.toString() + "&nbsp&nbsp&nbsp" + (far*near*nf).toString();
+//PRINT2.innerHTML = near.toString() + "&nbsp;&nbsp;&nbsp;" + far.toString() + "&nbsp&nbsp&nbsp" + (far*near*nf).toString();
 //https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
 }
 
-
+/**
+ *Translate 4x4matrix
+ *
+ *@param _t** {number} matrix to be translated
+ *@param _v** {number} translate vector
+ *@param _a** {number} matrix to be been translated
+ *
+*/
 var translateTByV = function MatrixTargetIsTranslatedByMatrixV(){
 
 	var x=_v11;
@@ -429,8 +477,7 @@ var moveAtoT = function MatrixAnswerMoveIntoMatrixTarget(){
 };
 </script>
 </head><body onload="start();"><div>
-<p id="PRINT1" style="position:absolute;top:500px;left:0px">こんにちわ</p>
-<p id="PRINT2" style="position:absolute;top:530px;left:0px">こんにちわ</p>
-
-
+<p id="PRINT_CAUTION" style="position:absolute;top:500px;left:0px;font-color:red;">こんにちわ</p>
+<p id="PRINT_INFO" style="position:absolute;top:530px;left:0px">こんにちわ</p>
+<p id="PRINT_LOG" style="position:absolute;top:560px;left:0px">こんにちわ</p>
 <canvas></canvas></div></body></html>
