@@ -49,7 +49,8 @@ function start(){
 	canvas.style.height='480px';
 	canvas.height=canvas.clientHeight;//necessary
 
-	gl.clearColor(0.0, 0.0, 0.0, 0.5);	//Clear to black,fully opaque
+	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//クリップ空間の-1～1の値をcanvasの大きさに変換する
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
 	gl.clearDepth(1.0);			//Clear everything
 	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
 	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
@@ -57,8 +58,7 @@ function start(){
 
 	//for rectangle test
 {
-//    gl.viewport(0, 0,
-//      gl.drawingBufferWidth, gl.drawingBufferHeight);
+//	gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
 //    gl.enable(gl.SCISSOR_TEST);
 //   gl.scissor(30, 10, 60, 60);//60x60の正方形
 //    gl.clearColor(1.0, 1.0, 0.0, 1.0);
@@ -110,17 +110,17 @@ function initShaders(gl) {
 
 		//シェーダープログラムで使う配列変数を使用可能にする
 	//プログラムのどこにあるのかを取得
-	var positionLocation = gl.getAttribLocation(shaderProgram,"aVertexPosition");//""内は特殊言語の実装参照してる
-	var colorLocation = gl.getAttribLocation(shaderProgram,"aVertexColor");
+	var positionsLocation = gl.getAttribLocation(shaderProgram,"aVertexPosition");//""内は特殊言語の実装参照してる
+	var colorsLocation = gl.getAttribLocation(shaderProgram,"aVertexColor");
 
 	//使ってもいいよリストに登録
-	gl.enableVertexAttribArray(positionLocation);//githubではdrawScene()内で実行
-	gl.enableVertexAttribArray(colorLocation);
+	gl.enableVertexAttribArray(positionsLocation);//githubではdrawScene()内で実行
+	gl.enableVertexAttribArray(colorsLocation);
 
 
 	return {
-		positionLoc:positionLocation,
-		colorLoc:colorLocation,
+		positionLoc:positionsLocation,
+		colorLoc:colorsLocation,
 		prog:shaderProgram
 	}
 }
@@ -177,71 +177,43 @@ function initBuffers(gl,oShader){
 	//あとはそれにvertexのattributionをbufferDataを使って
 	//頂点の座標、頂点の色、テキストデータなどをバッファに放り込むだけ
 
-	var verticesBuffer = gl.createBuffer();//正方形のvertices
-	gl.bindBuffer(gl.ARRAY_BUFFER,verticesBuffer);
-
-/*
-	var positions = [
-		1.0,1.0,-1.0,1.0,
-		1.0,-1.0,-1.0,1.0,
-		-1.0,-1.0,-1.0,1.0,
-		-1.0,1.0,-1.0,1.0,
-		0.0,0.0,-0.0,1.0,
-		1.0,1.0,1.0,1.0,
-		1.0,-1.0,1.0,1.0,
-		-1.0,-1.0,1.0,1.0,
-		-1.0,1.0,1.0,1.0
-
-	];
-*/
-	var positions = [
-		1.0,1.0,0.0,
-		-1.0,1.0,0.0,
-		1.0,-1.0,0.0,
-		-1.0,-1.0,0.0
-	];
-
-	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
-
-	var colors = [
-		0.0, 1.0, 1.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 1.0, 0.0, 1.0,
-		1.0, 0.3, 1.0, 1.0,
-		0.0, 0.0, 0.0, 1.0,
-		0.0, 0.0, 1.0, 1.0,
-		0.5, 1.0, 1.0, 1.0,
-		0.6, 0.2, 0.4, 1.0,
-		1.0, 0.9, 0.5, 1.0
-	];
-	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(colors),gl.STATIC_DRAW);
-
-		//バッファにある頂点情報をsend
-		//send vertex information to WebGL script by using WebGLBuffer whitch has been stored vertex info by arrays
-
-	//var oShader.prop...specify the index of vertex attribute to be modifiedどのattributeを使うかを指定 
-	var numComponents = 1;//githubでは2//A GLint specifying the number of components per vertex attribute.Must be 1,2,3,or 4.上で指定したattribute毎のコンポーネントの数
-	var type = gl.FLOAT;//A GLenum specifying the data type of each component in the array.Possible values:
-				//*gl.BYTE:signed 8-bit integer,with values in [-128,127]
-				//*gl.SHORT:signed 16-bit integer,with values in [-32768,32767]
-				//*gl.UNSIGNED_BYTE:
-				//*gl.UNSIGNED_SHORT:
-				//*gl.FLOAT:32-bit IEEE floating point number
-				//When using a WebGL 2 context,the fllowing values are available additionally:
-					//*gl.HALF_FLOAT:16-bit IEEE floating point nuber
-
+	//引数の準備
+	var type = gl.FLOAT;
 	var normalize = false;
-	var stride = 0;
+	var stride = 0;//shaderを呼び出すごとに進むバイト数//これは(buffer.slice((offset + i) * stride,size);)という意味
 	var offset = 0;
 
-
-		//WebGLBufferにstoreしておいた、位置と色の情報を取り出す
-		//WebGLBufferにjavascriptから配列で情報を渡し、WebGLBufferからWebGLスクリプトの変数に値を渡す
-		//array --> buffer --> uniform
-	numComponents = 3;//2だったら、行ごとに3列目に0を補完する(c.f. githubの例)
+	//頂点の位置情報をバッファを作ってそこに入れる
+	var positions = [
+		1.0,1.0,-1.0,
+		-1.0,1.0,-1.0,
+		1.0,-1.0,-1.0,
+		-1.0,-1.0,-1.0,
+	];
+	var positionsBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,positionsBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
+	//バッファにある頂点の位置情報や色情報をどう使用するかを決めてGLSLに渡す
+	numComponents = 3;//列の数
 	gl.vertexAttribPointer(oShader.positionLoc,numComponents,type,normalize,stride,offset);//attribute vec4 aVertexLocation;
-	numComponents = 4;//colorsは1つの頂点に4つのデータ(matrixの列数が4)だから。
+
+
+
+	//頂点の色情報をバッファを作ってそこに入れる
+	var colors = [
+		1.0, 1.0, 1.0, 1.0,
+		0.0, 0.0, 1.0, 1.0,
+		0.0, 1.0, 0.0, 1.0,
+		1.0, 0.3, 1.0, 1.0,
+	];
+	//bufferを作ってBufferに入れる
+	var colorsBuffer = gl.createBuffer();//正方形のvertices
+	gl.bindBuffer(gl.ARRAY_BUFFER,colorsBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(colors),gl.STATIC_DRAW);
+	numComponents = 4;//列の数
 	gl.vertexAttribPointer(oShader.colorLoc,numComponents,type,normalize,stride,offset);//attribute vec4 aVertexColor;
+
+
 
 
 }
@@ -266,7 +238,7 @@ function drawScene(gl,oShader,angle){
 
 
 		//perspective matrix...MatP was already defined at global position
-	var fieldOfView = 45 * Math.PI / 180;	//in radian;
+	var fieldOfView = 30 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	var zNear = 0.001;
 	var zFar = 100.0;
@@ -279,13 +251,11 @@ function drawScene(gl,oShader,angle){
 		//model view matrix...MatA was already defined in global scope
 	MatA.init();
 //	MatA.trans(0.0,0.0,-6.0);
-	MatA.trans(0.0,0.0,-3.0);
-console.log(7.2-4*260/100);
-	MatA.rot(1.0,0.0,1.0,angle*Math.PI/180);
+	MatA.trans(0.0,0.0,-6.0);
+	MatA.rot(1.0,1.0,1.0,angle*Math.PI/180);
 	var modelViewMatrix = new Array(16);
 	MatA.store(modelViewMatrix);
 
-console.log(modelViewMatrix);
 
 
 
@@ -312,15 +282,33 @@ console.log(modelViewMatrix);
 
 
 
-	var offset = 0;
+	var vertexOffset = 0;//このoffsetは頂点のx,y,zごとに進むので、データ的にはoffset*3(4?)ごとに進む
 	var vertexCount = 4;
 
-//	gl.drawArrays(gl.TRIANGLE_STRIP,offset,vertexCount);
-	gl.drawArrays(gl.LINE_STRIP,offset,vertexCount);
+//	gl.drawArrays(gl.TRIANGLES,vertexOffset,vertexCount);
+	gl.drawArrays(gl.TRIANGLE_STRIP,vertexOffset,vertexCount);
+//	gl.drawArrays(gl.LINE_STRIP,vertexOffset,vertexCount);
 //	PRINT_INFO.innerHTML+=gl.hasOwnProperty("PointSize").toString()+"<br>";
-//	gl.drawArrays(gl.POINTS,offset,vertexCount);
+//	gl.drawArrays(gl.POINTS,vertexOffset,vertexCount);
 
 }
+
+
+
+
+
+
+
+
+
+//*****************************************************************************
+
+
+
+
+
+
+
 
 
 
