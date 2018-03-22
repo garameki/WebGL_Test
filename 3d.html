@@ -45,22 +45,25 @@ function start(){
 	canvas.style.top='0px';
 	canvas.style.backgroundColor='#003080';
 	canvas.style.width='640px';
-	canvas.width=canvas.clientWidth;
+	canvas.width=canvas.clientWidth;//necessary
 	canvas.style.height='480px';
-	canvas.height=canvas.clientHeight;
+	canvas.height=canvas.clientHeight;//necessary
 
-    gl.viewport(0, 0,
-      gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.enable(gl.SCISSOR_TEST);
-    gl.scissor(30, 10, 60, 60);//60x60の正方形
-    gl.clearColor(1.0, 1.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+	gl.clearColor(0.0, 0.0, 0.0, 0.5);	//Clear to black,fully opaque
+	gl.clearDepth(1.0);			//Clear everything
+	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
+	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
-////	gl.clearColor(0.0, 0.0, 0.0, 0.5);	//Clear to black,fully opaque
-//	gl.clearDepth(1.0);			//Clear everything
-//	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
-//	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
-////	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	//for rectangle test
+{
+//    gl.viewport(0, 0,
+//      gl.drawingBufferWidth, gl.drawingBufferHeight);
+//    gl.enable(gl.SCISSOR_TEST);
+//   gl.scissor(30, 10, 60, 60);//60x60の正方形
+//    gl.clearColor(1.0, 1.0, 0.0, 1.0);
+//    gl.clear(gl.COLOR_BUFFER_BIT);
+}
 
 
 	var oShader = initShaders(gl);
@@ -69,7 +72,7 @@ function start(){
 	var timeBefore=0;
 	var angle=0;
 	function render(timeStamp){
-		if(timeStamp - timeBefore>100){
+		if(timeStamp - timeBefore>10){
 			angle+=1;
 			angle=Math.floor(angle*10)/10;
 			if(angle>360)angle=0;
@@ -275,12 +278,14 @@ function drawScene(gl,oShader,angle){
 
 		//model view matrix...MatA was already defined in global scope
 	MatA.init();
-	MatA.trans(0.0,0.0,-6.0);
+//	MatA.trans(0.0,0.0,-6.0);
+	MatA.trans(0.0,0.0,-3.0);
+console.log(7.2-4*260/100);
 	MatA.rot(1.0,0.0,1.0,angle*Math.PI/180);
 	var modelViewMatrix = new Array(16);
 	MatA.store(modelViewMatrix);
 
-
+console.log(modelViewMatrix);
 
 
 
@@ -310,8 +315,8 @@ function drawScene(gl,oShader,angle){
 	var offset = 0;
 	var vertexCount = 4;
 
-	gl.drawArrays(gl.TRIANGLE_STRIP,offset,vertexCount);
-//	gl.drawArrays(gl.LINE_STRIP,offset,vertexCount);
+//	gl.drawArrays(gl.TRIANGLE_STRIP,offset,vertexCount);
+	gl.drawArrays(gl.LINE_STRIP,offset,vertexCount);
 //	PRINT_INFO.innerHTML+=gl.hasOwnProperty("PointSize").toString()+"<br>";
 //	gl.drawArrays(gl.POINTS,offset,vertexCount);
 
