@@ -58,8 +58,25 @@ function start(){
 }
 
 
+
+
 	var oShader = initShaders(gl);
-	initBuffers(gl,oShader);
+
+	var aModels = [];
+	var oModel;
+
+	oModel = { };
+	oModel.base = regularHexahedron();
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();//function to rotation, translation and expand
+	aModels.push(oModel);
+console.log(oModel);
+	oModel = { };
+	oModel.base = regularTetrahedron();
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();
+	aModels.push(oModel);
+console.log(oModel);
 
 	var timeBefore=0;
 	var angle=0;
@@ -69,7 +86,7 @@ function start(){
 			angle=Math.floor(angle*10)/10;
 			if(angle>360)angle=0;
 			PRINT_INFO.innerText=angle.toString();
-			drawScene(gl,oShader,angle);
+			drawScene(gl,oShader,aModels,angle);
 			timeBefore = timeStamp;
 		}
 		window.requestAnimationFrame(render);
@@ -159,20 +176,7 @@ function getShader(gl,id){
 	return shader;
 }
 
-
-function initBuffers(gl,oShader){
-
-	//生成したバッファをWebGLBufferにバインドしたら、
-	//あとはそれにvertexのattributionをbufferDataを使って
-	//頂点の座標、頂点の色、テキストデータなどをバッファに放り込むだけ
-
-	//引数の準備
-	var type = gl.FLOAT;
-	var normalize = false;
-	var stride = 0;//shaderを呼び出すごとに進むバイト数//これは(buffer.slice((offset + i) * stride,size);)という意味
-	var offset = 0;
-
-
+function regularTetrahedron(){
 	//create tetrahedron
 	var ra=1.0;
 	var rb=2*Math.pow(2,0.5)/3*ra;
@@ -180,10 +184,6 @@ function initBuffers(gl,oShader){
 	var x2=0,y2=rb,z2=-ra/4;
 	var x3=rb*Math.sin(120*Math.PI/180),y3=rb*Math.cos(120*Math.PI/180),z3=-ra/4;
 	var x4=rb*Math.sin(240*Math.PI/180),y4=rb*Math.cos(240*Math.PI/180),z4=-ra/4;
-
-
-
-
 
 	//頂点の位置情報をバッファを作ってそこに入れる
 	var positions = [
@@ -200,14 +200,6 @@ function initBuffers(gl,oShader){
 		x3,y3,z3,
 		x4,y4,z4
 	];
-	var positionsBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER,positionsBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
-	//バッファにある頂点の位置情報や色情報をどう使用するかを決めてGLSLに渡す
-	numComponents = 3;//number of column
-	gl.vertexAttribPointer(oShader.positionLoc,numComponents,type,normalize,stride,offset);//attribute vec4 aVertexLocation;
-
-
 
 	//頂点の色情報をバッファを作ってそこに入れる
 	var colors = [
@@ -224,27 +216,157 @@ function initBuffers(gl,oShader){
 		0.9,0.1,0.1,1.0,
 		0.1,1.0,0.2,1.0,
 	];
-	//bufferを作ってBufferに入れる
+
+	return {
+		n:positions.length/3,
+		pos:positions,
+		col:colors
+	}
+}
+
+function regularHexahedron(){
+		//regular hexahedron
+	var positions = [
+		1.0,1.0,1.0,
+		-1.0,1.0,1.0,
+		-1.0,-1.0,1.0,
+		1.0,1.0,1.0,
+		-1.0,-1.0,1.0,
+		1.0,-1.0,1.0,	
+
+		1.0,1.0,1.0,
+		-1.0,1.0,1.0,
+		-1.0,1.0,-1.0,
+		1.0,1.0,1.0,
+		-1.0,1.0,-1.0,
+		1.0,1.0,-1.0,
+
+		1.0,1.0,1.0,
+		1.0,-1.0,1.0,
+		1.0,-1.0,-1.0,
+		1.0,1.0,1.0,
+		1.0,-1.0,-1.0,
+		1.0,1.0,-1.0,
+
+		1.0,1.0,-1.0,
+		-1.0,1.0,-1.0,
+		-1.0,-1.0,-1.0,
+		1.0,1.0,-1.0,
+		-1.0,-1.0,-1.0,
+		1.0,-1.0,-1.0,	
+
+		1.0,-1.0,1.0,
+		-1.0,-1.0,1.0,
+		-1.0,-1.0,-1.0,
+		1.0,-1.0,1.0,
+		-1.0,-1.0,-1.0,
+		1.0,-1.0,-1.0,
+
+		-1.0,1.0,1.0,
+		-1.0,-1.0,1.0,
+		-1.0,-1.0,-1.0,
+		-1.0,1.0,1.0,
+		-1.0,-1.0,-1.0,
+		-1.0,1.0,-1.0
+	];
+
+	var colors = [
+		0.3,1.0,1.0,0.1,
+		0.3,1.0,1.0,0.1,
+		0.3,1.0,1.0,0.1,
+		0.3,1.0,1.0,0.1,
+		0.3,1.0,1.0,0.1,
+		0.3,1.0,1.0,0.1,
+
+		1.0,0.2,0.5,0.5,
+		1.0,0.2,0.5,0.5,
+		1.0,0.2,0.5,0.5,
+		1.0,0.2,0.5,0.5,
+		1.0,0.2,0.5,0.5,
+		1.0,0.2,0.5,0.5,
+
+		0.7,0.3,0.8,0.9,
+		0.7,0.3,0.8,0.9,
+		0.7,0.3,0.8,0.9,
+		0.7,0.3,0.8,0.9,
+		0.7,0.3,0.8,0.9,
+		0.7,0.3,0.8,0.9,
+
+		0.6,1.0,0.6,0.9,
+		0.6,1.0,0.6,0.9,
+		0.6,1.0,0.6,0.9,
+		0.6,1.0,0.6,0.9,
+		0.6,1.0,0.6,0.9,
+		0.6,1.0,0.6,0.9,
+
+		0.4,0.2,0.1,0.9,
+		0.4,0.2,0.1,0.9,
+		0.4,0.2,0.1,0.9,
+		0.4,0.2,0.1,0.9,
+		0.4,0.2,0.1,0.9,
+		0.4,0.2,0.1,0.9,
+
+		1.0,1.0,0.1,0.9,
+		1.0,1.0,0.1,0.9,
+		1.0,1.0,0.1,0.9,
+		1.0,1.0,0.1,0.9,
+		1.0,1.0,0.1,0.9,
+		1.0,1.0,0.1,0.9
+	];
+
+	return {
+		n:positions.length/3,
+		pos:positions,
+		col:colors
+	}
+}
+
+function setModelToBuffer(gl,oModel){
+	//生成したバッファをWebGLBufferにバインドしたら、
+	//あとはそれにvertexのattributionをbufferDataを使って
+	//頂点の座標、頂点の色、テキストデータなどをバッファに放り込むだけ
+
+	//position to buffer
+	var positionsBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,positionsBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(oModel.base.pos),gl.STATIC_DRAW);
+	//color to buffer
 	var colorsBuffer = gl.createBuffer();//正方形のvertices
 	gl.bindBuffer(gl.ARRAY_BUFFER,colorsBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(colors),gl.STATIC_DRAW);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(oModel.base.col),gl.STATIC_DRAW);
+
+	return {
+		pointPos:positionsBuffer,
+		pointCol:colorsBuffer
+	}
+}
+
+function sendBufferData(gl,oShader,oBuffer){
+
+	//バッファにある頂点の位置情報や色情報をどう使用するかを決めてGLSLに渡す
+
+	//引数の準備
+	var type = gl.FLOAT;
+	var normalize = false;
+	var stride = 0;//shaderを呼び出すごとに進むバイト数//これは(buffer.slice((offset + i) * stride,size);)という意味
+	var offset = 0;
+
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffer.pointPos);
+	numComponents = 3;//number of column
+	gl.vertexAttribPointer(oShader.positionLoc,numComponents,type,normalize,stride,offset);
+
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffer.pointCol);
 	numComponents = 4;//列の数
-	gl.vertexAttribPointer(oShader.colorLoc,numComponents,type,normalize,stride,offset);//attribute vec4 aVertexColor;
-
-
-
+	gl.vertexAttribPointer(oShader.colorLoc,numComponents,type,normalize,stride,offset);
 
 }
 
 
-function drawScene(gl,oShader,angle){
 
-	// カラーバッファや深度バッファをクリアする
-	//Clear the canvas before we start drawing on it
-
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+function sendPerspectiveMatrix(gl,oShader){
 
 	/*
+		from cite site:
 		Create a perspective matrix, a special matrix that is
 		used to simulate the distortion of perspective in a camera.
 		Our field of view is 45 degrees, with a (width/height)
@@ -252,11 +374,8 @@ function drawScene(gl,oShader,angle){
 		and we only want ot see objects between 0.1 units
 		and 100 units away from the camera.
 	*/
-
-
-
 		//perspective matrix...MatP was already defined at global position
-	var fieldOfView = 30 * Math.PI / 180;	//in radian;
+	var fieldOfView = 90 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	var zNear = 0.001;
 	var zFar = 100.0;
@@ -264,47 +383,68 @@ function drawScene(gl,oShader,angle){
 	var projectionMatrix=new Array(16);
 	MatP.store(projectionMatrix);
 
-
-
-		//model view matrix...MatA was already defined in global scope
-	MatA.init();
-	MatA.trans(0.0,0.0,-6.0);
-	MatA.rot(1.0,0.0,0.0,angle*Math.PI/180);
-	MatA.rot(0.0,1.0,0.0,angle*Math.PI/180);
-	MatA.rot(0.0,0.0,1.0,angle*Math.PI/180);
-	var modelViewMatrix = new Array(16);
-	MatA.store(modelViewMatrix);
-
-
-
-
-		//各行列をsend
-		//Set the shader uniforms culclated above and something
-
 	//uniform mat4 uProjectionMatrixへ値を転送
 	var pUniform = gl.getUniformLocation(oShader.prog,"uProjectionMatrix");//""内は特殊言語の実装参照してる
 	if(!pUniform){PRINT_CAUTION.innerHTML+="pUniform is "+pUniform+"<br>";return null;}
 	gl.uniformMatrix4fv(pUniform,false,new Float32Array(projectionMatrix));
 
+}
+
+
+function mvMat_random(){
+
+	var rx = Math.floor(Math.random()*100)/10;
+	var ry = Math.floor(Math.random()*100)/10;
+	var rz = Math.floor(Math.random()*100)/10;
+	var m = Math.floor(Math.random()*3+1);
+	var tx = 2-Math.floor(Math.random()*4);
+	var ty = 2-Math.floor(Math.random()*4);
+
+	return function(angle){
+		//model view matrix...MatA was already defined in global scope
+		MatA.init();
+		MatA.trans(tx,ty,-6.0);
+		MatA.rot(rx,ry,rz,m*angle*Math.PI/180);
+
+		var matrix = new Array(16);
+		MatA.store(matrix);
+
+		return matrix;
+	}
+}
+
+function sendModelViewMatrix(gl,oShader,mvMatrix){
+
+		//Set the shader uniforms culclated above and something
 	//uniform mat4 uModelViewMatrixへ値を転送
 	var mvUniform = gl.getUniformLocation(oShader.prog,"uModelViewMatrix");
 	if(!mvUniform){PRINT_CAUTION.innerHTML+="mvUniform is "+mvUniform+"<br>";return null;}
-	gl.uniformMatrix4fv(mvUniform,false,new Float32Array(modelViewMatrix));
+	gl.uniformMatrix4fv(mvUniform,false,new Float32Array(mvMatrix));
 
 	//uniform float uPointSizeFloatへ値を転送
 	var psUniform = gl.getUniformLocation(oShader.prog,"uPointSizeFloat");
 	if(!psUniform){PRINT_CAUTION.innerHTML+="psUniform is "+psUniform+"<br>";return null;}
 	gl.uniform1f(psUniform,10.0);
+}
 
 
+function drawScene(gl,oShader,aModels,angle){
 
+	// カラーバッファや深度バッファをクリアする
+	//Clear the canvas before we start drawing on it
 
-
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	var vertexOffset = 0;//このoffsetは頂点のx,y,zごとに進むので、データ的にはoffset*3(4?)ごとに進む
-	var vertexCount = 12;
 
-	gl.drawArrays(gl.TRIANGLES,vertexOffset,vertexCount);
+	for(var ii=0;ii<aModels.length;ii++){
+		sendBufferData(gl,oShader,aModels[ii].buffers);
+		sendPerspectiveMatrix(gl,oShader);
+		sendModelViewMatrix(gl,oShader,aModels[ii].mvMat(angle));
+console.log(aModels[ii].base.n);
+		gl.drawArrays(gl.TRIANGLES,vertexOffset,aModels[ii].base.n);
+	}
+
 //	gl.drawArrays(gl.TRIANGLE_STRIP,vertexOffset,vertexCount);
 //	gl.drawArrays(gl.LINE_STRIP,vertexOffset,vertexCount);
 //	PRINT_INFO.innerHTML+=gl.hasOwnProperty("PointSize").toString()+"<br>";
@@ -361,7 +501,7 @@ var prepareAM = function makeAccumerateMatrixUnitMatrix(){
 /**
  *Translate homo 4x4matrix of accumerate matrix
  *
- *@param {number} x,y,z scalar of translation 
+ *@arg {number} x,y,z scalar of translation 
  *
 */
 var translateAM = function translateAccumurateMatrix(x,y,z){
@@ -381,8 +521,8 @@ var translateAM = function translateAccumurateMatrix(x,y,z){
 /**
  *Rotate homo 4x4matrix of accumurate matrix
  *
- *@param {number} x,y,z axis vector
- *@param {number} rad radian
+ *@arg {number} x,y,z axis vector
+ *@arg {number} rad radian
  *
 */
 var rotateAM = function rotateAccumurateMatrix(x,y,z,rad){
@@ -440,10 +580,10 @@ var storeAM = function storeAccumeMatrixToArray(arr){
 /**
  *Make perspective matrix
  *
- *@param {number} fov radian
- *@param {number} aspect width/height of screen
- *@param {number} near ?nearest distance to be able to take 
- *@param {number} far ?farthest distance to be able to take
+ *@arg {number} fov radian
+ *@arg {number} aspect width/height of screen
+ *@arg {number} near ?nearest distance to be able to take 
+ *@arg {number} far ?farthest distance to be able to take
 */
 var preparePM = function makePerspectiveMatrix(fov,aspectRatio,near,far){
 
@@ -484,9 +624,10 @@ Object.defineProperty(MatP,'store',{value:storePM,enumerable:true,configurable:t
 
 </script>
 </head><body onload="start();"><div>
-<h3 style="offset:0px;">Using textures in WebGL</h3>
+<h3 style="offset:0px;">Animating objects with WebGL</h3>
 <h5 style="offset:0px;">using gl.TRIANGLES mode to draw and not using gl.ELEMENT_ARRAY_BUFFER mode to buffer</h5>
-<p id="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL">MDN web docs moz://a</a></p>
+<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/Tutorial/Animating_objects_with_WebGL">MDN web docs moz://a</a></p>
+<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html">WebGLFundamentals</a></p>
 <canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
 <p id="PRINT_INFO" style="position:relative;top:0px;left:0px:offset:0px"></p>
 <p id="PRINT_CAUTION" style="position:relative;top:0px;left:0px;color:red;offset:0px;"></p>
