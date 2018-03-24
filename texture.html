@@ -66,7 +66,7 @@ function initTextures(gl){
 		}
 		reader.readAsDataURL(h.response);
 	}
-	h.open('GET',"http://localhost:8000/documents/games/3d/niku_stand2.png");
+	h.open('GET',"http://localhost:8000/documents/games/3d/warai.png");
 	h.send();
 //and Uhm...
 // chrome.exe --disable-web-security --user-data-dir//
@@ -133,12 +133,12 @@ function start(){
 	oModel.mvMat = new mvMat_random();//function to rotation, translation and expand
 	aModels.push(oModel);
 console.log(oModel);
-//	oModel = { };
-//	oModel.base = regularTetrahedron();
-//	oModel.buffers = setModelToBuffer(gl,oModel);
-//	oModel.mvMat = new mvMat_random();
-//	aModels.push(oModel);
-//console.log(oModel);
+	oModel = { };
+	oModel.base = regularTetrahedron();
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();
+	aModels.push(oModel);
+console.log(oModel);
 
 	var timeBefore=0;
 	var angle=0;
