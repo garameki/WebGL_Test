@@ -127,6 +127,7 @@ function start(){
 	var aModels = [];
 	var oModel;
 
+for(var ii=0;ii<10;ii++){
 	oModel = { };
 	oModel.base = regularHexahedron();
 	oModel.buffers = setModelToBuffer(gl,oModel);
@@ -139,6 +140,7 @@ console.log(oModel);
 	oModel.mvMat = new mvMat_random();
 	aModels.push(oModel);
 console.log(oModel);
+}
 
 	var timeBefore=0;
 	var angle=0;
