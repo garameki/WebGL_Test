@@ -551,8 +551,8 @@ function sphere(){
 	var alpha;//latitude
 	var gamma;//longitude
 	var rr=2.0;//radius
-	var dal=72;//diffential of alpha
-	var dgam=90;//differential of gamma
+	var dal=15;//diffential of alpha
+	var dgam=15;//differential of gamma
 
 	var nLongitude = 0,nLatitude = 0;
 	var px=[],py=[],pz=[];
@@ -569,7 +569,6 @@ function sphere(){
 			x=rr * Math.cos(rad * gamma) * Math.cos(rad * alpha);
 			y=rr * Math.cos(rad * gamma) * Math.sin(rad * alpha);
 			z=rr * Math.sin(rad * gamma);
-console.log(count++,Math.floor(x*10)/10,Math.floor(y*10)/10,Math.floor(z*10)/10);
 			px.push(x);
 			py.push(y);
 			pz.push(z);
@@ -640,31 +639,25 @@ console.log("colors n=",colors.length/4);
 	var countTriangle=0;
 
 	var indices = new Array();//2 triangles by indices make a rectangle
-//	indices = [0,1,2,0,3,2,1,3,4,1,5,4,2,3,4,2,5,4];
-	for(kk=0;kk<nLongitude-1;kk++){
-		for(ii=0;ii<nLatitude-1;ii++){
-			countTriangle++;
-			//triangle
-			indices.push(kk * nLatitude + ii);
-			indices.push(kk * nLatitude + ii + 1);
-			indices.push(kk * nLatitude + ii + 0 + nLatitude);
+	for(kk=0;kk<(nLongitude-1)*(nLatitude-1);kk++){
+		countTriangle++;
+		//triangle
+		indices.push(kk * 4 );
+		indices.push(kk * 4  + 1);
+		indices.push(kk * 4  + 2);
 
 
-			countTriangle++;
-			//triangle
-			indices.push(kk * nLatitude + ii + 1);
-			indices.push(kk * nLatitude + ii + 1 + nLatitude);
-			indices.push(kk * nLatitude + ii + 0 + nLatitude);
-console.log(countTriangle,"",
-	kk * nLatitude + ii + 1,
-	kk * nLatitude + ii + 1 + nLatitude,
-	kk * nLatitude + ii + 0 + nLatitude
-);
-		}
+		countTriangle++;
+		//triangle
+		indices.push(kk * 4  + 1);
+		indices.push(kk * 4  + 2);
+		indices.push(kk * 4  + 3);
+console.log("kk=",kk);
 	}
+
 console.log("nVerteces(of all triangles)=",countTriangle*3);
 	return {
-		n:10*3,//countTriangle*3,//全ての三角形の頂点の総数
+		n:countTriangle*3,//countTriangle*3,//全ての三角形の頂点の総数
 		pos:positions,
 		col:colors,
 		tex:textureCoordinates,
