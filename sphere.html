@@ -9,8 +9,8 @@
 
 	void main(void) {
 //		gl_FragColor = texture2D(uSampler,vec2(vTextureCoord.s,vTextureCoord.t));
-//		gl_FragColor = texture2D(uSampler,vTextureCoord);
-		gl_FragColor = vColor;
+		gl_FragColor = texture2D(uSampler,vTextureCoord);
+//		gl_FragColor = vColor;
 	}
 </script>
 <!--Vertex shader program-->
@@ -66,7 +66,7 @@ function initTextures(gl){
 		}
 		reader.readAsDataURL(h.response);
 	}
-	h.open('GET',"http://localhost:8000/documents/games/3d/warai.png");
+	h.open('GET',"http://localhost:8000/documents/games/3d/niku_stand2.png");
 	h.send();
 //and Uhm...
 // chrome.exe --disable-web-security --user-data-dir//
@@ -551,8 +551,8 @@ function sphere(){
 	var alpha;//latitude
 	var gamma;//longitude
 	var rr=2.0;//radius
-	var dal=15;//diffential of alpha
-	var dgam=15;//differential of gamma
+	var dal=2;//diffential of alpha
+	var dgam=2;//differential of gamma
 
 	var nLongitude = 0,nLatitude = 0;
 	var px=[],py=[],pz=[];
@@ -611,10 +611,10 @@ if(countRectangle!=(nLatitude-1)*(nLongitude-1))console.error("error123");
 
 	var colors = [];
 	for(var ii=0,len=countRectangle*4;ii<len;ii++){
-		colors.push(1.0);
+		colors.push(0.5);
 		colors.push(0.5);
 		colors.push(1.0);
-		colors.push(0.9);
+		colors.push(0.1);
 	};
 console.log("colors n=",colors.length/4);
 
@@ -652,7 +652,6 @@ console.log("colors n=",colors.length/4);
 		indices.push(kk * 4  + 1);
 		indices.push(kk * 4  + 2);
 		indices.push(kk * 4  + 3);
-console.log("kk=",kk);
 	}
 
 console.log("nVerteces(of all triangles)=",countTriangle*3);
@@ -809,8 +808,8 @@ function drawScene(gl,oShader,aModels,angle){
 		sendBufferData(gl,oShader,aModels[ii].buffers);
 		sendPerspectiveMatrix(gl,oShader);
 		sendModelViewMatrix(gl,oShader,aModels[ii].mvMat(angle));
-		gl.drawElements(gl.LINE_STRIP,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
-//		gl.drawElements(gl.TRIANGLES,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
+//		gl.drawElements(gl.LINE_STRIP,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
+		gl.drawElements(gl.TRIANGLES,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
 //		gl.drawElements(gl.TRIANGLES,154,gl.UNSIGNED_SHORT,vertexOffset);
 	}
 
