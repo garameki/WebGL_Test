@@ -32,20 +32,28 @@ title & necessary files
 
 >Sphere textured
 >---------------
->`sphere.html`
+>`sphere.html`  
 >`niku_stand2.png`
+>
+
+
+
+>Lighten Cube textured
+>---------------------
+>`light.html`  
+>'niku_stand2.png`  
 >
 
 
 Environment
 =============
 >
->`>ruby.exe -run -e httpd . -p 8000`
+>`>ruby.exe -run -e httpd . -p 8000`  
 >`>chrome.exe --disable-web-security --user-data-dir`
 >
 
 Cite Site
 =========
 >
-> - [mozilla](https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/Tutorial/Animating_objects_with_WebGL)
+> - [mozilla](https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/Tutorial/Animating_objects_with_WebGL)  
 >
