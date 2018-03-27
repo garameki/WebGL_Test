@@ -41,7 +41,7 @@ title & necessary files
 >Lighten Cube textured
 >---------------------
 >`light.html`  
->'niku_stand2.png`  
+>`niku_stand2.png`  
 >
 
 
