@@ -1,0 +1,1957 @@
+﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
+<link rel="sylesheet" href="">
+
+
+
+<script id="matrix-library" type='text/javascript'>
+
+//********************************* MATRICES FOR CULCULATION *************************************************************
+
+
+
+/**
+*define matrixes
+ *
+ *@variable {number} _nStacked    a number of being stacked
+ *@variable {number} _MAX_STACK
+ *@variable {number} _det determinant
+ *@variable {number} _x[1-4][1-4] a element of result matrix
+ *@variable {number} _y[1-4][1-4] a element of stack matrix to push and/or pull
+ *@variable {number} _a[1-4][1-4] a element of accumerate matrix e.g. answer of a calculation like multiplication
+ *@variable {number} _p[1-4][1-4] a element of perspective matrix
+ *
+*/
+var _nStacked=0;
+var _MAX_STACK=1;
+var _x11=void 0,_x12=void 0,_x13=void 0,_x14=void 0,_x21=void 0,_x22=void 0,_x23=void 0,_x24=void 0,_x31=void 0,_x32=void 0,_x33=void 0,_x34=void 0,_x41=void 0,_x42=void 0,_x43=void 0,_x44=void 0;//target matrix
+var _y11=void 0,_y12=void 0,_y13=void 0,_y14=void 0,_y21=void 0,_y22=void 0,_y23=void 0,_y24=void 0,_y31=void 0,_y32=void 0,_y33=void 0,_y34=void 0,_y41=void 0,_y42=void 0,_y43=void 0,_y44=void 0;//stack matrix
+var _a11=void 0,_a12=void 0,_a13=void 0,_a14=void 0,_a21=void 0,_a22=void 0,_a23=void 0,_a24=void 0,_a31=void 0,_a32=void 0,_a33=void 0,_a34=void 0,_a41=void 0,_a42=void 0,_a43=void 0,_a44=void 0;//answer matrix
+var _p11=void 0,_p12=void 0,_p13=void 0,_p14=void 0,_p21=void 0,_p22=void 0,_p23=void 0,_p24=void 0,_p31=void 0,_p32=void 0,_p33=void 0,_p34=void 0,_p41=void 0,_p42=void 0,_p43=void 0,_p44=void 0;//answer matrix
+/**
+ *
+ *Prepare accumerate matrix
+ *
+*/
+var prepareAM = function makeAccumerateMatrix(){
+
+	_a11 = 1;	_a12 = 0;	_a13 = 0;	_a14 = 0;
+	_a21 = 0;	_a22 = 1;	_a23 = 0;	_a24 = 0;
+	_a31 = 0;	_a32 = 0;	_a33 = 1;	_a34 = 0;
+	_a41 = 0;	_a42 = 0;	_a43 = 0;	_a44 = 1;
+};
+/**
+ *
+ *Push accumerate matrix to a stack
+ *
+*/
+var pushAM = function pushAccumerateMatrixToStack(){
+	_y11=_a11;_y12=_a12;_y13=_a13;_y14=_a14;
+	_y21=_a21;_y22=_a22;_y23=_a23;_y24=_a24;
+	_y31=_a31;_y32=_a32;_y33=_a33;_y34=_a34;
+	_y41=_a41;_y42=_a42;_y43=_a43;_y44=_a44;
+	_nStacked++;
+	if(_nStacked>_MAX_STACK)PRINT_CAUTION.innerHTML+="Matrix stack was broken._nStacked="+_nStacked.toString()+" <br>";
+};
+/**
+ *
+ *Pop a stack matrix to accumerate matrix
+ *
+*/
+var popAM = function popAccumerateMatrixFromStack(){
+	_a11=_y11;_a12=_y12;_a13=_y13;_a14=_y14;
+	_a21=_y21;_a22=_y22;_a23=_y23;_a24=_y24;
+	_a31=_y31;_a32=_y32;_a33=_y33;_a34=_y34;
+	_a41=_y41;_a42=_y42;_a43=_y43;_a44=_y44;
+	_nStacked--;
+};
+/**
+ *
+ *Inverse of homo 4x4 Matrix with Adjugate Formula
+ *
+*/
+var inverseAM = function inverseAccumerateMatrix(){
+_x11=_a11*(+_a22*_a33*_a44+_a23*_a34*_a42+_a24*_a32*_a43-_a24*_a33*_a42-_a22*_a34*_a43-_a23*_a32*_a44);
+_x21=_a21*(-_a12*_a33*_a44-_a13*_a34*_a42-_a14*_a32*_a43+_a14*_a33*_a42+_a12*_a34*_a43+_a13*_a32*_a44);
+_x31=_a31*(+_a12*_a23*_a44+_a13*_a24*_a42+_a14*_a22*_a43-_a14*_a23*_a42-_a12*_a24*_a43-_a13*_a22*_a44);
+_x41=_a41*(-_a12*_a23*_a34-_a13*_a24*_a32-_a14*_a22*_a33+_a14*_a23*_a32+_a12*_a24*_a33+_a13*_a22*_a34);
+_det = _x11+_x21+_x31+_x41;
+_x11=+_a22*_a33*_a44+_a23*_a34*_a42+_a24*_a32*_a43-_a24*_a33*_a42-_a22*_a34*_a43-_a23*_a32*_a44;
+_x12=-_a21*_a33*_a44-_a23*_a34*_a41-_a24*_a31*_a43+_a24*_a33*_a41+_a21*_a34*_a43+_a23*_a31*_a44;
+_x13=+_a21*_a32*_a44+_a22*_a34*_a41+_a24*_a31*_a42-_a24*_a32*_a41-_a21*_a34*_a42-_a22*_a31*_a44;
+_x14=-_a21*_a32*_a43-_a22*_a33*_a41-_a23*_a31*_a42+_a23*_a32*_a41+_a21*_a33*_a42+_a22*_a31*_a43;
+_x21=-_a12*_a33*_a44-_a13*_a34*_a42-_a14*_a32*_a43+_a14*_a33*_a42+_a12*_a34*_a43+_a13*_a32*_a44;
+_x22=+_a11*_a33*_a44+_a13*_a34*_a41+_a14*_a31*_a43-_a14*_a33*_a41-_a11*_a34*_a43-_a13*_a31*_a44;
+_x23=-_a11*_a32*_a44-_a12*_a34*_a41-_a14*_a31*_a42+_a14*_a32*_a41+_a11*_a34*_a42+_a12*_a31*_a44;
+_x24=+_a11*_a32*_a43+_a12*_a33*_a41+_a13*_a31*_a42-_a13*_a32*_a41-_a11*_a33*_a42-_a12*_a31*_a43;
+_x31=+_a12*_a23*_a44+_a13*_a24*_a42+_a14*_a22*_a43-_a14*_a23*_a42-_a12*_a24*_a43-_a13*_a22*_a44;
+_x32=-_a11*_a23*_a44-_a13*_a24*_a41-_a14*_a21*_a43+_a14*_a23*_a41+_a11*_a24*_a43+_a13*_a21*_a44;
+_x33=+_a11*_a22*_a44+_a12*_a24*_a41+_a14*_a21*_a42-_a14*_a22*_a41-_a11*_a24*_a42-_a12*_a21*_a44;
+_x34=-_a11*_a22*_a43-_a12*_a23*_a41-_a13*_a21*_a42+_a13*_a22*_a41+_a11*_a23*_a42+_a12*_a21*_a43;
+_x41=-_a12*_a23*_a34-_a13*_a24*_a32-_a14*_a22*_a33+_a14*_a23*_a32+_a12*_a24*_a33+_a13*_a22*_a34;
+_x42=+_a11*_a23*_a34+_a13*_a24*_a31+_a14*_a21*_a33-_a14*_a23*_a31-_a11*_a24*_a33-_a13*_a21*_a34;
+_x43=-_a11*_a22*_a34-_a12*_a24*_a31-_a14*_a21*_a32+_a14*_a22*_a31+_a11*_a24*_a32+_a12*_a21*_a34;
+_x44=+_a11*_a22*_a33+_a12*_a23*_a31+_a13*_a21*_a32-_a13*_a22*_a31-_a11*_a23*_a32-_a12*_a21*_a33;
+	_a11=_x11/_det;_a12=_x21/_det;_a13=_x31/_det;_a14=_x41/_det;
+	_a21=_x12/_det;_a22=_x22/_det;_a23=_x32/_det;_a24=_x42/_det;
+	_a31=_x13/_det;_a32=_x23/_det;_a33=_x33/_det;_a34=_x43/_det;
+	_a41=_x14/_det;_a42=_x24/_det;_a43=_x34/_det;_a44=_x44/_det;
+};
+/**
+ *
+ *Transpose homo 4x4x Matrix of accumerate matirx
+ *
+*/
+var transposeAM = function transposeAccumerateMatrix(){
+	_x11=_a11;_x12=_a21;_x13=_a31;_x14=_a41;
+	_x21=_a12;_x22=_a22;_x23=_a32;_x24=_a42;
+	_x31=_a13;_x32=_a23;_x33=_a33;_x34=_a43;
+	_x41=_a14;_x42=_a24;_x43=_a34;_x44=_a44;
+
+	_a11=_x11;_a12=_x12;_a13=_x13;_a14=_x14;
+	_a21=_x21;_a22=_x22;_a23=_x23;_a24=_x24;
+	_a31=_x31;_a32=_x32;_a33=_x33;_a34=_x34;
+	_a41=_x41;_a42=_x42;_a43=_x43;_a44=_x44;
+};
+/**
+ *Translate homo 4x4matrix of accumerate matrix
+ *
+ *@arg {number} x,y,z quantity of translation 
+ *
+*/
+var translateAM = function translateAccumurateMatrix(x,y,z){
+	_x11=_a11;_x12=_a12;_x13=_a13;_x14=_a14;
+	_x21=_a21;_x22=_a22;_x23=_a23;_x24=_a24;
+	_x31=_a31;_x32=_a32;_x33=_a33;_x34=_a34;
+	_x41=_a11*x+_a21*y+_a31*z+_a41;
+	_x42=_a12*x+_a22*y+_a32*z+_a42;
+	_x43=_a13*x+_a23*y+_a33*z+_a43;
+	_x44=_a14*x+_a24*y+_a34*z+_a44;
+
+	_a11=_x11;_a12=_x12;_a13=_x13;_a14=_x14;
+	_a21=_x21;_a22=_x22;_a23=_x23;_a24=_x24;
+	_a31=_x31;_a32=_x32;_a33=_x33;_a34=_x34;
+	_a41=_x41;_a42=_x42;_a43=_x43;_a44=_x44;
+};
+/**
+ *Rotate homo 4x4matrix of accumurate matrix
+ *
+ *@arg {number} x,y,z axis vector
+ *@arg {number} rad radian
+ *
+*/
+var rotateAM = function rotateAccumurateMatrix(x,y,z,rad){
+	var len = Math.sqrt(x*x+y*y+z*z);
+	if(len < 0.001){
+		PRINT_CAUTION.innerHTML+="axis Matrix is too short. x:"+x.toString()+" y:"+y.toString()+" z:"+z.toString()+"<br>";
+		return null;//????
+	}
+	var x = x/len;
+	var y = y/len;
+	var z = z/len;
+
+	//is this ok?????????
+	var s = Math.sin(rad);
+	var c = Math.cos(rad);
+	var t = 1 - c;
+
+	var g11 = x*x*t+c;	var g12 = y*x*t+z*s;	var g13 = z*x*t-y*s;
+	var g21 = x*y*t-z*s;	var g22 = y*y*t+c;	var g23 = z*y*t+x*s;
+	var g31 = x*z*t+y*s;	var g32 = y*z*t-x*s;	var g33 = z*z*t+c;
+
+	_x11 = _a11 * g11 + _a21 * g12 + _a31 * g13;
+	_x12 = _a12 * g11 + _a22 * g12 + _a32 * g13;
+	_x13 = _a13 * g11 + _a23 * g12 + _a33 * g13;
+	_x14 = _a14 * g11 + _a24 * g12 + _a34 * g13;
+
+	_x21 = _a11 * g21 + _a21 * g22 + _a31 * g23;
+	_x22 = _a12 * g21 + _a22 * g22 + _a32 * g23;
+	_x23 = _a13 * g21 + _a23 * g22 + _a33 * g23;
+	_x24 = _a14 * g21 + _a24 * g22 + _a34 * g23;
+
+	_x31 = _a11 * g31 + _a21 * g32 + _a31 * g33;
+	_x32 = _a12 * g31 + _a22 * g32 + _a32 * g33;
+	_x33 = _a13 * g31 + _a23 * g32 + _a33 * g33;
+	_x34 = _a14 * g31 + _a24 * g32 + _a34 * g33;
+	
+	_x41 = _a41;
+	_x42 = _a42;
+	_x43 = _a43;
+	_x44 = _a44;
+
+	_a11=_x11;_a12=_x12;_a13=_x13;_a14=_x14;
+	_a21=_x21;_a22=_x22;_a23=_x23;_a24=_x24;
+	_a31=_x31;_a32=_x32;_a33=_x33;_a34=_x34;
+	_a41=_x41;_a42=_x42;_a43=_x43;_a44=_x44;
+};
+
+var storeAM = function storeAccumeMatrixToArray(arr){
+	arr[0]=_a11;	arr[1]=_a12;	arr[2]=_a13;	arr[3]=_a14;
+	arr[4]=_a21;	arr[5]=_a22;	arr[6]=_a23;	arr[7]=_a24;
+	arr[8]=_a31;	arr[9]=_a32;	arr[10]=_a33;	arr[11]=_a34;
+	arr[12]=_a41;	arr[13]=_a42;	arr[14]=_a43;	arr[15]=_a44;
+};
+/*
+ *
+ *Load array to accumerate matrix
+ *
+ *@param {array} arr 4x4matrix
+ *
+*/
+var loadToAM = function loadMatrixToAccumerateMatrix(arr){
+	_a11=arr[0];_a12=arr[1];_a13=arr[2];_a14=arr[3];
+	_a21=arr[4];_a22=arr[5];_a23=arr[6];_a24=arr[7];
+	_a31=arr[8];_a32=arr[9];_a33=arr[10];_a34=arr[11];
+	_a41=arr[12];_a42=arr[13];_a43=arr[14];_a44=arr[15];
+}
+
+var MatA = { };
+Object.defineProperty(MatA,'loadIdentity',{value:prepareAM,enumerable:true,configurable:true});
+Object.defineProperty(MatA,'trans',{value:translateAM,enumerable:true,configurable:true});
+Object.defineProperty(MatA,'rot',{value:rotateAM,enumerable:true,configurable:true});
+Object.defineProperty(MatA,'store',{value:storeAM,enumerable:true,configurable:true});
+Object.defineProperty(MatA,'load',{value:loadToAM,enumerable:true,configurable:true});
+Object.defineProperty(MatA,'inverse',{value:inverseAM,enumerable:true,configurable:true});
+Object.defineProperty(MatA,'transpose',{value:transposeAM,enumerable:true,configurable:true});
+Object.defineProperty(MatA,'push',{value:pushAM,enumerable:true,configurable:true});
+Object.defineProperty(MatA,'pop',{value:popAM,enumerable:true,configurable:true});
+
+
+
+//*********************************** perspective matrix *********************************************
+
+
+/**
+ *Make perspective matrix
+ *
+ *@arg {number} fov radian
+ *@arg {number} aspect width/height of screen
+ *@arg {number} near ?nearest distance to be able to take 
+ *@arg {number} far ?farthest distance to be able to take
+*/
+var makePM = function makePerspectiveMatrix(fov,aspectRatio,near,far){
+
+	if(near == far){
+		PRINT_CAUTION.innerHTML += "far equals to near in makePMatrix().<br>";
+		return null;
+	}
+	var s = 1.0 / Math.tan(fov / 2);
+	var nf = 1 / (near - far);
+
+	_p11 = s/aspectRatio;	_p12 = 0;	_p13 = 0;			_p14 = 0;
+	_p21 = 0;		_p22 = s;	_p23 = 0;			_p24 = 0;
+	_p31 = 0;		_p32 = 0;	_p33 = (far + near) * nf;	_p34 = -1;
+	_p41 = 0;		_p42 = 0;	_p43 = 2 * far * near * nf;	_p44 = 0;
+
+//not important _p43,i think
+
+//PRINT2.innerHTML = near.toString() + "&nbsp;&nbsp;&nbsp;" + far.toString() + "&nbsp&nbsp&nbsp" + (far*near*nf).toString();
+//https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
+};
+var storePM = function storePerspectiveMatrixToArray(arr){
+	arr[0]=_p11;	arr[1]=_p12;	arr[2]=_p13;	arr[3]=_p14;
+	arr[4]=_p21;	arr[5]=_p22;	arr[6]=_p23;	arr[7]=_p24;
+	arr[8]=_p31;	arr[9]=_p32;	arr[10]=_p33;	arr[11]=_p34;
+	arr[12]=_p41;	arr[13]=_p42;	arr[14]=_p43;	arr[15]=_p44;
+};
+
+
+
+var MatP = { };
+Object.defineProperty(MatP,'make',{value:makePM,enumerable:true,configurable:true});
+Object.defineProperty(MatP,'store',{value:storePM,enumerable:true,configurable:true});
+
+
+
+
+</script>
+
+
+<!--******************************* SHADER PROGMRAMS *****************************************************-->
+
+
+
+
+
+<!--Fragment shader-->
+<script id="shader-fs" type="x-shader/x-fragment">
+//○	varying lowp vec4 vColor;
+	varying highp vec4 vColor;//●
+	varying highp vec2 vTextureCoord;
+	varying highp vec3 vLighting;//●
+
+	uniform sampler2D uSampler;
+
+	void main(void) {
+//x		gl_FragColor = texture2D(uSampler,vec2(vTextureCoord.s,vTextureCoord.t));
+//		gl_FragColor = texture2D(uSampler,vTextureCoord);//mediump型
+		gl_FragColor = vColor;
+
+		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
+//○		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
+//●		gl_FragColor = vec4(texelColor.rgb * vLighting,texelColor.a);//●
+
+	}
+</script>
+<!--Vertex shader-->
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexNormal;//●
+	attribute vec3 aVertexPosition;//x y z
+	attribute vec4 aVertexColor;//R G B Alpha
+	attribute vec2 aTextureCoord;//x y
+
+//○	uniform highp mat4 uNormalMatrix;//●
+	uniform mat4 uNormalMatrix;//●
+	uniform mat4 uModelViewMatrix;//homography matrix
+	uniform mat4 uProjectionMatrix;
+
+	uniform float uPointSizeFloat;//a float value
+
+//○	varying lowp vec4 vColor;
+//○	varying lowp vec2 vTextureCoord;
+	varying highp vec4 vColor;
+	varying highp vec2 vTextureCoord;
+	varying highp vec3 vLighting;//●
+
+
+	void main(void) {
+		gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
+		gl_PointSize = uPointSizeFloat;
+		vColor = aVertexColor;
+		vTextureCoord = aTextureCoord;
+
+		//●below
+//○		highp vec3 ambientLight = vec3(0.6,0.6,0.6);//ja
+//○		highp vec3 ambientLight = vec3(0.3,0.3,0.3);//en
+		highp vec3 ambientLight = vec3(0.5,0.5,0.5);//●color and darkness of light
+//○		highp vec3 directionalLightColor = vec3(0.5,0.5,0.75);//ja
+//○		highp vec3 directionalLightColor = vec3(1,1,1);//en
+		highp vec3 directionalLightColor = vec3(1,1,1);//myself
+//○		highp vec3 directionalVector = vec3(0.85,0.8,0.75);//ja
+//○		highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));//en
+		highp vec3 directionalVector = normalize(vec3(0.0,-1.0,0.0));//myself
+
+		highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal,1.0);
+	
+		highp float directional = max(dot(transformedNormal.xyz,directionalVector),0.0);
+		vLighting = ambientLight + (directionalLightColor * directional);
+		//●above
+	}
+
+</script>
+
+<script type='text/javascript'>
+
+function initShaders(gl) {
+	var fragmentShader = getShader(gl,"shader-fs");//プログラムをロードしてコンパイルして返す
+	var vertexShader = getShader(gl,"shader-vs");//プログラムをロードしてコンパイルして返す
+
+
+
+
+		//シェーダープログラムを作成
+	var shaderProgram = gl.createProgram();
+	gl.attachShader(shaderProgram,vertexShader);
+	gl.attachShader(shaderProgram,fragmentShader);
+	gl.linkProgram(shaderProgram);
+
+	//シェーダープログラムを作成できない場合はアラートを表示
+	if(!gl.getProgramParameter(shaderProgram,gl.LINK_STATUS)){
+		alert("can't initialize the shader program");
+		return null;
+	}
+
+	gl.useProgram(shaderProgram);//githubではdrawScene()内で実行
+
+		//シェーダープログラムで使う配列変数を使用可能にする
+	//プログラムのどこにあるのかを取得
+	//使ってもいいよリストに登録
+	var positionsLocation = gl.getAttribLocation(shaderProgram,"aVertexPosition");//""内は特殊言語の実装参照してる
+	gl.enableVertexAttribArray(positionsLocation);//githubではdrawScene()内で実行
+
+	var normalsLocation = gl.getAttribLocation(shaderProgram,"aVertexNormal");//●
+	gl.enableVertexAttribArray(normalsLocation);//●
+
+	var colorsLocation = gl.getAttribLocation(shaderProgram,"aVertexColor");
+	gl.enableVertexAttribArray(colorsLocation);
+
+	var textcoordLocation = gl.getAttribLocation(shaderProgram,"aTextureCoord");
+	gl.enableVertexAttribArray(textcoordLocation);
+
+	return {
+		positionLoc:positionsLocation,
+		normalLoc:normalsLocation,//●
+		colorLoc:colorsLocation,
+		textcoordLoc:textcoordLocation,
+		prog:shaderProgram
+	}
+};
+
+function getShader(gl,id){
+	var shaderScript,theSource,currentChild,shader;
+
+	shaderScript = document.getElementById(id);
+
+	if(!shaderScript) {
+		return null;
+	}
+
+	theSource = "";
+	currentChild = shaderScript.firstChild;
+
+	while(currentChild) {
+		if(currentChild.nodeType == currentChild.TEXT_NODE){
+			theSource += currentChild.textContent;
+		}
+
+		currentChild = currentChild.nextSibling;
+	}
+
+	if (shaderScript.type == "x-shader/x-fragment"){
+		shader = gl.createShader(gl.FRAGMENT_SHADER);
+	} else if (shaderScript.type == "x-shader/x-vertex"){
+		shader = gl.createShader(gl.VERTEX_SHADER);
+	} else {
+		// 未知のシェーダータイプ
+		PRINT_CAUTION.innerHTML+="Unknown shader type.The element type of shader program must be 'x-shader/x-vertex' or 'x-shader/x-fragment' now."+"<br>";
+		return null;
+	}
+
+	gl.shaderSource(shader,theSource);
+
+	//シェーダープログラムをコンパイル
+	gl.compileShader(shader);
+
+	//whether or not success to compileコンパイルが成功したかを確認
+	if (!gl.getShaderParameter(shader,gl.COMPILE_STATUS)) {
+		alert("Shader compile error occured : " + id + " : " + gl.getShaderInfoLog(shader));
+		return null;
+	}
+
+	return shader;
+};
+
+var Color = function(red,green,blue,alpha){
+	this.r=red;
+	this.g=green;
+	this.b=blue;
+	this.a=alpha;
+};
+Color.prototype.reverse = function(){
+	//to do
+};
+
+(function(){
+	ColorName = { };
+	Object.defineProperty(ColorName,'black'  ,{value:function(alpha){return new Color(0,0,0,alpha);},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(ColorName,'blue'   ,{value:function(alpha){return new Color(0,0,1,alpha);},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(ColorName,'red'    ,{value:function(alpha){return new Color(1,0,0,alpha);},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(ColorName,'magenta',{value:function(alpha){return new Color(1,0,1,alpha);},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(ColorName,'green'  ,{value:function(alpha){return new Color(0,1,0,alpha);},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(ColorName,'cyan'   ,{value:function(alpha){return new Color(1,1,0,alpha);},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(ColorName,'yellow' ,{value:function(alpha){return new Color(0,1,1,alpha);},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(ColorName,'white'  ,{value:function(alpha){return new Color(1,1,1,alpha);},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(ColorName,'purple'  ,{value:function(alpha){return new Color(Math.floor(128/256*100)/100,0,Math.floor(128/256*100)/100,alpha);},writable:false,enumerable:true,configurable:false});
+})();		
+
+
+
+
+
+
+
+
+
+function start(){
+	var canvas = document.getElementById('glcanvas');
+	canvas.width=canvas.clientWidth;//necessary
+	canvas.height=canvas.clientHeight;//necessary
+	var gl=canvas.getContext("webgl");
+	if(!gl){
+		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
+		return;
+	}
+
+	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//クリップ空間の-1～1の値をcanvasの大きさに変換する
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
+	gl.clearDepth(1.0);			//Clear everything
+	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
+	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
+
+
+
+	//for rectangle test
+{
+//	gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
+//    gl.enable(gl.SCISSOR_TEST);
+//   gl.scissor(30, 10, 60, 60);//60x60の正方形
+//    gl.clearColor(1.0, 1.0, 0.0, 1.0);
+//    gl.clear(gl.COLOR_BUFFER_BIT);
+};
+
+	var magenta 	= ColorName.magenta(1);
+	var green 	= ColorName.green(1);
+	var red 	= ColorName.red(1);
+	var blue 	= ColorName.blue(1);
+
+
+	initTextures(gl);
+	var oShader = initShaders(gl);
+	var aModels = [];
+	var oModel;
+	var mvm1 = Motion.axisY;
+	var mvm2 = Motion.none;
+	var mvm3 = Motion.none;
+	var mvm4 = Motion.none;
+	var mvm5 = Motion.none;
+
+//kkk
+
+	var p1 = new Point(1.2,0.5,1.2);
+	var p2 = new Point(1.2,1.5,1.0);
+	var p3 = new Point(0.5,0.5,0.6);
+
+		Draw.triangle(gl,p1,p2,p3,magenta,mvm1,mvm2,mvm3,mvm4,mvm5);
+	var pCenter = new Point((p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3);
+		Draw.point(gl,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+		Draw.line(gl,pCenter,p1,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	var pInnerBody = new Point(0,0,0);
+		Draw.point(gl,pInnerBody,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+		Draw.line(gl,pInnerBody,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	var vio = new Vector(pCenter.x-pInnerBody.x,pCenter.y-pInnerBody.y,pCenter.z-pInnerBody.z);
+	var pio = pCenter.calcTranslated(vio);
+		Draw.point(gl,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+		Draw.line(gl,pCenter,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	var vP = new Vector(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
+	var vQ = new Vector(p3.x-p1.x,p3.y-p1.y,p3.z-p1.z);
+
+	var vN = new Vector(vP.y*vQ.z-vP.z*vQ.y,vP.z*vQ.x-vP.x*vQ.z,vP.x*vQ.y-vP.y*vQ.x);
+	var pCN = new Point(pCenter.x+vN.x,pCenter.y+vN.y,pCenter.z+vN.z);
+		Draw.point(gl,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+		Draw.line(gl,pCenter,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	var l1=vio.calcLength();//Math.pow(vio.x*vio.x+vio.y*vio.y+vio.z*vio.z,0.5);//calcLength();
+	var l2=vio.calcLength();//Math.pow(vN.x*vN.x+vN.y*vN.y+vN.z*vN.z,0.5);//.calcLength();
+	if(l1==0 || l2==0){
+		vN = new Vector(0,0,0);
+	}else{
+		var theta = Math.acos((vio.x*vN.x+vio.y*vN.y+vio.z*vN.z)/(l1*l2));
+		if(theta>Math.PI)vN = new Vector(-vN.x,-vN.y,-vN.z);
+	}
+	//return vN;
+
+console.log("Theta=",theta/Math.PI*180);
+		Draw.axisX(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
+		Draw.axisY(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
+		Draw.axisZ(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
+
+/*
+for(var ii=0;ii<10;ii++){
+	oModel = { };
+	oModel.base = regularHexahedron();
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();//function to rotation, translation and expand
+	aModels.push(oModel);
+console.log(oModel);
+	oModel = { };
+	oModel.base = regularTetrahedron();
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();
+	aModels.push(oModel);
+console.log(oModel);
+};
+*/
+	var timeBefore=0;
+	var angle=0;
+	function render(timeStamp){
+		if(timeStamp - timeBefore>10){
+			angle+=1;
+			angle=Math.floor(angle*10)/10;
+			if(angle>360)angle=0;
+			PRINT_INFO.innerText=angle.toString();
+			drawScene(gl,oShader,aModels,angle);
+			timeBefore = timeStamp;
+		}
+		window.requestAnimationFrame(render);
+	}
+	window.requestAnimationFrame(render);
+};
+
+
+
+//******************************** BUFFERS *******************************
+
+
+
+function setModelToBuffer(gl,oModel){
+	//生成したバッファをWebGLBufferにバインドしたら、
+	//あとはそれにvertexのattributionをbufferDataを使って
+	//頂点の座標、頂点の色、テキストデータなどをバッファに放り込むだけ
+
+console.log("setModelToBuffer oModel=",oModel);
+	//position to buffer
+	var positionsBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,positionsBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(oModel.base.pos),gl.STATIC_DRAW);
+
+	//normal vectors to buffer//●
+	var normalBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(oModel.base.nor),gl.STATIC_DRAW);
+
+	//color to buffer
+	var colorsBuffer = gl.createBuffer();//正方形のvertices
+	gl.bindBuffer(gl.ARRAY_BUFFER,colorsBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(oModel.base.col),gl.STATIC_DRAW);
+
+	//texture position to buffer
+	var textureCoordinateBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,textureCoordinateBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(oModel.base.tex),gl.STATIC_DRAW);
+
+	//indices to ELEMENT buffer
+	var indexBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(oModel.base.ind),gl.STATIC_DRAW);
+
+	return {
+		pointPos:positionsBuffer,
+		pointNor:normalBuffer,//●
+		pointCol:colorsBuffer,
+		pointTex:textureCoordinateBuffer,
+		pointInd:indexBuffer
+	}
+};
+
+function sendBufferData(gl,oShader,oBuffer){
+
+	//バッファにある頂点の位置情報や色情報をどう使用するかを決めてGLSLに渡す
+
+	//引数の準備
+	var type = gl.FLOAT;
+	var normalize = false;
+	var stride = 0;//shaderを呼び出すごとに進むバイト数//これは(buffer.slice((offset + i) * stride,size);)という意味
+	var offset = 0;
+
+	//positons
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffer.pointPos);
+	numComponents = 3;//number of column
+	gl.vertexAttribPointer(oShader.positionLoc,numComponents,type,normalize,stride,offset);
+
+	//normal vector//●
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffer.pointNor);
+	numComponents = 3;
+	gl.vertexAttribPointer(oShader.normalLoc,numComponents,type,normalize,stride,offset);
+
+	//color
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffer.pointCol);
+	numComponents = 4;//列の数
+	gl.vertexAttribPointer(oShader.colorLoc,numComponents,type,normalize,stride,offset);
+
+	//texture
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffer.pointTex);
+	numComponents = 2;//列の数
+	gl.vertexAttribPointer(oShader.textcoordLoc,numComponents,type,normalize,stride,offset);
+
+	//index
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,oBuffer.pointInd);//arrayのとおりにデータを使うのでPointerはいらない。
+//this part below is not necessary for the elements of indices (It's already defined as array data structure.)
+//	numComponents = 3;//列の数
+//	gl.vertexAttribPointer(oShader.indexLoc,numComponents,type,normalize,stride,offset);
+
+};
+
+//********************************** DATA FOR SHADER ****************************************
+
+
+(function(){
+	Motion = { };
+
+	Object.defineProperty(Motion,'none',{value:unit(),writable:false,enumerable:false});
+	function unit(){
+		var a = new Array(16);
+		MatA.push();
+		MatA.loadIdentity();
+		MatA.store(a);
+		MatA.pop();
+		return a;
+	}
+
+
+	Object.defineProperty(Motion,'random',{get:function(){return (new random());}});
+	function random(){
+
+		var rx = Math.floor(Math.random()*100)/10;
+		var ry = Math.floor(Math.random()*100)/10;
+		var rz = Math.floor(Math.random()*100)/10;
+		var m = Math.floor(Math.random()*3+1);
+		var tx = 2-Math.floor(Math.random()*4);
+		var ty = 2-Math.floor(Math.random()*4);
+
+		return function(angle){
+
+			var matrix = new Array(16);
+
+			//model view matrix...MatA was already defined in global scope
+			MatA.push();//●
+			MatA.loadIdentity();
+			MatA.trans(tx,ty,-6.0);
+			MatA.rot(rx,ry,rz,m*angle*Math.PI/180);
+			MatA.store(matrix);
+			MatA.pop();//●
+	
+			return matrix;
+		}
+	};
+
+	Object.defineProperty(Motion,'axisY',{value:axisY(),writable:false});
+	function axisY(){
+
+		var rAxisX = 0;
+		var rAxisY = 1;
+		var rAxisZ = 0.1;
+		var mag = 1;
+		var tX = 0.0;
+		var tY = 0.0;
+		var tZ = -6.0;
+		return function(angle){
+
+			var matrix = new Array(16);
+
+			//model view matrix...MatA was already defined in global scope
+			MatA.push();//●
+			MatA.loadIdentity();
+			MatA.trans(tX,tY,tZ);
+			MatA.rot(rAxisX,rAxisY,rAxisZ,mag*angle*Math.PI/180);
+			MatA.store(matrix);
+			MatA.pop();//●
+
+			return matrix;
+		}
+	};
+})();
+
+
+function sendPerspectiveMatrix(gl,oShader){
+
+	/*
+		from cite site:
+		Create a perspective matrix, a special matrix that is
+		used to simulate the distortion of perspective in a camera.
+		Our field of view is 45 degrees, with a (width/height)
+		ratio that matches the display size of the canvas
+		and we only want ot see objects between 0.1 units
+		and 100 units away from the camera.
+	*/
+		//perspective matrix...MatP was already defined at global scope
+	var fieldOfView = 70 * Math.PI / 180;	//in radian;
+	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+	var zNear = 0.1;
+	var zFar = 100.0;
+
+	//create a projectionMatrix array as the perspective matrix
+	var projectionMatrix=new Array(16);
+	MatP.make(fieldOfView,aspect,zNear,zFar);
+	MatP.store(projectionMatrix);
+
+	//uniform mat4 uProjectionMatrixへ値を転送
+	var pUniform = gl.getUniformLocation(oShader.prog,"uProjectionMatrix");//""内は特殊言語の実装参照してる
+	if(!pUniform){PRINT_CAUTION.innerHTML+="pUniform is "+pUniform+"<br>";return null;}
+	gl.uniformMatrix4fv(pUniform,false,new Float32Array(projectionMatrix));
+
+};
+
+
+
+function sendModelViewMatrix(gl,oShader,mvMatrix){
+
+		//Set the shader uniforms culclated above and something
+	//uniform mat4 uModelViewMatrixへ値を転送
+	var mvUniform = gl.getUniformLocation(oShader.prog,"uModelViewMatrix");
+	if(!mvUniform){PRINT_CAUTION.innerHTML+="mvUniform is "+mvUniform+"<br>";return null;}
+	gl.uniformMatrix4fv(mvUniform,false,new Float32Array(mvMatrix));
+};
+
+function sendPointSize(gl,oShader,nSize){
+	//uniform float uPointSizeFloatへ値を転送
+	var psUniform = gl.getUniformLocation(oShader.prog,"uPointSizeFloat");
+	if(!psUniform){PRINT_CAUTION.innerHTML+="psUniform is "+psUniform+"<br>";return null;}
+	gl.uniform1f(psUniform,nSize);
+};
+
+function sendNormalMatrix(gl,oShader,mvMatrix){//●
+
+	var normMatrix = new Array(16);
+
+	//compute matrix
+	MatA.push();
+	MatA.load(mvMatrix);
+	MatA.inverse();
+	MatA.transpose();
+	MatA.store(normMatrix);
+	MatA.pop();
+
+
+	//uniform highp mat4 uNormalMatrixに値を転送
+	var normUniform = gl.getUniformLocation(oShader.prog,"uNormalMatrix");
+	if(!normUniform){PRINT_CAUTION.innerHTML+="normUniform is "+normUniform+"<br>";return null;}
+	gl.uniformMatrix4fv(normUniform,false,new Float32Array(normMatrix));
+};
+
+function sendSampler(gl,oShader,number){
+	//uniform float uPointSizeFloatへ値を転送
+	var sampler = gl.getUniformLocation(oShader.prog,"uSampler");
+	if(!sampler){PRINT_CAUTION.innerHTML+="sampler is "+sampler+"<br>";return null;}
+	gl.uniform1i(sampler,number);
+};
+	
+
+
+//************************************** DRAW SCENE *************************************************
+
+
+function drawScene(gl,oShader,aModels,angle){
+
+	// カラーバッファや深度バッファをクリアする
+	//Clear the canvas before we start drawing on it
+
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	var vertexOffset = 0;//このoffsetは頂点のx,y,zごとに進むので、データ的にはoffset*3(4?)ごとに進む
+	var nPointSize = 10.0;
+
+	var mat;//matrix
+	for(var ii=0;ii<Draw.length;ii++){
+		sendBufferData(gl,oShader,Draw.memberByIndex(ii).buffers);
+		sendPerspectiveMatrix(gl,oShader);
+		mat = Draw.memberByIndex(ii).mvm1(angle);
+		sendModelViewMatrix(gl,oShader,mat);
+		sendNormalMatrix(gl,oShader,mat);
+		sendPointSize(gl,oShader,nPointSize);
+		sendSampler(gl,oShader,0);//unit number
+		Draw.memberByIndex(ii).base.draw();
+
+//		gl.drawElements(gl.LINE_STRIP,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
+//		gl.drawElements(gl.TRIANGLES,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
+//		gl.drawElements(gl.TRIANGLES,154,gl.UNSIGNED_SHORT,vertexOffset);
+	}
+
+//	gl.drawArrays(gl.TRIANGLE_STRIP,vertexOffset,vertexCount);
+//	gl.drawArrays(gl.LINE_STRIP,vertexOffset,vertexCount);
+//	PRINT_INFO.innerHTML+=gl.hasOwnProperty("PointSize").toString()+"<br>";
+//	gl.drawArrays(gl.POINTS,vertexOffset,vertexCount);
+
+};
+
+//flag=true;
+
+//******************************* TEXTURE ******************************************************
+
+
+
+function initTextures(gl){
+	cubeTexture = gl.createTexture();
+	cubeImage = new Image();
+	cubeImage.onload = function (){
+		var canvas = document.createElement('canvas');
+		document.getElementsByTagName('body')[0].appendChild(canvas);
+		canvas.width = 100;
+		canvas.height = 50;
+		canvas.style.position='absolute';
+		canvas.style.left='0px';
+		canvas.style.top='0px';
+		canvas.style.backgroundColor='transparent';
+		canvas.style.globalAlpa=0.7;
+		canvas.style.zIndex=100;
+		var ctx = canvas.getContext('2d');
+		ctx.drawImage(cubeImage,0,0);
+		handleTextureLoaded(gl,cubeImage,cubeTexture);
+	};
+
+	var reader = new FileReader();
+	reader.onloadend = function(){
+		cubeImage.src = reader.result;
+	};
+
+	var h = new XMLHttpRequest();
+	h.responseType = "blob";
+	h.onload = function(){
+		reader.readAsDataURL(h.response);
+	};
+
+	handleTextureDefault(gl);//●
+	h.open('GET',"http://localhost:8000/documents/games/3d/niku_stand2.png");
+	h.send();
+	//To get url data, it's necessary to have been executing two applications listed below
+	// ・chrome.exe --disable-web-security --user-data-dir//
+	// ・ruby -run -e httpd . -p 8000
+	//2nd line is changable to python,php or other language to work as simple http local server.
+};
+function handleTextureLoaded(gl,image,texture){//gl.TEXTURE_2Dオブジェクトのプロパティーに値を入れる操作を行う
+
+	gl.bindTexture   (gl.TEXTURE_2D,texture);
+	gl.texImage2D    (gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+	gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+	gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
+	gl.generateMipmap(gl.TEXTURE_2D);//gl.TEXTURE_2Dをmipmapに適用
+	gl.activeTexture(gl.TEXTURE0);//●
+//bad	gl.bindTexture   (gl.TEXTURE_2D,null);
+	gl.activeTexture(gl.TEXTURE0);
+	gl.bindTexture   (gl.TEXTURE_2D,texture);//●
+};
+function handleTextureDefault(gl){//●//when image data can not get from url
+	//for webGL2
+	var level = 0;
+	var internalFormat = gl.RGBA;
+	var width = 1;
+	var height = 1;
+	var border = 0;
+	var srcFormat = gl.RGBA;
+	var srcType = gl.UNSIGNED_BYTE;
+	var pixel = new Uint8Array([0,0,255,255]);
+	gl.texImage2D	 (gl.TEXTURE_2D,level,internalFormat,width,height,border,srcFormat,srcType,pixel);
+};
+
+
+
+
+
+
+
+
+//**************************** 3D SHAPES *************************************************
+//kkk
+var Point = function(x,y,z){
+	this.x=x;
+	this.y=y;
+	this.z=z;
+};
+Point.prototype.calcTranslated = function(v){
+	//@param {Vector} out
+	//@param {Vector} v
+	return new Point(this.x+v.x,this.y+v.y,this.z+v.z);
+};
+
+
+//kkk
+var Vector = function Vector(x,y,z){
+	this.x=x;
+	this.y=y;
+	this.z=z;
+};
+Vector.prototype.calcLength = function(){
+	return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5);
+};
+Vector.prototype.renewUnit = function(){
+//	var len = this.calcLength();
+//	this.x=this.x/len;
+//	this.y=this.y/len;
+//	this.z=this.z/len;
+};
+
+(function(){
+	Draw = { };
+	var aModels=[];
+	var length=0;
+	Object.defineProperty(Draw,'pushModel',{value:function(oModel){aModels.push(oModel);length++;},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(Draw,'memberByIndex',{value:function(num){return aModels[num];},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(Draw,'length',{get:function(){return length;},enumerable:true,configurable:false});
+
+	Object.defineProperty(Draw,'point',{value:point,enumerable:true});
+	function point(gl,p1,color,mvm1,mvm2,mvm3,mvm4,mvm5){
+console.log("point p1=",p1);
+		var oModel = { };
+		oModel.base = Shape.point(gl,p1,color);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.mvm1 = mvm1;
+		oModel.mvm2 = mvm2;
+		oModel.mvm3 = mvm3;
+		oModel.mvm4 = mvm4;
+		oModel.mvm5 = mvm5;
+		Draw.pushModel(oModel);
+
+	};
+	Object.defineProperty(Draw,'line',{value:line,writable:false,enumerable:true});
+	function line(gl,pointStart,pointEnd,color,mvm1,mvm2,mvm3,mvm4,mvm5){
+console.log("line");
+		var oModel = { };
+		oModel.base = Shape.line(gl,pointStart,pointEnd,color);
+
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.mvm1 = mvm1;
+		oModel.mvm2 = mvm2;
+		oModel.mvm3 = mvm3;
+		oModel.mvm4 = mvm4;
+		oModel.mvm5 = mvm5;
+		Draw.pushModel(oModel);
+		
+	};
+	Object.defineProperty(Draw,'triangle',{value:triangle,writable:false,enumerable:true});
+	function triangle(gl,p1,p2,p3,color,mvm1,mvm2,mvm3,mvm4,mvm5){
+console.log("triangle");
+			var oModel = { };
+			oModel.base = Shape.triangle(gl,p1,p2,p3,color);
+			oModel.buffers = setModelToBuffer(gl,oModel);
+			oModel.mvm1 = mvm1;
+			oModel.mvm2 = mvm2;
+			oModel.mvm3 = mvm3;
+			oModel.mvm4 = mvm4;
+			oModel.mvm5 = mvm5;
+			Draw.pushModel(oModel);
+	};
+	Object.defineProperty(Draw,'axisX',{value:axisX(),writable:false,enumerable:true});
+	function axisX(){
+		return function(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
+			var oModel = { };
+			oModel.base = Shape.axisX(gl);
+console.log("axisX base=",oModel.base);
+			oModel.buffers = setModelToBuffer(gl,oModel);
+			oModel.mvm1 = mvm1;
+			oModel.mvm2 = mvm2;
+			oModel.mvm3 = mvm3;
+			oModel.mvm4 = mvm4;
+			oModel.mvm5 = mvm5;
+			Draw.pushModel(oModel);
+		}
+	};
+	Object.defineProperty(Draw,'axisY',{value:axisY(),writable:false,enumerable:true});
+	function axisY(){
+		return function(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
+			var oModel = { };
+			oModel.base = Shape.axisY(gl);
+console.log("axisY base=",oModel.base);
+			oModel.buffers = setModelToBuffer(gl,oModel);
+			oModel.mvm1 = mvm1;
+			oModel.mvm2 = mvm2;
+			oModel.mvm3 = mvm3;
+			oModel.mvm4 = mvm4;
+			oModel.mvm5 = mvm5;
+			Draw.pushModel(oModel);
+		}
+	};
+	Object.defineProperty(Draw,'axisZ',{value:axisZ(),writable:false,enumerable:true});
+	function axisZ(){
+		return function(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
+			var oModel = { };
+			oModel.base = Shape.axisZ(gl);
+console.log("axisZ base=",oModel.base);
+			oModel.buffers = setModelToBuffer(gl,oModel);
+			oModel.mvm1 = mvm1;
+			oModel.mvm2 = mvm2;
+			oModel.mvm3 = mvm3;
+			oModel.mvm4 = mvm4;
+			oModel.mvm5 = mvm5;
+			Draw.pushModel(oModel);
+		}
+	};
+	
+})();
+//kkk
+
+
+
+(function(){
+	Shape = { };
+	Object.defineProperty(Shape,'point',{value:point(),writable:false,enumerable:true,configurable:false});
+	function point(){
+		return function(gl,p,c){
+console.log("shape p=",p);
+			var positions = [];
+			positions.push(p.x,p.y,p.z);
+			var normals = [1,1,1];
+			var colors = [c.r,c.g,c.b,c.a];
+			var textureCoordinates = [0,0];
+			var indices = [0];
+			return {
+				n:1,
+				pos:positions,
+				nor:normals,
+				col:colors,
+				tex:textureCoordinates,
+				ind:indices,
+				draw:function(){
+					gl.drawElements(gl.POINTS,1,gl.UNSIGNED_SHORT,0);//to do
+				}
+			}
+		}
+	};
+	Object.defineProperty(Shape,'line',{value:line(),writable:false,enumerable:true,configurable:false});
+	function line(){
+		return function(gl,pointStart,pointEnd,color){
+			var positions = [];
+			positions.push(pointStart.x,pointStart.y,pointStart.z,pointEnd.x,pointEnd.y,pointEnd.z);
+			var normals = [1,1,1,1,1,1];
+			var colors = [];
+			colors.push(color.r,color.g,color.b,color.a);
+			colors.push(color.r,color.g,color.b,color.a);
+			var textureCoordinates = [0,0,1,1];
+			var indices = [0,1];
+			return {
+				n:2,
+				pos:positions,
+				nor:normals,
+				col:colors,
+				tex:textureCoordinates,
+				ind:indices,
+				draw:function(){
+					gl.drawElements(gl.LINE_STRIP,2,gl.UNSIGNED_SHORT,0);//to do
+				}
+			}
+		}
+	};
+	Object.defineProperty(Shape,'triangle',{value:triangle(),writable:false,enumerable:true,configurable:false});
+	function triangle(){
+		return function(gl,p1,p2,p3,color){
+			var positions = [];
+			positions.push(p1.x,p1.y,p1.z,p2.x,p2.y,p2.z,p3.x,p3.y,p3.z,p1.x,p1.y,p1.z);
+			var normals = [
+				1,1,1,
+				1,1,1,
+				1,1,1,
+				1,1,1
+			];
+			var colors = [];
+			colors.push(color.r,color.g,color.b,color.a);
+			colors.push(color.r,color.g,color.b,color.a);
+			colors.push(color.r,color.g,color.b,color.a);
+			colors.push(color.r,color.g,color.b,color.a);
+			var textureCoordinates = [
+				0,0,
+				0,1,
+				1,1,
+				1,1
+			];
+			var indices = [
+				0,1,2,3
+			];
+			return {
+				n:4,
+				pos:positions,
+				nor:normals,
+				col:colors,
+				tex:textureCoordinates,
+				ind:indices,
+				draw:function(){
+					gl.drawElements(gl.LINE_STRIP,4,gl.UNSIGNED_SHORT,0);
+				}
+			}
+		}
+	};
+	Object.defineProperty(Shape,'axisX',{value:axisX(),writable:false,enumerable:true,configurable:false});
+	function axisX() {
+		return function(gl){
+console.log("here");
+			return Shape.line(gl,new Point(0,0,0),new Point(10,0,0),new Color(1,0,0,1));	
+		}
+	};
+	Object.defineProperty(Shape,'axisY',{value:new axisY(),writable:false,enumerable:true,configurable:false});
+	function axisY(){
+		return function(gl) {
+			return Shape.line(gl,new Point(0,0,0),new Point(0,10,0),new Color(0,1,0,1));	
+		}
+	};
+	Object.defineProperty(Shape,'axisZ',{value:new axisZ(),writable:false,enumerable:true,configurable:false});
+	function axisZ(){
+		return function(gl) {
+			return Shape.line(gl,new Point(0,0,0),new Point(0,0,10),new Color(0,0,1,1));	
+		}
+	};
+
+/*
+	var positions = [
+		 0.0, 0.0, 0.0,
+		10.0, 0.0, 0.0,
+		10.0, 0.1, 0.0,
+		 0.0, 0.1, 0.0
+	];
+	var normals = [
+		0,0,1,
+		0,0,1,
+		0,0,1,
+		0,0,1
+
+	];
+	var colors = [
+		1,0,0,1,
+		1,0,0,1,
+		1,0,0,1,
+		1,0,0,1
+	];
+	var textureCoordinates = [
+		0.0,0.0,
+		1.0,0.0,
+		1.0,1.0,
+		0.0,1.0
+	];
+	var indices = [
+		0,1,2,0,2,3
+	];
+	return {
+		n:6,
+		pos:positions,
+		nor:normals,
+		col:colors,
+		tex:textureCoordinates,
+		ind:indices,
+		draw:function(){
+			gl.drawElements(gl.LINE_STRIP,6,gl.UNSIGNED_SHORT,0);
+		}
+
+	}
+};	
+function axisY(gl) {
+	var positions = [
+		 0.0,  0.0, 0.0,
+		 0.0, 10.0, 0.0,
+		 0.0, 10.0, 0.1,
+		 0.0,  0.0, 0.1
+	];
+	var normals = [
+		1,0,0,
+		1,0,0,
+		1,0,0,
+		1,0,0,
+
+	];
+	var colors = [
+		0,1,0,1,
+		0,1,0,1,
+		0,1,0,1,
+		0,1,0,1
+	];
+	var textureCoordinates = [
+		0.0,0.0,
+		1.0,0.0,
+		1.0,1.0,
+		0.0,1.0
+	];
+	var indices = [
+		0,1,2,0,2,3
+	];
+	return {
+		n:6,
+		pos:positions,
+		nor:normals,
+		col:colors,
+		tex:textureCoordinates,
+		ind:indices,
+		draw:function(){
+			gl.drawElements(gl.LINE_STRIP,6,gl.UNSIGNED_SHORT,0);
+		}
+
+	}
+};	
+
+
+function axisZ(gl) {
+	var positions = [
+		 0.0, 0.0,  0.0,
+		 0.0, 0.0, 10.0,
+		 0.1, 0.0, 10.0,
+		 0.1, 0.0,  0.0
+	];
+	var normals = [
+		1,1,1,
+		1,1,1,
+		1,1,1,
+		1,1,1
+
+	];
+	var colors = [
+		0,0,1,1,
+		0,0,1,1,
+		0,0,1,1,
+		0,0,1,1
+	];
+	var textureCoordinates = [
+		0.0,0.0,
+		1.0,0.0,
+		1.0,1.0,
+		0.0,1.0
+	];
+	var indices = [
+		0,1,2,0,2,3
+	];
+	return {
+		n:6,
+		pos:positions,
+		nor:normals,
+		col:colors,
+		tex:textureCoordinates,
+		ind:indices,
+		draw:function(){
+			gl.drawElements(gl.LINE_STRIP,6,gl.UNSIGNED_SHORT,0);
+		}
+
+	}
+};	
+
+*/
+
+
+})();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function regularTetrahedron(){
+	//create tetrahedron
+	var ra=1.0;
+	var rb=2*Math.pow(2,0.5)/3*ra;
+	var x1=0,y1=0,z1=ra;
+	var x2=0,y2=rb,z2=-ra/4;
+	var x3=rb*Math.sin(120*Math.PI/180),y3=rb*Math.cos(120*Math.PI/180),z3=-ra/4;
+	var x4=rb*Math.sin(240*Math.PI/180),y4=rb*Math.cos(240*Math.PI/180),z4=-ra/4;
+
+	//頂点の位置情報をバッファを作ってそこに入れる
+	var positions = [
+		x1,y1,z1,
+		x2,y2,z2,
+		x3,y3,z3,
+
+		x1,y1,z1,
+		x2,y2,z2,
+		x4,y4,z4,
+
+		x1,y1,z1,
+		x3,y3,z3,
+		x4,y4,z4,
+
+		x2,y2,z2,
+		x3,y3,z3,
+		x4,y4,z4
+	];
+
+	//頂点の色情報をバッファを作ってそこに入れる
+	var colors = [
+		1.0, 1.0, 1.0, 1.0,
+		0.0,0.0,0.9,1.0,
+		0.9,0.1,0.1,1.0,
+		1.0, 1.0, 1.0, 1.0,
+		0.0,0.0,0.9,1.0,
+		0.1,1.0,0.2,1.0,
+		1.0, 1.0, 1.0, 1.0,
+		0.9,0.1,0.1,1.0,
+		0.1,1.0,0.2,1.0,
+		0.0,0.0,0.9,1.0,
+		0.9,0.1,0.1,1.0,
+		0.1,1.0,0.2,1.0,
+	];
+
+	var textureCoordinates = [
+		0.0,0.0,
+		1.0,0.0,
+		1.0,1.0,
+
+		0.0,0,0,
+		0.0,1.0,
+		1.0,1.0,
+
+		0.0,0.0,
+		1.0,0.0,
+		1.0,1.0,
+
+		0.0,0,0,
+		0.0,1.0,
+		1.0,1.0
+	];
+
+	var indices = [
+0,1,2,
+3,4,5,
+6,7,8,
+9,10,11
+];	
+
+	return {
+		n:positions.length/3,
+		pos:positions,
+		col:colors,
+		tex:textureCoordinates,
+		ind:indices
+	}
+};
+
+//********************************** HEXAHEDRON ******************************************
+
+function regularHexahedron(gl){
+		//regular hexahedron
+var newPositions2 = [
+-1.0,-1.0,1.0,
+1.0,-1.0,1.0,
+1.0,1.0,1.0,
+-1.0,1.0,1.0,
+
+-1.0,-1.0,-1.0,
+-1.0,1.0,-1.0,
+1.0,1.0,-1.0,
+1.0,-1.0,-1.0,
+
+-1.0,1.0,-1.0,
+-1.0,1.0,1.0,
+1.0,1.0,1.0,
+1.0,1.0,-1.0,
+
+-1.0,-1.0,-1.0,
+1.0,-1.0,-1.0,
+1.0,-1.0,1.0,
+-1.0,-1.0,1.0,
+
+1.0,-1.0,-1.0,
+1.0,1.0,-1.0,
+1.0,1.0,1.0,1.0,-1.0,1.0,
+
+-1.0,-1.0,-1.0,
+-1.0,-1.0,1.0,
+-1.0,1.0,1.0,
+-1.0,1.0,-1.0
+];
+
+	var newPositions = [
+
+-1.0,1.0,1.0,
+-1.0,-1.0,1.0,
+1.0,-1.0,1.0,
+1.0,1.0,1.0,
+
+-1.0,1.0,-1.0,
+1.0,1.0,-1.0,
+1.0,-1.0,-1.0,
+-1.0,-1.0,1.0,
+
+-1.0,1.0,1.0,
+-1.0,1.0,-1.0,
+1.0,1.0,-1.0,
+1.0,1.0,1.0,
+
+-1.0,-1.0,1.0,
+-1.0,-1.0,1.0,
+-1.0,-1.0,-1.0,
+-1.0,-1.0,-1.0,
+
+1.0,-1.0,1.0,
+1.0,1.0,1.0,
+1.0,1.0,-1.0,
+1.0,-1.0,-1.0,
+
+-1.0,-1.0,1.0,
+-1.0,-1.0,-1.0,
+-1.0,1.0,-1.0,
+-1.0,1.0,1.0
+
+];
+
+
+	var positions = [
+		1.0,1.0,1.0,
+		-1.0,1.0,1.0,
+		-1.0,-1.0,1.0,
+			1.0,1.0,1.0,
+			-1.0,-1.0,1.0,
+			1.0,-1.0,1.0,	
+
+		1.0,1.0,1.0,
+		-1.0,1.0,1.0,
+		-1.0,1.0,-1.0,
+			1.0,1.0,1.0,
+			-1.0,1.0,-1.0,
+			1.0,1.0,-1.0,
+
+		1.0,1.0,1.0,
+		1.0,-1.0,1.0,
+		1.0,-1.0,-1.0,
+			1.0,1.0,1.0,
+			1.0,-1.0,-1.0,
+			1.0,1.0,-1.0,
+
+		1.0,1.0,-1.0,
+		-1.0,1.0,-1.0,
+		-1.0,-1.0,-1.0,
+			1.0,1.0,-1.0,
+			-1.0,-1.0,-1.0,
+			1.0,-1.0,-1.0,	
+
+		1.0,-1.0,1.0,
+		-1.0,-1.0,1.0,
+		-1.0,-1.0,-1.0,
+			1.0,-1.0,1.0,
+			-1.0,-1.0,-1.0,
+			1.0,-1.0,-1.0,
+
+		-1.0,1.0,1.0,
+		-1.0,-1.0,1.0,
+		-1.0,-1.0,-1.0,
+			-1.0,1.0,1.0,
+			-1.0,-1.0,-1.0,
+			-1.0,1.0,-1.0
+	];
+
+	var normals = [
+
+0.0,0.0,1.0,
+0.0,0.0,1.0,
+0.0,0.0,1.0,
+0.0,0.0,1.0,
+
+0.0,0.0,-1.0,
+0.0,0.0,-1.0,
+0.0,0.0,-1.0,
+0.0,0.0,-1.0,
+
+0.0,1.0,0.0,
+0.0,1.0,0.0,
+0.0,1.0,0.0,
+0.0,1.0,0.0,
+
+0.0,-1.0,0.0,
+0.0,-1.0,0.0,
+0.0,-1.0,0.0,
+0.0,-1.0,0.0,
+
+1.0,0.0,0.0,
+1.0,0.0,0.0,
+1.0,0.0,0.0,
+1.0,0.0,0.0,
+
+-1.0,0.0,0.0,
+-1.0,0.0,0.0,
+-1.0,0.0,0.0,
+-1.0,0.0,0.0,
+
+];
+	var newNormals = [];
+	var m = newPositions.length/3;
+	var n = m/4;
+	for(var ii=0;ii<n;ii++){
+		tempNorm = norm(//set points orderd like a sector around the center as first argument
+			positions[ii*12+0],positions[ii*12+1],positions[ii*12+2],
+			positions[ii*12+3],positions[ii*12+4],positions[ii*12+5],
+			positions[ii*12+6],positions[ii*12+7],positions[ii*12+8],
+			positions[ii*12+9],positions[ii*12+10],positions[ii*12+11]
+		);
+console.log("norm=",tempNorm);
+
+		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
+		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
+		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
+		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
+	}
+
+	var newColors = [
+
+		1.0,1.0,1.0,1.0,
+		1.0,1.0,1.0,1.0,
+		1.0,1.0,1.0,1.0,
+		1.0,1.0,1.0,1.0,
+
+		1.0,0.2,0.5,0.5,
+		1.0,0.2,0.5,0.5,
+		1.0,0.2,0.5,0.5,
+		1.0,0.2,0.5,0.5,
+
+		0.7,0.3,0.8,0.9,
+		0.7,0.3,0.8,0.9,
+		0.7,0.3,0.8,0.9,
+		0.7,0.3,0.8,0.9,
+
+		0.6,1.0,0.6,0.9,
+		0.6,1.0,0.6,0.9,
+		0.6,1.0,0.6,0.9,
+		0.6,1.0,0.6,0.9,
+
+		0.4,0.2,0.1,0.9,
+		0.4,0.2,0.1,0.9,
+		0.4,0.2,0.1,0.9,
+		0.4,0.2,0.1,0.9,
+
+		1.0,1.0,0.1,0.9,
+		1.0,1.0,0.1,0.9,
+		1.0,1.0,0.1,0.9,
+		1.0,1.0,0.1,0.9,
+
+];
+	var colors = [
+		0.3,1.0,1.0,0.1,
+		0.3,1.0,1.0,0.1,
+		0.3,1.0,1.0,0.1,
+			0.3,1.0,1.0,0.1,
+			0.3,1.0,1.0,0.1,
+			0.3,1.0,1.0,0.1,
+
+		1.0,0.2,0.5,0.5,
+		1.0,0.2,0.5,0.5,
+		1.0,0.2,0.5,0.5,
+			1.0,0.2,0.5,0.5,
+			1.0,0.2,0.5,0.5,
+			1.0,0.2,0.5,0.5,
+
+		0.7,0.3,0.8,0.9,
+		0.7,0.3,0.8,0.9,
+		0.7,0.3,0.8,0.9,
+			0.7,0.3,0.8,0.9,
+			0.7,0.3,0.8,0.9,
+			0.7,0.3,0.8,0.9,
+
+		0.6,1.0,0.6,0.9,
+		0.6,1.0,0.6,0.9,
+		0.6,1.0,0.6,0.9,
+			0.6,1.0,0.6,0.9,
+			0.6,1.0,0.6,0.9,
+			0.6,1.0,0.6,0.9,
+
+		0.4,0.2,0.1,0.9,
+		0.4,0.2,0.1,0.9,
+		0.4,0.2,0.1,0.9,
+			0.4,0.2,0.1,0.9,
+			0.4,0.2,0.1,0.9,
+			0.4,0.2,0.1,0.9,
+
+		1.0,1.0,0.1,0.9,
+		1.0,1.0,0.1,0.9,
+		1.0,1.0,0.1,0.9,
+			1.0,1.0,0.1,0.9,
+			1.0,1.0,0.1,0.9,
+			1.0,1.0,0.1,0.9
+	];
+
+
+	var textureCoordinates = [
+		1.0,0.0,
+		1.0,1.0,
+		0.0,1.0,
+		0.0,0.0,
+
+		1.0,0.0,
+		1.0,1.0,
+		0.0,1.0,
+		0.0,0.0,
+
+		1.0,0.0,
+		1.0,1.0,
+		0.0,1.0,
+		0.0,0.0,
+
+		1.0,0.0,
+		1.0,1.0,
+		0.0,1.0,
+		0.0,0.0,
+
+		1.0,0.0,
+		1.0,1.0,
+		0.0,1.0,
+		0.0,0.0,
+
+		1.0,0.0,
+		1.0,1.0,
+		0.0,1.0,
+		0.0,0.0
+];
+
+
+	var indices = [
+0,1,2,0,2,3,
+4,5,6,4,6,7,
+8,9,10,8,10,11,
+12,13,14,12,14,15,
+16,17,18,16,18,19,
+20,21,22,20,22,23
+];
+
+
+	return {
+		n:positions.length/3,
+		pos:newPositions,
+//		pos:newPositions2,
+//○		nor:newNormals,//●
+		nor:normals,
+		col:newColors,
+		tex:textureCoordinates,
+		ind:indices,
+		draw:function(){
+			gl.drawElements(gl.LINE_STRIP,positions.length/3,gl.UNSIGNED_SHORT,0);
+		}
+
+	}
+};
+
+
+//******************************** SPHERE ***********************************************
+/**
+ *
+ *Calculation of Normal Vector from any points in 4 which are on same plane
+ *
+ *@param-set {number}{number}{number} x,y,z positions. The remain arguments as the number devided by 3 is ignored.
+ *
+*/
+
+
+function sphere(gl){
+
+	var rad = Math.PI / 180;
+	var alpha;//latitude
+	var gamma;//longitude
+	var rr=2.0;//radius
+	var dal=20;//diffential of alpha
+	var dgam=20;//differential of gamma
+
+	var nLongitude = 0,nLatitude = 0;
+	var px=[],py=[],pz=[];
+	var flagFirstTime=true;
+	var x,y,z,count=0;
+	for(gamma=-90;gamma<=90;gamma+=dgam){
+		nLongitude++;
+		for(alpha=-180;alpha<=180;alpha+=dal){
+			if(flagFirstTime){
+				//console.log("alpha=",alpha);
+				nLatitude++;
+			}
+
+			x=rr * Math.cos(rad * gamma) * Math.cos(rad * alpha);
+			y=rr * Math.cos(rad * gamma) * Math.sin(rad * alpha);
+			z=rr * Math.sin(rad * gamma);
+			px.push(x);
+			py.push(y);
+			pz.push(z);
+
+		}
+		flagFirstTime=false;
+	}
+console.log(" nLongitude=",nLongitude," nLatitude=",nLatitude);
+	var countRectangle=0;
+	var ii,kk;
+	var n1,n2,n3,n4;
+	var tempNorm;
+	var normals = [];
+	var positions = [];
+	for(kk=0;kk<nLongitude-1;kk++){
+		for(ii=0;ii<nLatitude-1;ii++){
+			countRectangle++;
+			n1=kk * nLatitude + ii;
+			positions.push(px[n1]);
+			positions.push(py[n1]);
+			positions.push(pz[n1]);
+
+			n2 = kk * nLatitude + ii + 1;
+			positions.push(px[n2]);
+			positions.push(py[n2]);
+			positions.push(pz[n2]);
+
+			n3 = kk * nLatitude + ii + nLatitude;
+			positions.push(px[n3]);
+			positions.push(py[n3]);
+			positions.push(pz[n3]);
+
+			n4 = kk * nLatitude + ii + nLatitude + 1;
+			positions.push(px[n4]); 
+			positions.push(py[n4]);
+			positions.push(pz[n4]);
+
+			tempNorm = norm(//set points orderd like a sector around the center as first argument
+				px[n1],py[n1],pz[n1],
+				px[n2],py[n2],pz[n2],
+				px[n4],py[n4],pz[n4],
+				px[n3],py[n3],pz[n3]
+			);
+console.log("norm=",tempNorm);
+
+			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+		}
+	}
+
+
+console.log("number of rectangles",countRectangle);
+
+if(countRectangle!=(nLatitude-1)*(nLongitude-1))console.error("error123");
+
+
+	var colors = [];
+	for(var ii=0,len=countRectangle*4;ii<len;ii++){
+		colors.push(0.5);
+		colors.push(0.5);
+		colors.push(1.0);
+		colors.push(0.1);
+	}
+console.log("colors n=",colors.length/4);
+
+	var textureCoordinates = [];
+	for(kk=0;kk<nLongitude-1;kk++){
+		for(ii=0;ii<nLatitude-1;ii++){
+			textureCoordinates.push(1/nLatitude * ii);
+			textureCoordinates.push(1/nLongitude * kk);
+
+			textureCoordinates.push(1/nLatitude * (ii + 1));
+			textureCoordinates.push(1/nLongitude * kk);
+
+			textureCoordinates.push(1/nLatitude * ii);
+			textureCoordinates.push(1/nLongitude * (kk + 1));
+
+			textureCoordinates.push(1/nLatitude * (ii + 1));
+			textureCoordinates.push(1/nLongitude * (kk + 1));
+		}
+	}
+
+
+	var countTriangle=0;
+
+	var indices = new Array();//2 triangles by indices make a rectangle
+	for(kk=0;kk<(nLongitude-1)*(nLatitude-1);kk++){
+		countTriangle++;
+		//triangle
+		indices.push(kk * 4 );
+		indices.push(kk * 4  + 1);
+		indices.push(kk * 4  + 2);
+
+
+		countTriangle++;
+		//triangle
+		indices.push(kk * 4  + 1);
+		indices.push(kk * 4  + 2);
+		indices.push(kk * 4  + 3);
+	}
+
+console.log("nVerteces(of all triangles)=",countTriangle*3);
+	return {
+		n:countTriangle*3,//countTriangle*3,//全ての三角形の頂点の総数
+		pos:positions,
+		nor:normals,
+		col:colors,
+		tex:textureCoordinates,
+		ind:indices,
+		draw:function(){
+			gl.drawElements(gl.LINE_STRIP,countTriangle*3,gl.UNSIGNED_SHORT,0);
+		}
+
+	}
+};
+
+</script>
+<script id="matrix-library" type='text/javascript'>
+//****************************************** class Point, class Vector *******************************************************
+var norm = function getNormalVectorForm4Points(){
+	/**
+	 *class Point
+	 *
+	*/
+	var Poi = function Point(x,y,z){
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	};
+	/**
+	 *class Vector
+	 *
+	*/
+	var Vec = function Vector2(x,y,z){
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	};
+	Vec.prototype.calcLength2 = function(){
+console.log("x.prop=",this.x);
+console.log("y.prop=",this.y);
+console.log("z.prop=",this.z);
+		return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5);
+	};
+	/**
+	 *get cross vector from 3 points of cartesian
+	 *
+	 *@param {Vector} out cross vector
+	 *@param {Point} pL,pO,pR dimensional point each other
+	 *
+	*/
+	var cross = function getCrossVector(pO,pR,pL){
+		var vP = new Vec(pL.x-pO.x , pL.y-pO.y , pL.z-pO.z);
+		var vQ = new Vec(pR.x-pO.x , pR.y-pO.y , pR.z-pO.z);
+		var x = vP.x * vQ.z - vP.z * vQ.y;
+		var y = vP.z * vQ.x - vP.x * vQ.z;
+		var z = vP.x * vQ.y - vP.y * vQ.x;
+//console.log("x=",x);
+//console.log("y=",y);
+//console.log("z=",z);
+		return new Vec(x,y,z);
+	};
+
+
+	var vec;
+	var ii,jj,kk;
+	var maxLength = 0;
+	var maxVector=void 0;
+	var ii,jj,kk;
+	var pois = new Array();
+	var n = Math.floor(arguments.length/3);
+
+	for(var ii=0;ii<n;ii++){
+		pois.push(new Poi(arguments[3*ii],arguments[3*ii+1],arguments[3*ii+2]));
+	}
+//console.log(pois);
+	ii=0;
+	for(var jj=ii+1;jj<n-1;jj++){
+		for(var kk=jj+1;kk<n;kk++){
+//console.log("pois[ii]=",pois[ii]);
+//console.log("pois[jj]=",pois[jj]);
+//console.log("pois[kk]=",pois[kk]);
+			vec = cross(pois[ii],pois[jj],pois[kk]);
+//console.log("length=",vec.calcLength2());
+			if(vec.calcLength2() > maxLength){
+				maxLength = vec.length;
+				maxVector = vec;
+			}
+		}
+	}
+	if(!maxVector){
+//		console.log(arguments);
+		PRINT_CAUTION.innerHTML+="can't decide cross vector<br>";
+		return null;
+	}
+	return {
+		x:vec.x,
+		y:vec.y,
+		z:vec.z
+	}
+};
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+</head><body onload="start();"><div>
+<h3 style="offset:0px;">Animating objects with WebGL</h3>
+<h5 style="offset:0px;">using gl.TRIANGLES mode to draw and not using gl.ELEMENT_ARRAY_BUFFER mode to buffer</h5>
+<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/Tutorial/Lighting_in_WebGL">MDN web docs moz://a(click next page)</a></p>
+<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html">WebGLFundamentals</a></p>
+<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
+<p id="PRINT_INFO" style="position:relative;top:0px;left:0px:offset:0px"></p>
+<p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;offset:0px;background-color:white;"></p>
+</div></body></html>
