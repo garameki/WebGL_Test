@@ -25,8 +25,8 @@
 //		gl_FragColor = texture2D(uSampler,vTextureCoord);//mediump型
 //		gl_FragColor = vColor;
 
-//○		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
-		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
+		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
+//○		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
 		gl_FragColor = vec4(texelColor.rgb * vLighting,texelColor.a);//●
 
 	}
@@ -61,12 +61,13 @@
 		//●below
 //○		highp vec3 ambientLight = vec3(0.6,0.6,0.6);//ja
 //○		highp vec3 ambientLight = vec3(0.3,0.3,0.3);//en
-		highp vec3 ambientLight = vec3(0.1,0.1,0.1);//myself
+		highp vec3 ambientLight = vec3(0.5,0.5,0.5);//●color and darkness of light
 //○		highp vec3 directionalLightColor = vec3(0.5,0.5,0.75);//ja
-		highp vec3 directionalLightColor = vec3(1,1,1);//en
+//○		highp vec3 directionalLightColor = vec3(1,1,1);//en
+		highp vec3 directionalLightColor = vec3(1,1,1);//myself
 //○		highp vec3 directionalVector = vec3(0.85,0.8,0.75);//ja
 //○		highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));//en
-		highp vec3 directionalVector = normalize(vec3(1.0,1.0,1.0));//myself
+		highp vec3 directionalVector = normalize(vec3(0.0,-1.0,0.0));//myself
 
 		highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal,1.0);
 	
@@ -216,22 +217,23 @@ function start(){
 	var aModels = [];
 	var oModel;
 
-	//●below
 	oModel = { };
 	oModel.base = regularHexahedron();
 	oModel.buffers = setModelToBuffer(gl,oModel);
 	oModel.mvMat = new mvMat_random();//function to rotation, translation and expand
 	aModels.push(oModel);
 console.log(oModel);
-	//●above
-/*
+
+
+	//●below
 	oModel = { };
 	oModel.base = sphere();
 	oModel.buffers = setModelToBuffer(gl,oModel);
-	oModel.mvMat = new mvMat_random();
+	oModel.mvMat = new mvMat_1();
 	aModels.push(oModel);
 console.log(oModel);
-*/
+	//●above
+
 
 /*
 for(var ii=0;ii<10;ii++){
@@ -365,7 +367,7 @@ function sendPerspectiveMatrix(gl,oShader){
 		and 100 units away from the camera.
 	*/
 		//perspective matrix...MatP was already defined at global scope
-	var fieldOfView = 45 * Math.PI / 180;	//in radian;
+	var fieldOfView = 70 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	var zNear = 0.1;
 	var zFar = 100.0;
@@ -408,6 +410,31 @@ function mvMat_random(){
 	}
 }
 
+function mvMat_1(){
+
+	var rAxisX = 0;
+	var rAxisY = 1;
+	var rAxisZ = 0;
+	var mag = 1;
+	var tX = 0.0;
+	var tY = 5.0;
+	var tZ = -16.0;
+	return function(angle){
+
+		var matrix = new Array(16);
+
+		//model view matrix...MatA was already defined in global scope
+		MatA.push();//●
+		MatA.loadIdentity();
+		MatA.trans(tX,tY,tZ);
+		MatA.rot(rAxisX,rAxisY,rAxisZ,mag*angle*Math.PI/180);
+		MatA.store(matrix);
+		MatA.pop();//●
+
+		return matrix;
+	}
+}
+ryrztxyytz
 function sendModelViewMatrix(gl,oShader,mvMatrix){
 
 		//Set the shader uniforms culclated above and something
@@ -647,26 +674,57 @@ function regularTetrahedron(){
 
 function regularHexahedron(){
 		//regular hexahedron
+var newPositions2 = [
+-1.0,-1.0,1.0,
+1.0,-1.0,1.0,
+1.0,1.0,1.0,
+-1.0,1.0,1.0,
+
+-1.0,-1.0,-1.0,
+-1.0,1.0,-1.0,
+1.0,1.0,-1.0,
+1.0,-1.0,-1.0,
+
+-1.0,1.0,-1.0,
+-1.0,1.0,1.0,
+1.0,1.0,1.0,
+1.0,1.0,-1.0,
+
+-1.0,-1.0,-1.0,
+1.0,-1.0,-1.0,
+1.0,-1.0,1.0,
+-1.0,-1.0,1.0,
+
+1.0,-1.0,-1.0,
+1.0,1.0,-1.0,
+1.0,1.0,1.0,1.0,-1.0,1.0,
+
+-1.0,-1.0,-1.0,
+-1.0,-1.0,1.0,
+-1.0,1.0,1.0,
+-1.0,1.0,-1.0
+];
+
 	var newPositions = [
 
 -1.0,1.0,1.0,
-1.0,1.0,1.0,
-1.0,-1.0,1.0,
 -1.0,-1.0,1.0,
+1.0,-1.0,1.0,
+1.0,1.0,1.0,
 
 -1.0,1.0,-1.0,
 1.0,1.0,-1.0,
 1.0,-1.0,-1.0,
--1.0,-1.0,-1.0,
+-1.0,-1.0,1.0,
 
 -1.0,1.0,1.0,
-1.0,1.0,1.0,
-1.0,1.0,-1.0,
 -1.0,1.0,-1.0,
+1.0,1.0,-1.0,
+1.0,1.0,1.0,
 
 -1.0,-1.0,1.0,
-1.0,-1.0,1.0,
-1.0,-1.0,-1.0,
+-1.0,-1.0,1.0,
+-1.0,-1.0,-1.0,
 -1.0,-1.0,-1.0,
 
 1.0,-1.0,1.0,
@@ -675,9 +733,9 @@ function regularHexahedron(){
 1.0,-1.0,-1.0,
 
 -1.0,-1.0,1.0,
--1.0,1.0,1.0,
+-1.0,-1.0,-1.0,
 -1.0,1.0,-1.0,
--1.0,-1.0,-1.0
+-1.0,1.0,1.0
 
 ];
 
@@ -759,6 +817,23 @@ function regularHexahedron(){
 -1.0,0.0,0.0,
 
 ];
+	var newNormals = [];
+	var m = newPositions.length/3;
+	var n = m/4;
+	for(var ii=0;ii<n;ii++){
+		tempNorm = norm(//set points orderd like a sector around the center as first argument
+			positions[ii*12+0],positions[ii*12+1],positions[ii*12+2],
+			positions[ii*12+3],positions[ii*12+4],positions[ii*12+5],
+			positions[ii*12+6],positions[ii*12+7],positions[ii*12+8],
+			positions[ii*12+9],positions[ii*12+10],positions[ii*12+11]
+		);
+console.log("norm=",tempNorm);
+
+		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
+		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
+		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
+		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
+	}
 
 	var newColors = [
 
@@ -884,6 +959,8 @@ function regularHexahedron(){
 	return {
 		n:positions.length/3,
 		pos:newPositions,
+//		pos:newPositions2,
+//○		nor:newNormals,//●
 		nor:normals,
 		col:newColors,
 		tex:textureCoordinates,
@@ -893,20 +970,23 @@ function regularHexahedron(){
 
 
 //******************************** SPHERE ***********************************************
+/**
+ *
+ *Calculation of Normal Vector from any points in 4 which are on same plane
+ *
+ *@param-set {number}{number}{number} x,y,z positions. The remain arguments as the number devided by 3 is ignored.
+ *
+*/
+
 
 function sphere(){
-
-	var count;
-
-
-
 
 	var rad = Math.PI / 180;
 	var alpha;//latitude
 	var gamma;//longitude
 	var rr=2.0;//radius
-	var dal=2;//diffential of alpha
-	var dgam=2;//differential of gamma
+	var dal=20;//diffential of alpha
+	var dgam=20;//differential of gamma
 
 	var nLongitude = 0,nLatitude = 0;
 	var px=[],py=[],pz=[];
@@ -933,27 +1013,45 @@ function sphere(){
 console.log(" nLongitude=",nLongitude," nLatitude=",nLatitude);
 	var countRectangle=0;
 	var ii,kk;
+	var n1,n2,n3,n4;
+	var tempNorm;
+	var normals = [];
 	var positions = [];
 	for(kk=0;kk<nLongitude-1;kk++){
 		for(ii=0;ii<nLatitude-1;ii++){
 			countRectangle++;
-			positions.push(px[kk * nLatitude + ii]);
-			positions.push(py[kk * nLatitude + ii]);
-			positions.push(pz[kk * nLatitude + ii]);
+			n1=kk * nLatitude + ii;
+			positions.push(px[n1]);
+			positions.push(py[n1]);
+			positions.push(pz[n1]);
 
-			positions.push(px[kk * nLatitude + ii + 1]);
-			positions.push(py[kk * nLatitude + ii + 1]);
-			positions.push(pz[kk * nLatitude + ii + 1]);
+			n2 = kk * nLatitude + ii + 1;
+			positions.push(px[n2]);
+			positions.push(py[n2]);
+			positions.push(pz[n2]);
 
-			positions.push(px[kk * nLatitude + ii + nLatitude]);
-			positions.push(py[kk * nLatitude + ii + nLatitude]);
-			positions.push(pz[kk * nLatitude + ii + nLatitude]);
+			n3 = kk * nLatitude + ii + nLatitude;
+			positions.push(px[n3]);
+			positions.push(py[n3]);
+			positions.push(pz[n3]);
 
-			positions.push(px[kk * nLatitude + ii + nLatitude + 1]); 
-			positions.push(py[kk * nLatitude + ii + nLatitude + 1]);
-			positions.push(pz[kk * nLatitude + ii + nLatitude + 1]);
+			n4 = kk * nLatitude + ii + nLatitude + 1;
+			positions.push(px[n4]); 
+			positions.push(py[n4]);
+			positions.push(pz[n4]);
 
+			tempNorm = norm(//set points orderd like a sector around the center as first argument
+				px[n1],py[n1],pz[n1],
+				px[n2],py[n2],pz[n2],
+				px[n4],py[n4],pz[n4],
+				px[n3],py[n3],pz[n3]
+			);
+console.log("norm=",tempNorm);
 
+			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
 		}
 	}
 
@@ -1012,12 +1110,99 @@ console.log("nVerteces(of all triangles)=",countTriangle*3);
 	return {
 		n:countTriangle*3,//countTriangle*3,//全ての三角形の頂点の総数
 		pos:positions,
+		nor:normals,
 		col:colors,
 		tex:textureCoordinates,
 		ind:indices
 	}
 }
 
+</script>
+<script id="matrix-library" type='text/javascript'>
+//****************************************** class Point, class Vector *******************************************************
+var norm = function getNormalVectorForm4Points(){
+	/**
+	 *class Point
+	 *
+	*/
+	var Poi = function Point(x,y,z){
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+	/**
+	 *class Vector
+	 *
+	*/
+	var Vec = function Vector(x,y,z){
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+	Vec.prototype.calcLength = function(){
+//console.log("x.prop=",this.x);
+//console.log("y.prop=",this.y);
+//console.log("z.prop=",this.z);
+		return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5)
+	}
+	/**
+	 *get cross vector from 3 points of cartesian
+	 *
+	 *@param {Vector} out cross vector
+	 *@param {Point} pL,pO,pR dimensional point each other
+	 *
+	*/
+	var cross = function getCrossVector(pO,pR,pL){
+		var vP = new Vec(pL.x-pO.x , pL.y-pO.y , pL.z-pO.z);
+		var vQ = new Vec(pR.x-pO.x , pR.y-pO.y , pR.z-pO.z);
+		var x = vP.x * vQ.z - vP.z * vQ.y;
+		var y = vP.z * vQ.x - vP.x * vQ.z;
+		var z = vP.x * vQ.y - vP.y * vQ.x;
+//console.log("x=",x);
+//console.log("y=",y);
+//console.log("z=",z);
+		return new Vec(x,y,z);
+	}
+
+
+	var vec;
+	var ii,jj,kk;
+	var maxLength = 0;
+	var maxVector=void 0;
+	var ii,jj,kk;
+	var pois = new Array();
+	var n = Math.floor(arguments.length/3);
+
+	for(var ii=0;ii<n;ii++){
+		pois.push(new Poi(arguments[3*ii],arguments[3*ii+1],arguments[3*ii+2]));
+	}
+//console.log(pois);
+	ii=0;
+	for(var jj=ii+1;jj<n-1;jj++){
+		for(var kk=jj+1;kk<n;kk++){
+//console.log("pois[ii]=",pois[ii]);
+//console.log("pois[jj]=",pois[jj]);
+//console.log("pois[kk]=",pois[kk]);
+			vec = cross(pois[ii],pois[jj],pois[kk]);
+//console.log("length=",vec.calcLength());
+			if(vec.calcLength() > maxLength){
+				maxLength = vec.length;
+				maxVector = vec;
+			}
+		}
+	}
+	if(!maxVector){
+//		console.log(arguments);
+		PRINT_CAUTION.innerHTML+="can't decide cross vector<br>";
+		return null;
+	}
+	return {
+		x:vec.x,
+		y:vec.y,
+		z:vec.z
+	}
+}
+	
 
 
 
@@ -1311,5 +1496,5 @@ Object.defineProperty(MatP,'store',{value:storePM,enumerable:true,configurable:t
 <p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html">WebGLFundamentals</a></p>
 <canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
 <p id="PRINT_INFO" style="position:relative;top:0px;left:0px:offset:0px"></p>
-<p id="PRINT_CAUTION" style="position:relative;top:0px;left:0px;color:red;offset:0px;"></p>
+<p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;offset:0px;background-color:white;"></p>
 </div></body></html>
