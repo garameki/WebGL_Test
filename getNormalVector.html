@@ -3,7 +3,7 @@
 
 
 
-<script id="matrix-library" type='text/javascript'>
+<script id="tagIdMatrix" type='text/javascript'>
 
 //********************************* MATRICES FOR CULCULATION *************************************************************
 
@@ -12,260 +12,529 @@
 /**
 *define matrixes
  *
+ * This is specifid for 4x4 Matrix computation.
+ *	The answer is re-restored to _a[1-4][1-4]. 
  *@variable {number} _nStacked    a number of being stacked
  *@variable {number} _MAX_STACK
  *@variable {number} _det determinant
- *@variable {number} _x[1-4][1-4] a element of result matrix
+ *@variable {number} _x[1-4][1-4] a element of temporary result matrix
  *@variable {number} _y[1-4][1-4] a element of stack matrix to push and/or pull
  *@variable {number} _a[1-4][1-4] a element of accumerate matrix e.g. answer of a calculation like multiplication
- *@variable {number} _p[1-4][1-4] a element of perspective matrix
  *
 */
-var _nStacked=0;
-var _MAX_STACK=1;
-var _x11=void 0,_x12=void 0,_x13=void 0,_x14=void 0,_x21=void 0,_x22=void 0,_x23=void 0,_x24=void 0,_x31=void 0,_x32=void 0,_x33=void 0,_x34=void 0,_x41=void 0,_x42=void 0,_x43=void 0,_x44=void 0;//target matrix
-var _y11=void 0,_y12=void 0,_y13=void 0,_y14=void 0,_y21=void 0,_y22=void 0,_y23=void 0,_y24=void 0,_y31=void 0,_y32=void 0,_y33=void 0,_y34=void 0,_y41=void 0,_y42=void 0,_y43=void 0,_y44=void 0;//stack matrix
-var _a11=void 0,_a12=void 0,_a13=void 0,_a14=void 0,_a21=void 0,_a22=void 0,_a23=void 0,_a24=void 0,_a31=void 0,_a32=void 0,_a33=void 0,_a34=void 0,_a41=void 0,_a42=void 0,_a43=void 0,_a44=void 0;//answer matrix
-var _p11=void 0,_p12=void 0,_p13=void 0,_p14=void 0,_p21=void 0,_p22=void 0,_p23=void 0,_p24=void 0,_p31=void 0,_p32=void 0,_p33=void 0,_p34=void 0,_p41=void 0,_p42=void 0,_p43=void 0,_p44=void 0;//answer matrix
-/**
- *
- *Prepare accumerate matrix
- *
-*/
-var prepareAM = function makeAccumerateMatrix(){
+(function(){
+	myMat4 = { };
+	Object.defineProperty(myMat4,'loadIdentity'	,{value:prepareAM,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myMat4,'loadPerspective'	,{value:preparePM,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myMat4,'trans'		,{value:translateAM,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myMat4,'rot'		,{value:rotateAM,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myMat4,'storeTo'		,{value:storeAM,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myMat4,'load'		,{value:loadToAM,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myMat4,'inverse'		,{value:inverseAM,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myMat4,'transpose'	,{value:transposeAM,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myMat4,'multi'		,{value:multiplyAMBy,writable:false,enumerable:true,configurable:false});
 
-	_a11 = 1;	_a12 = 0;	_a13 = 0;	_a14 = 0;
-	_a21 = 0;	_a22 = 1;	_a23 = 0;	_a24 = 0;
-	_a31 = 0;	_a32 = 0;	_a33 = 1;	_a34 = 0;
-	_a41 = 0;	_a42 = 0;	_a43 = 0;	_a44 = 1;
-};
-/**
- *
- *Push accumerate matrix to a stack
- *
-*/
-var pushAM = function pushAccumerateMatrixToStack(){
-	_y11=_a11;_y12=_a12;_y13=_a13;_y14=_a14;
-	_y21=_a21;_y22=_a22;_y23=_a23;_y24=_a24;
-	_y31=_a31;_y32=_a32;_y33=_a33;_y34=_a34;
-	_y41=_a41;_y42=_a42;_y43=_a43;_y44=_a44;
-	_nStacked++;
-	if(_nStacked>_MAX_STACK)PRINT_CAUTION.innerHTML+="Matrix stack was broken._nStacked="+_nStacked.toString()+" <br>";
-};
-/**
- *
- *Pop a stack matrix to accumerate matrix
- *
-*/
-var popAM = function popAccumerateMatrixFromStack(){
-	_a11=_y11;_a12=_y12;_a13=_y13;_a14=_y14;
-	_a21=_y21;_a22=_y22;_a23=_y23;_a24=_y24;
-	_a31=_y31;_a32=_y32;_a33=_y33;_a34=_y34;
-	_a41=_y41;_a42=_y42;_a43=_y43;_a44=_y44;
-	_nStacked--;
-};
-/**
- *
- *Inverse of homo 4x4 Matrix with Adjugate Formula
- *
-*/
-var inverseAM = function inverseAccumerateMatrix(){
-_x11=_a11*(+_a22*_a33*_a44+_a23*_a34*_a42+_a24*_a32*_a43-_a24*_a33*_a42-_a22*_a34*_a43-_a23*_a32*_a44);
-_x21=_a21*(-_a12*_a33*_a44-_a13*_a34*_a42-_a14*_a32*_a43+_a14*_a33*_a42+_a12*_a34*_a43+_a13*_a32*_a44);
-_x31=_a31*(+_a12*_a23*_a44+_a13*_a24*_a42+_a14*_a22*_a43-_a14*_a23*_a42-_a12*_a24*_a43-_a13*_a22*_a44);
-_x41=_a41*(-_a12*_a23*_a34-_a13*_a24*_a32-_a14*_a22*_a33+_a14*_a23*_a32+_a12*_a24*_a33+_a13*_a22*_a34);
-_det = _x11+_x21+_x31+_x41;
-_x11=+_a22*_a33*_a44+_a23*_a34*_a42+_a24*_a32*_a43-_a24*_a33*_a42-_a22*_a34*_a43-_a23*_a32*_a44;
-_x12=-_a21*_a33*_a44-_a23*_a34*_a41-_a24*_a31*_a43+_a24*_a33*_a41+_a21*_a34*_a43+_a23*_a31*_a44;
-_x13=+_a21*_a32*_a44+_a22*_a34*_a41+_a24*_a31*_a42-_a24*_a32*_a41-_a21*_a34*_a42-_a22*_a31*_a44;
-_x14=-_a21*_a32*_a43-_a22*_a33*_a41-_a23*_a31*_a42+_a23*_a32*_a41+_a21*_a33*_a42+_a22*_a31*_a43;
-_x21=-_a12*_a33*_a44-_a13*_a34*_a42-_a14*_a32*_a43+_a14*_a33*_a42+_a12*_a34*_a43+_a13*_a32*_a44;
-_x22=+_a11*_a33*_a44+_a13*_a34*_a41+_a14*_a31*_a43-_a14*_a33*_a41-_a11*_a34*_a43-_a13*_a31*_a44;
-_x23=-_a11*_a32*_a44-_a12*_a34*_a41-_a14*_a31*_a42+_a14*_a32*_a41+_a11*_a34*_a42+_a12*_a31*_a44;
-_x24=+_a11*_a32*_a43+_a12*_a33*_a41+_a13*_a31*_a42-_a13*_a32*_a41-_a11*_a33*_a42-_a12*_a31*_a43;
-_x31=+_a12*_a23*_a44+_a13*_a24*_a42+_a14*_a22*_a43-_a14*_a23*_a42-_a12*_a24*_a43-_a13*_a22*_a44;
-_x32=-_a11*_a23*_a44-_a13*_a24*_a41-_a14*_a21*_a43+_a14*_a23*_a41+_a11*_a24*_a43+_a13*_a21*_a44;
-_x33=+_a11*_a22*_a44+_a12*_a24*_a41+_a14*_a21*_a42-_a14*_a22*_a41-_a11*_a24*_a42-_a12*_a21*_a44;
-_x34=-_a11*_a22*_a43-_a12*_a23*_a41-_a13*_a21*_a42+_a13*_a22*_a41+_a11*_a23*_a42+_a12*_a21*_a43;
-_x41=-_a12*_a23*_a34-_a13*_a24*_a32-_a14*_a22*_a33+_a14*_a23*_a32+_a12*_a24*_a33+_a13*_a22*_a34;
-_x42=+_a11*_a23*_a34+_a13*_a24*_a31+_a14*_a21*_a33-_a14*_a23*_a31-_a11*_a24*_a33-_a13*_a21*_a34;
-_x43=-_a11*_a22*_a34-_a12*_a24*_a31-_a14*_a21*_a32+_a14*_a22*_a31+_a11*_a24*_a32+_a12*_a21*_a34;
-_x44=+_a11*_a22*_a33+_a12*_a23*_a31+_a13*_a21*_a32-_a13*_a22*_a31-_a11*_a23*_a32-_a12*_a21*_a33;
-	_a11=_x11/_det;_a12=_x21/_det;_a13=_x31/_det;_a14=_x41/_det;
-	_a21=_x12/_det;_a22=_x22/_det;_a23=_x32/_det;_a24=_x42/_det;
-	_a31=_x13/_det;_a32=_x23/_det;_a33=_x33/_det;_a34=_x43/_det;
-	_a41=_x14/_det;_a42=_x24/_det;_a43=_x34/_det;_a44=_x44/_det;
-};
-/**
- *
- *Transpose homo 4x4x Matrix of accumerate matirx
- *
-*/
-var transposeAM = function transposeAccumerateMatrix(){
-	_x11=_a11;_x12=_a21;_x13=_a31;_x14=_a41;
-	_x21=_a12;_x22=_a22;_x23=_a32;_x24=_a42;
-	_x31=_a13;_x32=_a23;_x33=_a33;_x34=_a43;
-	_x41=_a14;_x42=_a24;_x43=_a34;_x44=_a44;
+	Object.defineProperty(myMat4,'push'		,{value:pushAM,writable:false,enumerable:false,configurable:false});//for local scope of here
+	Object.defineProperty(myMat4,'pop'		,{value:popAM,writable:false,enumerable:false,configurable:false});//for local scope of here
 
-	_a11=_x11;_a12=_x12;_a13=_x13;_a14=_x14;
-	_a21=_x21;_a22=_x22;_a23=_x23;_a24=_x24;
-	_a31=_x31;_a32=_x32;_a33=_x33;_a34=_x34;
-	_a41=_x41;_a42=_x42;_a43=_x43;_a44=_x44;
-};
-/**
- *Translate homo 4x4matrix of accumerate matrix
- *
- *@arg {number} x,y,z quantity of translation 
- *
-*/
-var translateAM = function translateAccumurateMatrix(x,y,z){
-	_x11=_a11;_x12=_a12;_x13=_a13;_x14=_a14;
-	_x21=_a21;_x22=_a22;_x23=_a23;_x24=_a24;
-	_x31=_a31;_x32=_a32;_x33=_a33;_x34=_a34;
-	_x41=_a11*x+_a21*y+_a31*z+_a41;
-	_x42=_a12*x+_a22*y+_a32*z+_a42;
-	_x43=_a13*x+_a23*y+_a33*z+_a43;
-	_x44=_a14*x+_a24*y+_a34*z+_a44;
+	var _nStacked=0;
+	var _MAX_STACK=1;
+	var _x11=void 0,_x12=void 0,_x13=void 0,_x14=void 0,_x21=void 0,_x22=void 0,_x23=void 0,_x24=void 0,_x31=void 0,_x32=void 0,_x33=void 0,_x34=void 0,_x41=void 0,_x42=void 0,_x43=void 0,_x44=void 0;//target matrix
+	var _y11=void 0,_y12=void 0,_y13=void 0,_y14=void 0,_y21=void 0,_y22=void 0,_y23=void 0,_y24=void 0,_y31=void 0,_y32=void 0,_y33=void 0,_y34=void 0,_y41=void 0,_y42=void 0,_y43=void 0,_y44=void 0;//stack matrix
+	var _a11=void 0,_a12=void 0,_a13=void 0,_a14=void 0,_a21=void 0,_a22=void 0,_a23=void 0,_a24=void 0,_a31=void 0,_a32=void 0,_a33=void 0,_a34=void 0,_a41=void 0,_a42=void 0,_a43=void 0,_a44=void 0;//answer matrix
+	/**
+	 *
+	 *Prepare accumerate matrix
+	 *
+	*/
+	function prepareAM(){//createAccumerateMatrix as Unit Matrix
 
-	_a11=_x11;_a12=_x12;_a13=_x13;_a14=_x14;
-	_a21=_x21;_a22=_x22;_a23=_x23;_a24=_x24;
-	_a31=_x31;_a32=_x32;_a33=_x33;_a34=_x34;
-	_a41=_x41;_a42=_x42;_a43=_x43;_a44=_x44;
-};
-/**
- *Rotate homo 4x4matrix of accumurate matrix
- *
- *@arg {number} x,y,z axis vector
- *@arg {number} rad radian
- *
-*/
-var rotateAM = function rotateAccumurateMatrix(x,y,z,rad){
-	var len = Math.sqrt(x*x+y*y+z*z);
-	if(len < 0.001){
-		PRINT_CAUTION.innerHTML+="axis Matrix is too short. x:"+x.toString()+" y:"+y.toString()+" z:"+z.toString()+"<br>";
-		return null;//????
-	}
-	var x = x/len;
-	var y = y/len;
-	var z = z/len;
+		_a11 = 1;	_a12 = 0;	_a13 = 0;	_a14 = 0;
+		_a21 = 0;	_a22 = 1;	_a23 = 0;	_a24 = 0;
+		_a31 = 0;	_a32 = 0;	_a33 = 1;	_a34 = 0;
+		_a41 = 0;	_a42 = 0;	_a43 = 0;	_a44 = 1;
+	};
+	/**
+	 *
+	 *Push accumerate matrix to a stack
+	 *
+	*/
+	function pushAM(){//pushAccumerateMatrixToStack(){
+		_y11=_a11;_y12=_a12;_y13=_a13;_y14=_a14;
+		_y21=_a21;_y22=_a22;_y23=_a23;_y24=_a24;
+		_y31=_a31;_y32=_a32;_y33=_a33;_y34=_a34;
+		_y41=_a41;_y42=_a42;_y43=_a43;_y44=_a44;
+		_nStacked++;
+		//if(_nStacked>_MAX_STACK)PRINT_CAUTION.innerHTML+="Matrix stack was broken._nStacked="+_nStacked.toString()+" <br>";
+	};
+	/**
+	 *
+	 *Pop a stack matrix to accumerate matrix
+	 *
+	*/
+	function popAM(){//popAccumerateMatrixFromStack(){
+		_a11=_y11;_a12=_y12;_a13=_y13;_a14=_y14;
+		_a21=_y21;_a22=_y22;_a23=_y23;_a24=_y24;
+		_a31=_y31;_a32=_y32;_a33=_y33;_a34=_y34;
+		_a41=_y41;_a42=_y42;_a43=_y43;_a44=_y44;
+		_nStacked--;
+	};
+	/**
+	 *
+	 *Inverse of homo 4x4 Matrix with Adjugate Formula
+	 *
+	*/
+	function inverseAM(){//inverseAccumerateMatrix(){
+		_x11=_a11*(+_a22*_a33*_a44+_a23*_a34*_a42+_a24*_a32*_a43-_a24*_a33*_a42-_a22*_a34*_a43-_a23*_a32*_a44);
+		_x21=_a21*(-_a12*_a33*_a44-_a13*_a34*_a42-_a14*_a32*_a43+_a14*_a33*_a42+_a12*_a34*_a43+_a13*_a32*_a44);
+		_x31=_a31*(+_a12*_a23*_a44+_a13*_a24*_a42+_a14*_a22*_a43-_a14*_a23*_a42-_a12*_a24*_a43-_a13*_a22*_a44);
+		_x41=_a41*(-_a12*_a23*_a34-_a13*_a24*_a32-_a14*_a22*_a33+_a14*_a23*_a32+_a12*_a24*_a33+_a13*_a22*_a34);
+		_det = _x11+_x21+_x31+_x41;
+		_x11=+_a22*_a33*_a44+_a23*_a34*_a42+_a24*_a32*_a43-_a24*_a33*_a42-_a22*_a34*_a43-_a23*_a32*_a44;
+		_x12=-_a21*_a33*_a44-_a23*_a34*_a41-_a24*_a31*_a43+_a24*_a33*_a41+_a21*_a34*_a43+_a23*_a31*_a44;
+		_x13=+_a21*_a32*_a44+_a22*_a34*_a41+_a24*_a31*_a42-_a24*_a32*_a41-_a21*_a34*_a42-_a22*_a31*_a44;
+		_x14=-_a21*_a32*_a43-_a22*_a33*_a41-_a23*_a31*_a42+_a23*_a32*_a41+_a21*_a33*_a42+_a22*_a31*_a43;
+		_x21=-_a12*_a33*_a44-_a13*_a34*_a42-_a14*_a32*_a43+_a14*_a33*_a42+_a12*_a34*_a43+_a13*_a32*_a44;
+		_x22=+_a11*_a33*_a44+_a13*_a34*_a41+_a14*_a31*_a43-_a14*_a33*_a41-_a11*_a34*_a43-_a13*_a31*_a44;
+		_x23=-_a11*_a32*_a44-_a12*_a34*_a41-_a14*_a31*_a42+_a14*_a32*_a41+_a11*_a34*_a42+_a12*_a31*_a44;
+		_x24=+_a11*_a32*_a43+_a12*_a33*_a41+_a13*_a31*_a42-_a13*_a32*_a41-_a11*_a33*_a42-_a12*_a31*_a43;
+		_x31=+_a12*_a23*_a44+_a13*_a24*_a42+_a14*_a22*_a43-_a14*_a23*_a42-_a12*_a24*_a43-_a13*_a22*_a44;
+		_x32=-_a11*_a23*_a44-_a13*_a24*_a41-_a14*_a21*_a43+_a14*_a23*_a41+_a11*_a24*_a43+_a13*_a21*_a44;
+		_x33=+_a11*_a22*_a44+_a12*_a24*_a41+_a14*_a21*_a42-_a14*_a22*_a41-_a11*_a24*_a42-_a12*_a21*_a44;
+		_x34=-_a11*_a22*_a43-_a12*_a23*_a41-_a13*_a21*_a42+_a13*_a22*_a41+_a11*_a23*_a42+_a12*_a21*_a43;
+		_x41=-_a12*_a23*_a34-_a13*_a24*_a32-_a14*_a22*_a33+_a14*_a23*_a32+_a12*_a24*_a33+_a13*_a22*_a34;
+		_x42=+_a11*_a23*_a34+_a13*_a24*_a31+_a14*_a21*_a33-_a14*_a23*_a31-_a11*_a24*_a33-_a13*_a21*_a34;
+		_x43=-_a11*_a22*_a34-_a12*_a24*_a31-_a14*_a21*_a32+_a14*_a22*_a31+_a11*_a24*_a32+_a12*_a21*_a34;
+		_x44=+_a11*_a22*_a33+_a12*_a23*_a31+_a13*_a21*_a32-_a13*_a22*_a31-_a11*_a23*_a32-_a12*_a21*_a33;
+		_a11=_x11/_det;_a12=_x21/_det;_a13=_x31/_det;_a14=_x41/_det;
+		_a21=_x12/_det;_a22=_x22/_det;_a23=_x32/_det;_a24=_x42/_det;
+		_a31=_x13/_det;_a32=_x23/_det;_a33=_x33/_det;_a34=_x43/_det;
+		_a41=_x14/_det;_a42=_x24/_det;_a43=_x34/_det;_a44=_x44/_det;
+	};
+	/**
+	 *
+	 *Transpose homo 4x4x Matrix of accumerate matirx
+	 *
+	*/
+	function transposeAM(){// = function transposeAccumerateMatrix(){
+		_x11=_a11;_x12=_a21;_x13=_a31;_x14=_a41;
+		_x21=_a12;_x22=_a22;_x23=_a32;_x24=_a42;
+		_x31=_a13;_x32=_a23;_x33=_a33;_x34=_a43;
+		_x41=_a14;_x42=_a24;_x43=_a34;_x44=_a44;
 
-	//is this ok?????????
-	var s = Math.sin(rad);
-	var c = Math.cos(rad);
-	var t = 1 - c;
+		_a11=_x11;_a12=_x12;_a13=_x13;_a14=_x14;
+		_a21=_x21;_a22=_x22;_a23=_x23;_a24=_x24;
+		_a31=_x31;_a32=_x32;_a33=_x33;_a34=_x34;
+		_a41=_x41;_a42=_x42;_a43=_x43;_a44=_x44;
+	};
+	/**
+	 *Translate homo 4x4matrix of accumerate matrix
+	 *
+	 *@arg {number} x,y,z quantity of translation 
+	 *
+	*/
+	function translateAM(x,y,z){// = function translateAccumurateMatrix(x,y,z){
 
-	var g11 = x*x*t+c;	var g12 = y*x*t+z*s;	var g13 = z*x*t-y*s;
-	var g21 = x*y*t-z*s;	var g22 = y*y*t+c;	var g23 = z*y*t+x*s;
-	var g31 = x*z*t+y*s;	var g32 = y*z*t-x*s;	var g33 = z*z*t+c;
+///??????????????????????????????????????????? why ??????????????????????????????????????????????????????????????????????????
+//    1 0 0 x      1 0 0 0
+//not 0 1 0 y  but 0 1 0 0 the method below is the side of 'but', but openGL use the translation matrix as the side of 'not'
+//    0 0 1 z      0 0 1 0
+//    0 0 0 1      x y z 1
+//??????????????????????????????????????????? why ?????????????????????????????????????????????????????????????????
 
-	_x11 = _a11 * g11 + _a21 * g12 + _a31 * g13;
-	_x12 = _a12 * g11 + _a22 * g12 + _a32 * g13;
-	_x13 = _a13 * g11 + _a23 * g12 + _a33 * g13;
-	_x14 = _a14 * g11 + _a24 * g12 + _a34 * g13;
 
-	_x21 = _a11 * g21 + _a21 * g22 + _a31 * g23;
-	_x22 = _a12 * g21 + _a22 * g22 + _a32 * g23;
-	_x23 = _a13 * g21 + _a23 * g22 + _a33 * g23;
-	_x24 = _a14 * g21 + _a24 * g22 + _a34 * g23;
+		_x11=_a11;_x12=_a12;_x13=_a13;_x14=_a14;
+		_x21=_a21;_x22=_a22;_x23=_a23;_x24=_a24;
+		_x31=_a31;_x32=_a32;_x33=_a33;_x34=_a34;
+		_x41=_a11*x+_a21*y+_a31*z+_a41;
+		_x42=_a12*x+_a22*y+_a32*z+_a42;
+		_x43=_a13*x+_a23*y+_a33*z+_a43;
+		_x44=_a14*x+_a24*y+_a34*z+_a44;
 
-	_x31 = _a11 * g31 + _a21 * g32 + _a31 * g33;
-	_x32 = _a12 * g31 + _a22 * g32 + _a32 * g33;
-	_x33 = _a13 * g31 + _a23 * g32 + _a33 * g33;
-	_x34 = _a14 * g31 + _a24 * g32 + _a34 * g33;
+		_a11=_x11;_a12=_x12;_a13=_x13;_a14=_x14;
+		_a21=_x21;_a22=_x22;_a23=_x23;_a24=_x24;
+		_a31=_x31;_a32=_x32;_a33=_x33;_a34=_x34;
+		_a41=_x41;_a42=_x42;_a43=_x43;_a44=_x44;
+	};
+	/**
+	 *Rotate homo 4x4matrix of accumurate matrix
+	 *
+	 *@arg {number} x,y,z axis vector
+	 *@arg {number} rad radian
+	 *
+	*/
+	function rotateAM(x,y,z,rad){// = function rotateAccumurateMatrix(x,y,z,rad){
+		var len = Math.sqrt(x*x+y*y+z*z);
+		if(len < 0.001){
+			PRINT_CAUTION.innerHTML+="axis Matrix is too short. x:"+x.toString()+" y:"+y.toString()+" z:"+z.toString()+"<br>";
+			return null;//????
+		}
+		var x = x/len;
+		var y = y/len;
+		var z = z/len;
+
+		//is this ok?????????
+		var s = Math.sin(rad);
+		var c = Math.cos(rad);
+		var t = 1 - c;
+
+		var g11 = x*x*t+c;	var g12 = y*x*t+z*s;	var g13 = z*x*t-y*s;
+		var g21 = x*y*t-z*s;	var g22 = y*y*t+c;	var g23 = z*y*t+x*s;
+		var g31 = x*z*t+y*s;	var g32 = y*z*t-x*s;	var g33 = z*z*t+c;
+
+		_x11 = _a11 * g11 + _a21 * g12 + _a31 * g13;
+		_x12 = _a12 * g11 + _a22 * g12 + _a32 * g13;
+		_x13 = _a13 * g11 + _a23 * g12 + _a33 * g13;
+		_x14 = _a14 * g11 + _a24 * g12 + _a34 * g13;
+
+		_x21 = _a11 * g21 + _a21 * g22 + _a31 * g23;
+		_x22 = _a12 * g21 + _a22 * g22 + _a32 * g23;
+		_x23 = _a13 * g21 + _a23 * g22 + _a33 * g23;
+		_x24 = _a14 * g21 + _a24 * g22 + _a34 * g23;
+
+		_x31 = _a11 * g31 + _a21 * g32 + _a31 * g33;
+		_x32 = _a12 * g31 + _a22 * g32 + _a32 * g33;
+		_x33 = _a13 * g31 + _a23 * g32 + _a33 * g33;
+		_x34 = _a14 * g31 + _a24 * g32 + _a34 * g33;
 	
-	_x41 = _a41;
-	_x42 = _a42;
-	_x43 = _a43;
-	_x44 = _a44;
+		_x41 = _a41;
+		_x42 = _a42;
+		_x43 = _a43;
+		_x44 = _a44;
 
-	_a11=_x11;_a12=_x12;_a13=_x13;_a14=_x14;
-	_a21=_x21;_a22=_x22;_a23=_x23;_a24=_x24;
-	_a31=_x31;_a32=_x32;_a33=_x33;_a34=_x34;
-	_a41=_x41;_a42=_x42;_a43=_x43;_a44=_x44;
-};
+		_a11=_x11;_a12=_x12;_a13=_x13;_a14=_x14;
+		_a21=_x21;_a22=_x22;_a23=_x23;_a24=_x24;
+		_a31=_x31;_a32=_x32;_a33=_x33;_a34=_x34;
+		_a41=_x41;_a42=_x42;_a43=_x43;_a44=_x44;
+	};
+	function storeAM(arr){// = function storeAccumeMatrixToArray(arr){
+		arr[0]=_a11;	arr[1]=_a12;	arr[2]=_a13;	arr[3]=_a14;
+		arr[4]=_a21;	arr[5]=_a22;	arr[6]=_a23;	arr[7]=_a24;
+		arr[8]=_a31;	arr[9]=_a32;	arr[10]=_a33;	arr[11]=_a34;
+		arr[12]=_a41;	arr[13]=_a42;	arr[14]=_a43;	arr[15]=_a44;
+	};
+	/*
+	 *
+	 *Load array to accumerate matrix
+	 *
+	 *@param {array} arr 4x4matrix
+	 *
+	*/
+	function loadToAM(arr){// = function loadMatrixToAccumerateMatrix(arr){
+		_a11=arr[0];_a12=arr[1];_a13=arr[2];_a14=arr[3];
+		_a21=arr[4];_a22=arr[5];_a23=arr[6];_a24=arr[7];
+		_a31=arr[8];_a32=arr[9];_a33=arr[10];_a34=arr[11];
+		_a41=arr[12];_a42=arr[13];_a43=arr[14];_a44=arr[15];
+	};
+	/**
+	 *Make perspective matrix
+	 *
+	 *@arg {number} fov radian
+	 *@arg {number} aspect width/height of screen
+	 *@arg {number} near ?nearest distance to be able to take 
+	 *@arg {number} far ?farthest distance to be able to take
+	*/
+	function preparePM(fov,aspectRatio,near,far){// = function makePerspectiveMatrix(fov,aspectRatio,near,far){
 
-var storeAM = function storeAccumeMatrixToArray(arr){
-	arr[0]=_a11;	arr[1]=_a12;	arr[2]=_a13;	arr[3]=_a14;
-	arr[4]=_a21;	arr[5]=_a22;	arr[6]=_a23;	arr[7]=_a24;
-	arr[8]=_a31;	arr[9]=_a32;	arr[10]=_a33;	arr[11]=_a34;
-	arr[12]=_a41;	arr[13]=_a42;	arr[14]=_a43;	arr[15]=_a44;
-};
-/*
- *
- *Load array to accumerate matrix
- *
- *@param {array} arr 4x4matrix
- *
-*/
-var loadToAM = function loadMatrixToAccumerateMatrix(arr){
-	_a11=arr[0];_a12=arr[1];_a13=arr[2];_a14=arr[3];
-	_a21=arr[4];_a22=arr[5];_a23=arr[6];_a24=arr[7];
-	_a31=arr[8];_a32=arr[9];_a33=arr[10];_a34=arr[11];
-	_a41=arr[12];_a42=arr[13];_a43=arr[14];_a44=arr[15];
-}
+		if(near == far){
+			PRINT_CAUTION.innerHTML += "far equals to near in makePMatrix().<br>";
+			return null;
+		}
+		var s = 1.0 / Math.tan(fov / 2);
+		var nf = 1 / (near - far);
 
-var MatA = { };
-Object.defineProperty(MatA,'loadIdentity',{value:prepareAM,enumerable:true,configurable:true});
-Object.defineProperty(MatA,'trans',{value:translateAM,enumerable:true,configurable:true});
-Object.defineProperty(MatA,'rot',{value:rotateAM,enumerable:true,configurable:true});
-Object.defineProperty(MatA,'store',{value:storeAM,enumerable:true,configurable:true});
-Object.defineProperty(MatA,'load',{value:loadToAM,enumerable:true,configurable:true});
-Object.defineProperty(MatA,'inverse',{value:inverseAM,enumerable:true,configurable:true});
-Object.defineProperty(MatA,'transpose',{value:transposeAM,enumerable:true,configurable:true});
-Object.defineProperty(MatA,'push',{value:pushAM,enumerable:true,configurable:true});
-Object.defineProperty(MatA,'pop',{value:popAM,enumerable:true,configurable:true});
+		_a11 = s/aspectRatio;	_a12 = 0;	_a13 = 0;			_a14 = 0;
+		_a21 = 0;		_a22 = s;	_a23 = 0;			_a24 = 0;
+		_a31 = 0;		_a32 = 0;	_a33 = (far + near) * nf;	_a34 = -1;
+		_a41 = 0;		_a42 = 0;	_a43 = 2 * far * near * nf;	_a44 = 0;
 
+		//not important _a43,i think
 
-
-//*********************************** perspective matrix *********************************************
-
-
-/**
- *Make perspective matrix
- *
- *@arg {number} fov radian
- *@arg {number} aspect width/height of screen
- *@arg {number} near ?nearest distance to be able to take 
- *@arg {number} far ?farthest distance to be able to take
-*/
-var makePM = function makePerspectiveMatrix(fov,aspectRatio,near,far){
-
-	if(near == far){
-		PRINT_CAUTION.innerHTML += "far equals to near in makePMatrix().<br>";
-		return null;
-	}
-	var s = 1.0 / Math.tan(fov / 2);
-	var nf = 1 / (near - far);
-
-	_p11 = s/aspectRatio;	_p12 = 0;	_p13 = 0;			_p14 = 0;
-	_p21 = 0;		_p22 = s;	_p23 = 0;			_p24 = 0;
-	_p31 = 0;		_p32 = 0;	_p33 = (far + near) * nf;	_p34 = -1;
-	_p41 = 0;		_p42 = 0;	_p43 = 2 * far * near * nf;	_p44 = 0;
-
-//not important _p43,i think
-
-//PRINT2.innerHTML = near.toString() + "&nbsp;&nbsp;&nbsp;" + far.toString() + "&nbsp&nbsp&nbsp" + (far*near*nf).toString();
-//https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
-};
-var storePM = function storePerspectiveMatrixToArray(arr){
-	arr[0]=_p11;	arr[1]=_p12;	arr[2]=_p13;	arr[3]=_p14;
-	arr[4]=_p21;	arr[5]=_p22;	arr[6]=_p23;	arr[7]=_p24;
-	arr[8]=_p31;	arr[9]=_p32;	arr[10]=_p33;	arr[11]=_p34;
-	arr[12]=_p41;	arr[13]=_p42;	arr[14]=_p43;	arr[15]=_p44;
-};
-
-
-
-var MatP = { };
-Object.defineProperty(MatP,'make',{value:makePM,enumerable:true,configurable:true});
-Object.defineProperty(MatP,'store',{value:storePM,enumerable:true,configurable:true});
-
-
+		//PRINT2.innerHTML = near.toString() + "&nbsp;&nbsp;&nbsp;" + far.toString() + "&nbsp&nbsp&nbsp" + (far*near*nf).toString();
+		//https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
+	};
+	function multiplyAMBy(arr){//=function AccumerateMatrixIsMultipliedByOtherMatrix(arr){
+		myMat4.push();
+		myMat4.load(arr);
+		// Y・A
+		_x11=_y11*_a11+_y12*_a21+_y13*_a31+_y14*_a41;
+		_x12=_y11*_a12+_y12*_a22+_y13*_a32+_y14*_a42;
+		_x13=_y11*_a13+_y12*_a23+_y13*_a33+_y14*_a43;
+		_x14=_y11*_a14+_y12*_a24+_y13*_a34+_y14*_a44;
+		_x21=_y21*_a11+_y22*_a21+_y23*_a31+_y24*_a41;
+		_x22=_y21*_a12+_y22*_a22+_y23*_a32+_y24*_a42;
+		_x23=_y21*_a13+_y22*_a23+_y23*_a33+_y24*_a43;
+		_x24=_y21*_a14+_y22*_a24+_y23*_a34+_y24*_a44;
+		_x31=_y31*_a11+_y32*_a21+_y33*_a31+_y34*_a41;
+		_x32=_y31*_a12+_y32*_a22+_y33*_a32+_y34*_a42;
+		_x33=_y31*_a13+_y32*_a23+_y33*_a33+_y34*_a43;
+		_x34=_y31*_a14+_y32*_a24+_y33*_a34+_y34*_a44;
+		_x41=_y41*_a11+_y42*_a21+_y43*_a31+_y44*_a41;
+		_x42=_y41*_a12+_y42*_a22+_y43*_a32+_y44*_a42;
+		_x43=_y41*_a13+_y42*_a23+_y43*_a33+_y44*_a43;
+		_x44=_y41*_a14+_y42*_a24+_y43*_a34+_y44*_a44;
+		_a11=_x11;_a12=_x12;_a13=_x13;_a14=_x14;
+		_a21=_x21;_a22=_x22;_a23=_x23;_a24=_x24;
+		_a31=_x31;_a32=_x32;_a33=_x33;_a34=_x34;
+		_a41=_x41;_a42=_x42;_a43=_x43;_a44=_x44;
+	};
+})();
 
 
 </script>
 
 
+<script id="tagIdColorName" type='text/javascript'>
+
+(function(){
+	var ColorRGBA = function(red,green,blue,alpha){
+		this.r=red;
+		this.g=green;
+		this.b=blue;
+		this.a=alpha;
+	};
+	ColorRGBA.prototype.reverse = function(){
+		//to do
+	};
+
+	(function(){
+		myColorName = { };
+		Object.defineProperty(myColorName,'black'  ,{value:function(alpha){return new ColorRGBA(0,0,0,alpha);},writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(myColorName,'blue'   ,{value:function(alpha){return new ColorRGBA(0,0,1,alpha);},writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(myColorName,'red'    ,{value:function(alpha){return new ColorRGBA(1,0,0,alpha);},writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(myColorName,'magenta',{value:function(alpha){return new ColorRGBA(1,0,1,alpha);},writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(myColorName,'green'  ,{value:function(alpha){return new ColorRGBA(0,1,0,alpha);},writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(myColorName,'cyan'   ,{value:function(alpha){return new ColorRGBA(1,1,0,alpha);},writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(myColorName,'yellow' ,{value:function(alpha){return new ColorRGBA(0,1,1,alpha);},writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(myColorName,'white'  ,{value:function(alpha){return new ColorRGBA(1,1,1,alpha);},writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(myColorName,'purple'  ,{value:function(alpha){return new ColorRGBA(Math.floor(128/256*100)/100,0,Math.floor(128/256*100)/100,alpha);},writable:false,enumerable:true,configurable:false});
+	})();		
+
+})();
+</script>
+
+<script id="tagIdGeoClass" type='text/javascript'>
+
+(function(){
+	myGeoClass = { };
+	Object.defineProperty(myGeoClass,'Point',{value:Point,writable:false,enumerable:true});
+	Object.defineProperty(myGeoClass,'Vector',{value:Vector,writable:false,enumerable:true});
+
+	function Point(x,y,z){
+		this.x=x;
+		this.y=y;
+		this.z=z;
+	};
+	Point.prototype.calcTranslated = function(v){
+		//@param {Point} out
+		//@param {Vector} v
+		return new myGeoClass.Point(this.x+v.x,this.y+v.y,this.z+v.z);
+	};
+
+
+	function Vector(x,y,z){
+		this.x=x;
+		this.y=y;
+		this.z=z;
+	};
+	Vector.prototype.calcLength = function(){
+		return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5);
+	};
+	Vector.prototype.makeMyselfUnitVector = function(){
+		var len = 1/this.calcLength();
+		this.x=this.x*len;
+		this.y=this.y*len;
+		this.z=this.z*len;
+	};
+})();
+
+</script>
+
+
+<script id="tagIdShape" type='text/javascript'>
+
+(function(){
+	myGLSape = { };
+	Object.defineProperty(myGLSape,'point'		,{value:point(),writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'line'		,{value:line(),writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'triangle'	,{value:triangle(),writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'axisX'		,{value:axisX(),writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'axisY'		,{value:new axisY(),writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'axisZ'		,{value:new axisZ(),writable:false,enumerable:true,configurable:false});
+
+	//entities
+	function point(){
+		return function(gl,p,c){
+			var positions = [];
+			positions.push(p.x,p.y,p.z);
+			var normals = [1,1,1];
+			var colors = [c.r,c.g,c.b,c.a];
+			var textureCoordinates = [0,0];
+			var indices = [0];
+			return {
+				name:'point',
+				n:1,
+				pos:positions,
+				nor:normals,
+				col:colors,
+				tex:textureCoordinates,
+				ind:indices,
+				draw:function(){
+					gl.drawElements(gl.POINTS,1,gl.UNSIGNED_SHORT,0);//to do
+				}
+			}
+		}
+	};
+	function line(){
+		return function(gl,pointStart,pointEnd,color){
+			var positions = [];
+			positions.push(pointStart.x,pointStart.y,pointStart.z,pointEnd.x,pointEnd.y,pointEnd.z);
+			var normals = [1,1,1,1,1,1];
+			var colors = [];
+			colors.push(color.r,color.g,color.b,color.a);
+			colors.push(color.r,color.g,color.b,color.a);
+			var textureCoordinates = [0,0,1,1];
+			var indices = [0,1];
+			return {
+				name:'line',
+				n:2,
+				pos:positions,
+				nor:normals,
+				col:colors,
+				tex:textureCoordinates,
+				ind:indices,
+				draw:function(){
+					gl.drawElements(gl.LINE_STRIP,2,gl.UNSIGNED_SHORT,0);//to do
+				}
+			}
+		}
+	};
+	function triangle(){
+		return function(gl,p1,p2,p3,color){
+			var positions = [];
+			positions.push(p1.x,p1.y,p1.z,p2.x,p2.y,p2.z,p3.x,p3.y,p3.z,p1.x,p1.y,p1.z);
+			var vN = getNormalVector(gl,p1,p2,p3,new myGeoClass.Point(0,0,0));
+			var normals = [
+				vN.x,vN.y,vN.z,
+				vN.x,vN.y,vN.z,
+				vN.x,vN.y,vN.z
+			];
+			var colors = [];
+			colors.push(color.r,color.g,color.b,color.a);
+			colors.push(color.r,color.g,color.b,color.a);
+			colors.push(color.r,color.g,color.b,color.a);
+			var textureCoordinates = [
+				0,0,
+				0,1,
+				1,1,
+			];
+			var indices = [
+				0,1,2
+			];
+			return {
+				name:'triangle',
+				n:3,
+				pos:positions,
+				nor:normals,
+				col:colors,
+				tex:textureCoordinates,
+				ind:indices,
+				draw:function(){
+					gl.drawElements(gl.TRIANGLES,3,gl.UNSIGNED_SHORT,0);
+				}
+			}
+		}
+	};
+	function axisX() {
+		return function(gl){
+			return myGLSape.line(gl,new myGeoClass.Point(0,0,0),new myGeoClass.Point(10,0,0),new myColorName.red(1));	
+		}
+	};
+	function axisY(){
+		return function(gl) {
+			return myGLSape.line(gl,new myGeoClass.Point(0,0,0),new myGeoClass.Point(0,10,0),new myColorName.green(1));	
+		}
+	};
+	function axisZ(){
+		return function(gl) {
+			return myGLSape.line(gl,new myGeoClass.Point(0,0,0),new myGeoClass.Point(0,0,10),new myColorName.blue(1));	
+		}
+	};
+
+	/**
+	 *Get Normal Vector from 3 points and an inner point
+	 *
+	 *@param {Vector} out  x,y,z
+	 *@param {Vector} p1 x,y,z
+	 *@param {Vector} p2 x,y,z
+	 *@param {Vector} p3 x,y,z
+	 *@param {Vector} pInnerBody x,y,z
+	 *
+	*/
+	function getNormalVector(gl,p1,p2,p3,pInnerBody){
+			//kkkk
+			var mvm1 = Motion.axisY;
+			var mvm2 = Motion.none;
+			var mvm3 = Motion.none;
+			var mvm4 = Motion.none;
+			var mvm5 = Motion.none;
+
+
+			var magenta = myColorName.magenta(1);
+			var red = myColorName.red(1);
+			var green = myColorName.red(1);
+			var blue = myColorName.blue(1);
+			var cyan = myColorName.cyan(1);
+			var yellow = myColorName.yellow(1);
+
+
+	//		Draw.triangle(gl,p1,p2,p3,magenta,mvm1,mvm2,mvm3,mvm4,mvm5);
+			Draw.point(gl,p1,red,mvm1,mvm2,mvm3,mvm4,mvm5);
+			Draw.point(gl,p2,cyan,mvm1,mvm2,mvm3,mvm4,mvm5);
+			Draw.point(gl,p3,blue,mvm1,mvm2,mvm3,mvm4,mvm5);
+		var pCenter = new myGeoClass.Point((p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3);
+			Draw.point(gl,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+			Draw.line(gl,pCenter,p1,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+			Draw.point(gl,pInnerBody,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+			Draw.line(gl,pInnerBody,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+		var vio = new myGeoClass.Vector(pCenter.x-pInnerBody.x,pCenter.y-pInnerBody.y,pCenter.z-pInnerBody.z);
+		var pio = pCenter.calcTranslated(vio);
+			Draw.point(gl,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+			Draw.line(gl,pCenter,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+		var vP = new myGeoClass.Vector(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
+		var vQ = new myGeoClass.Vector(p3.x-p1.x,p3.y-p1.y,p3.z-p1.z);
+
+		var vN = new myGeoClass.Vector(vP.y*vQ.z-vP.z*vQ.y,vP.z*vQ.x-vP.x*vQ.z,vP.x*vQ.y-vP.y*vQ.x);
+		var pCN = new myGeoClass.Point(pCenter.x+vN.x,pCenter.y+vN.y,pCenter.z+vN.z);
+			Draw.point(gl,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+			Draw.line(gl,pCenter,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+		var l1=vio.calcLength();//Math.pow(vio.x*vio.x+vio.y*vio.y+vio.z*vio.z,0.5);//calcLength();
+		var l2=vio.calcLength();//Math.pow(vN.x*vN.x+vN.y*vN.y+vN.z*vN.z,0.5);//.calcLength();
+		if(l1==0 || l2==0){
+			vN = new myGeoClass.Vector(0,0,0);
+PRINT_CAUTION.innerHTML+="vN=(0,0,0)<br>";
+			return vN;
+		}else{
+			var theta = Math.acos((vio.x*vN.x+vio.y*vN.y+vio.z*vN.z)/(l1*l2));
+			if(theta>Math.PI/2)vN = new myGeoClass.Vector(-vN.x,-vN.y,-vN.z);
+		}
+		var pCN2 = new myGeoClass.Point(pCenter.x + vN.x,pCenter.y + vN.y,pCenter.z + vN.z);
+			Draw.line(gl,pCenter,pCN2,yellow,mvm1,mvm2,mvm3,mvm4,mvm5);
+console.log("vN=",vN);
+		vN.makeMyselfUnitVector();
+
+//			Draw.axisX(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
+//			Draw.axisY(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
+//			Draw.axisZ(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
+
+		return vN;
+	};
+
+
+})();
+
+
+</script>
 <!--******************************* SHADER PROGMRAMS *****************************************************-->
 
 
@@ -283,8 +552,8 @@ Object.defineProperty(MatP,'store',{value:storePM,enumerable:true,configurable:t
 
 	void main(void) {
 //x		gl_FragColor = texture2D(uSampler,vec2(vTextureCoord.s,vTextureCoord.t));
-//		gl_FragColor = texture2D(uSampler,vTextureCoord);//mediump型
-		gl_FragColor = vColor;
+		gl_FragColor = texture2D(uSampler,vTextureCoord);//mediump型
+//		gl_FragColor = vColor;
 
 		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
 //○		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
@@ -328,7 +597,7 @@ Object.defineProperty(MatP,'store',{value:storePM,enumerable:true,configurable:t
 		highp vec3 directionalLightColor = vec3(1,1,1);//myself
 //○		highp vec3 directionalVector = vec3(0.85,0.8,0.75);//ja
 //○		highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));//en
-		highp vec3 directionalVector = normalize(vec3(0.0,-1.0,0.0));//myself
+		highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));//myself
 
 		highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal,1.0);
 	
@@ -430,31 +699,6 @@ function getShader(gl,id){
 	return shader;
 };
 
-var Color = function(red,green,blue,alpha){
-	this.r=red;
-	this.g=green;
-	this.b=blue;
-	this.a=alpha;
-};
-Color.prototype.reverse = function(){
-	//to do
-};
-
-(function(){
-	ColorName = { };
-	Object.defineProperty(ColorName,'black'  ,{value:function(alpha){return new Color(0,0,0,alpha);},writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(ColorName,'blue'   ,{value:function(alpha){return new Color(0,0,1,alpha);},writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(ColorName,'red'    ,{value:function(alpha){return new Color(1,0,0,alpha);},writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(ColorName,'magenta',{value:function(alpha){return new Color(1,0,1,alpha);},writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(ColorName,'green'  ,{value:function(alpha){return new Color(0,1,0,alpha);},writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(ColorName,'cyan'   ,{value:function(alpha){return new Color(1,1,0,alpha);},writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(ColorName,'yellow' ,{value:function(alpha){return new Color(0,1,1,alpha);},writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(ColorName,'white'  ,{value:function(alpha){return new Color(1,1,1,alpha);},writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(ColorName,'purple'  ,{value:function(alpha){return new Color(Math.floor(128/256*100)/100,0,Math.floor(128/256*100)/100,alpha);},writable:false,enumerable:true,configurable:false});
-})();		
-
-
-
 
 
 
@@ -488,77 +732,24 @@ function start(){
 //    gl.clear(gl.COLOR_BUFFER_BIT);
 };
 
-	var magenta 	= ColorName.magenta(1);
-	var green 	= ColorName.green(1);
-	var red 	= ColorName.red(1);
-	var blue 	= ColorName.blue(1);
+			var mvm1 = Motion.axisY;
+			var mvm2 = Motion.none;
+			var mvm3 = Motion.none;
+			var mvm4 = Motion.none;
+			var mvm5 = Motion.none;
 
 
 	initTextures(gl);
 	var oShader = initShaders(gl);
-	var aModels = [];
-	var oModel;
-	var mvm1 = Motion.axisY;
-	var mvm2 = Motion.none;
-	var mvm3 = Motion.none;
-	var mvm4 = Motion.none;
-	var mvm5 = Motion.none;
 
-//kkk
+	var p1 = new myGeoClass.Point(1.0,0.5,0.4);
+	var p2 = new myGeoClass.Point(0.5,0.2,1.4);
+	var p3 = new myGeoClass.Point(0.7,1.5,0.8);
 
-	var p1 = new Point(1.2,0.5,1.2);
-	var p2 = new Point(1.2,1.5,1.0);
-	var p3 = new Point(0.5,0.5,0.6);
 
-		Draw.triangle(gl,p1,p2,p3,magenta,mvm1,mvm2,mvm3,mvm4,mvm5);
-	var pCenter = new Point((p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3);
-		Draw.point(gl,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-		Draw.line(gl,pCenter,p1,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-	var pInnerBody = new Point(0,0,0);
-		Draw.point(gl,pInnerBody,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-		Draw.line(gl,pInnerBody,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-	var vio = new Vector(pCenter.x-pInnerBody.x,pCenter.y-pInnerBody.y,pCenter.z-pInnerBody.z);
-	var pio = pCenter.calcTranslated(vio);
-		Draw.point(gl,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-		Draw.line(gl,pCenter,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-	var vP = new Vector(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
-	var vQ = new Vector(p3.x-p1.x,p3.y-p1.y,p3.z-p1.z);
 
-	var vN = new Vector(vP.y*vQ.z-vP.z*vQ.y,vP.z*vQ.x-vP.x*vQ.z,vP.x*vQ.y-vP.y*vQ.x);
-	var pCN = new Point(pCenter.x+vN.x,pCenter.y+vN.y,pCenter.z+vN.z);
-		Draw.point(gl,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-		Draw.line(gl,pCenter,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-	var l1=vio.calcLength();//Math.pow(vio.x*vio.x+vio.y*vio.y+vio.z*vio.z,0.5);//calcLength();
-	var l2=vio.calcLength();//Math.pow(vN.x*vN.x+vN.y*vN.y+vN.z*vN.z,0.5);//.calcLength();
-	if(l1==0 || l2==0){
-		vN = new Vector(0,0,0);
-	}else{
-		var theta = Math.acos((vio.x*vN.x+vio.y*vN.y+vio.z*vN.z)/(l1*l2));
-		if(theta>Math.PI)vN = new Vector(-vN.x,-vN.y,-vN.z);
-	}
-	//return vN;
+	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),mvm1,mvm2,mvm3,mvm4,mvm5);
 
-console.log("Theta=",theta/Math.PI*180);
-		Draw.axisX(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
-		Draw.axisY(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
-		Draw.axisZ(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
-
-/*
-for(var ii=0;ii<10;ii++){
-	oModel = { };
-	oModel.base = regularHexahedron();
-	oModel.buffers = setModelToBuffer(gl,oModel);
-	oModel.mvMat = new mvMat_random();//function to rotation, translation and expand
-	aModels.push(oModel);
-console.log(oModel);
-	oModel = { };
-	oModel.base = regularTetrahedron();
-	oModel.buffers = setModelToBuffer(gl,oModel);
-	oModel.mvMat = new mvMat_random();
-	aModels.push(oModel);
-console.log(oModel);
-};
-*/
 	var timeBefore=0;
 	var angle=0;
 	function render(timeStamp){
@@ -567,7 +758,8 @@ console.log(oModel);
 			angle=Math.floor(angle*10)/10;
 			if(angle>360)angle=0;
 			PRINT_INFO.innerText=angle.toString();
-			drawScene(gl,oShader,aModels,angle);
+//			drawScene(gl,oShader,aModels,angle);
+			drawScene(gl,oShader,angle);
 			timeBefore = timeStamp;
 		}
 		window.requestAnimationFrame(render);
@@ -668,10 +860,8 @@ function sendBufferData(gl,oShader,oBuffer){
 	Object.defineProperty(Motion,'none',{value:unit(),writable:false,enumerable:false});
 	function unit(){
 		var a = new Array(16);
-		MatA.push();
-		MatA.loadIdentity();
-		MatA.store(a);
-		MatA.pop();
+		myMat4.loadIdentity();
+		myMat4.storeTo(a);
 		return a;
 	}
 
@@ -690,13 +880,11 @@ function sendBufferData(gl,oShader,oBuffer){
 
 			var matrix = new Array(16);
 
-			//model view matrix...MatA was already defined in global scope
-			MatA.push();//●
-			MatA.loadIdentity();
-			MatA.trans(tx,ty,-6.0);
-			MatA.rot(rx,ry,rz,m*angle*Math.PI/180);
-			MatA.store(matrix);
-			MatA.pop();//●
+			//model view matrix...myMat4 was already defined in global scope
+			myMat4.loadIdentity();
+			myMat4.trans(tx,ty,-6.0);
+			myMat4.rot(rx,ry,rz,m*angle*Math.PI/180);
+			myMat4.storeTo(matrix);
 	
 			return matrix;
 		}
@@ -716,13 +904,11 @@ function sendBufferData(gl,oShader,oBuffer){
 
 			var matrix = new Array(16);
 
-			//model view matrix...MatA was already defined in global scope
-			MatA.push();//●
-			MatA.loadIdentity();
-			MatA.trans(tX,tY,tZ);
-			MatA.rot(rAxisX,rAxisY,rAxisZ,mag*angle*Math.PI/180);
-			MatA.store(matrix);
-			MatA.pop();//●
+			//model view matrix...myMat4 was already defined in global scope
+			myMat4.loadIdentity();
+			myMat4.trans(tX,tY,tZ);
+			myMat4.rot(rAxisX,rAxisY,rAxisZ,mag*angle*Math.PI/180);
+			myMat4.storeTo(matrix);
 
 			return matrix;
 		}
@@ -741,7 +927,7 @@ function sendPerspectiveMatrix(gl,oShader){
 		and we only want ot see objects between 0.1 units
 		and 100 units away from the camera.
 	*/
-		//perspective matrix...MatP was already defined at global scope
+		//perspective matrix...myMat4 was already defined at global scope
 	var fieldOfView = 70 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	var zNear = 0.1;
@@ -749,8 +935,8 @@ function sendPerspectiveMatrix(gl,oShader){
 
 	//create a projectionMatrix array as the perspective matrix
 	var projectionMatrix=new Array(16);
-	MatP.make(fieldOfView,aspect,zNear,zFar);
-	MatP.store(projectionMatrix);
+	myMat4.loadPerspective(fieldOfView,aspect,zNear,zFar);
+	myMat4.storeTo(projectionMatrix);
 
 	//uniform mat4 uProjectionMatrixへ値を転送
 	var pUniform = gl.getUniformLocation(oShader.prog,"uProjectionMatrix");//""内は特殊言語の実装参照してる
@@ -761,13 +947,25 @@ function sendPerspectiveMatrix(gl,oShader){
 
 
 
-function sendModelViewMatrix(gl,oShader,mvMatrix){
-
+function sendModelViewMatrix(gl,oShader,aMVMatrices){
+	//@param {Array} aMVMatrices motion view matrix in Array
 		//Set the shader uniforms culclated above and something
+
+	var mvMat = new Array(16);
+	myMat4.load(aMVMatrices[0]);
+
+	for(var ii=1,len=aMVMatrices.length;ii<len;ii++){
+		myMat4.multi(aMVMatrices[ii]);
+	}
+
+	myMat4.storeTo(mvMat);
+
 	//uniform mat4 uModelViewMatrixへ値を転送
 	var mvUniform = gl.getUniformLocation(oShader.prog,"uModelViewMatrix");
 	if(!mvUniform){PRINT_CAUTION.innerHTML+="mvUniform is "+mvUniform+"<br>";return null;}
-	gl.uniformMatrix4fv(mvUniform,false,new Float32Array(mvMatrix));
+	gl.uniformMatrix4fv(mvUniform,false,new Float32Array(mvMat));
+
+	return mvMat;
 };
 
 function sendPointSize(gl,oShader,nSize){
@@ -782,13 +980,12 @@ function sendNormalMatrix(gl,oShader,mvMatrix){//●
 	var normMatrix = new Array(16);
 
 	//compute matrix
-	MatA.push();
-	MatA.load(mvMatrix);
-	MatA.inverse();
-	MatA.transpose();
-	MatA.store(normMatrix);
-	MatA.pop();
-
+	myMat4.load(mvMatrix);
+	myMat4.inverse();
+	myMat4.transpose();
+	myMat4.storeTo(normMatrix);
+//https://msdn.microsoft.com/ja-jp/library/ms810476.aspx
+//	say the reason 'inverse & transpose' above
 
 	//uniform highp mat4 uNormalMatrixに値を転送
 	var normUniform = gl.getUniformLocation(oShader.prog,"uNormalMatrix");
@@ -808,7 +1005,7 @@ function sendSampler(gl,oShader,number){
 //************************************** DRAW SCENE *************************************************
 
 
-function drawScene(gl,oShader,aModels,angle){
+function drawScene(gl,oShader,angle){
 
 	// カラーバッファや深度バッファをクリアする
 	//Clear the canvas before we start drawing on it
@@ -818,16 +1015,18 @@ function drawScene(gl,oShader,aModels,angle){
 	var vertexOffset = 0;//このoffsetは頂点のx,y,zごとに進むので、データ的にはoffset*3(4?)ごとに進む
 	var nPointSize = 10.0;
 
-	var mat;//matrix
+	var member;
+	var aMatrices;//5 matrices now
 	for(var ii=0;ii<Draw.length;ii++){
-		sendBufferData(gl,oShader,Draw.memberByIndex(ii).buffers);
+		member = Draw.memberByIndex(ii);
+		sendBufferData(gl,oShader,member.buffers);
 		sendPerspectiveMatrix(gl,oShader);
-		mat = Draw.memberByIndex(ii).mvm1(angle);
-		sendModelViewMatrix(gl,oShader,mat);
+		aMatrices = [member.mvm1(angle),member.mvm2,member.mvm3,member.mvm4,member.mvm5];//kkkkkkkkkk
+		var mat = sendModelViewMatrix(gl,oShader,aMatrices);
 		sendNormalMatrix(gl,oShader,mat);
 		sendPointSize(gl,oShader,nPointSize);
 		sendSampler(gl,oShader,0);//unit number
-		Draw.memberByIndex(ii).base.draw();
+		member.base.draw();
 
 //		gl.drawElements(gl.LINE_STRIP,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
 //		gl.drawElements(gl.TRIANGLES,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
@@ -877,7 +1076,7 @@ function initTextures(gl){
 		reader.readAsDataURL(h.response);
 	};
 
-	handleTextureDefault(gl);//●
+//kkk	handleTextureDefault(gl);//●issue occured
 	h.open('GET',"http://localhost:8000/documents/games/3d/niku_stand2.png");
 	h.send();
 	//To get url data, it's necessary to have been executing two applications listed below
@@ -918,34 +1117,8 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 
 
 //**************************** 3D SHAPES *************************************************
-//kkk
-var Point = function(x,y,z){
-	this.x=x;
-	this.y=y;
-	this.z=z;
-};
-Point.prototype.calcTranslated = function(v){
-	//@param {Vector} out
-	//@param {Vector} v
-	return new Point(this.x+v.x,this.y+v.y,this.z+v.z);
-};
 
 
-//kkk
-var Vector = function Vector(x,y,z){
-	this.x=x;
-	this.y=y;
-	this.z=z;
-};
-Vector.prototype.calcLength = function(){
-	return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5);
-};
-Vector.prototype.renewUnit = function(){
-//	var len = this.calcLength();
-//	this.x=this.x/len;
-//	this.y=this.y/len;
-//	this.z=this.z/len;
-};
 
 (function(){
 	Draw = { };
@@ -955,11 +1128,11 @@ Vector.prototype.renewUnit = function(){
 	Object.defineProperty(Draw,'memberByIndex',{value:function(num){return aModels[num];},writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(Draw,'length',{get:function(){return length;},enumerable:true,configurable:false});
 
-	Object.defineProperty(Draw,'point',{value:point,enumerable:true});
+	Object.defineProperty(Draw,'point',{value:point,writable:false,enumerable:true});
 	function point(gl,p1,color,mvm1,mvm2,mvm3,mvm4,mvm5){
 console.log("point p1=",p1);
 		var oModel = { };
-		oModel.base = Shape.point(gl,p1,color);
+		oModel.base = myGLSape.point(gl,p1,color);
 		oModel.buffers = setModelToBuffer(gl,oModel);
 		oModel.mvm1 = mvm1;
 		oModel.mvm2 = mvm2;
@@ -973,7 +1146,7 @@ console.log("point p1=",p1);
 	function line(gl,pointStart,pointEnd,color,mvm1,mvm2,mvm3,mvm4,mvm5){
 console.log("line");
 		var oModel = { };
-		oModel.base = Shape.line(gl,pointStart,pointEnd,color);
+		oModel.base = myGLSape.line(gl,pointStart,pointEnd,color);
 
 		oModel.buffers = setModelToBuffer(gl,oModel);
 		oModel.mvm1 = mvm1;
@@ -988,7 +1161,7 @@ console.log("line");
 	function triangle(gl,p1,p2,p3,color,mvm1,mvm2,mvm3,mvm4,mvm5){
 console.log("triangle");
 			var oModel = { };
-			oModel.base = Shape.triangle(gl,p1,p2,p3,color);
+			oModel.base = myGLSape.triangle(gl,p1,p2,p3,color);
 			oModel.buffers = setModelToBuffer(gl,oModel);
 			oModel.mvm1 = mvm1;
 			oModel.mvm2 = mvm2;
@@ -1001,8 +1174,7 @@ console.log("triangle");
 	function axisX(){
 		return function(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
 			var oModel = { };
-			oModel.base = Shape.axisX(gl);
-console.log("axisX base=",oModel.base);
+			oModel.base = myGLSape.axisX(gl);
 			oModel.buffers = setModelToBuffer(gl,oModel);
 			oModel.mvm1 = mvm1;
 			oModel.mvm2 = mvm2;
@@ -1016,8 +1188,7 @@ console.log("axisX base=",oModel.base);
 	function axisY(){
 		return function(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
 			var oModel = { };
-			oModel.base = Shape.axisY(gl);
-console.log("axisY base=",oModel.base);
+			oModel.base = myGLSape.axisY(gl);
 			oModel.buffers = setModelToBuffer(gl,oModel);
 			oModel.mvm1 = mvm1;
 			oModel.mvm2 = mvm2;
@@ -1031,8 +1202,7 @@ console.log("axisY base=",oModel.base);
 	function axisZ(){
 		return function(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
 			var oModel = { };
-			oModel.base = Shape.axisZ(gl);
-console.log("axisZ base=",oModel.base);
+			oModel.base = myGLSape.axisZ(gl);
 			oModel.buffers = setModelToBuffer(gl,oModel);
 			oModel.mvm1 = mvm1;
 			oModel.mvm2 = mvm2;
@@ -1043,250 +1213,6 @@ console.log("axisZ base=",oModel.base);
 		}
 	};
 	
-})();
-//kkk
-
-
-
-(function(){
-	Shape = { };
-	Object.defineProperty(Shape,'point',{value:point(),writable:false,enumerable:true,configurable:false});
-	function point(){
-		return function(gl,p,c){
-console.log("shape p=",p);
-			var positions = [];
-			positions.push(p.x,p.y,p.z);
-			var normals = [1,1,1];
-			var colors = [c.r,c.g,c.b,c.a];
-			var textureCoordinates = [0,0];
-			var indices = [0];
-			return {
-				n:1,
-				pos:positions,
-				nor:normals,
-				col:colors,
-				tex:textureCoordinates,
-				ind:indices,
-				draw:function(){
-					gl.drawElements(gl.POINTS,1,gl.UNSIGNED_SHORT,0);//to do
-				}
-			}
-		}
-	};
-	Object.defineProperty(Shape,'line',{value:line(),writable:false,enumerable:true,configurable:false});
-	function line(){
-		return function(gl,pointStart,pointEnd,color){
-			var positions = [];
-			positions.push(pointStart.x,pointStart.y,pointStart.z,pointEnd.x,pointEnd.y,pointEnd.z);
-			var normals = [1,1,1,1,1,1];
-			var colors = [];
-			colors.push(color.r,color.g,color.b,color.a);
-			colors.push(color.r,color.g,color.b,color.a);
-			var textureCoordinates = [0,0,1,1];
-			var indices = [0,1];
-			return {
-				n:2,
-				pos:positions,
-				nor:normals,
-				col:colors,
-				tex:textureCoordinates,
-				ind:indices,
-				draw:function(){
-					gl.drawElements(gl.LINE_STRIP,2,gl.UNSIGNED_SHORT,0);//to do
-				}
-			}
-		}
-	};
-	Object.defineProperty(Shape,'triangle',{value:triangle(),writable:false,enumerable:true,configurable:false});
-	function triangle(){
-		return function(gl,p1,p2,p3,color){
-			var positions = [];
-			positions.push(p1.x,p1.y,p1.z,p2.x,p2.y,p2.z,p3.x,p3.y,p3.z,p1.x,p1.y,p1.z);
-			var normals = [
-				1,1,1,
-				1,1,1,
-				1,1,1,
-				1,1,1
-			];
-			var colors = [];
-			colors.push(color.r,color.g,color.b,color.a);
-			colors.push(color.r,color.g,color.b,color.a);
-			colors.push(color.r,color.g,color.b,color.a);
-			colors.push(color.r,color.g,color.b,color.a);
-			var textureCoordinates = [
-				0,0,
-				0,1,
-				1,1,
-				1,1
-			];
-			var indices = [
-				0,1,2,3
-			];
-			return {
-				n:4,
-				pos:positions,
-				nor:normals,
-				col:colors,
-				tex:textureCoordinates,
-				ind:indices,
-				draw:function(){
-					gl.drawElements(gl.LINE_STRIP,4,gl.UNSIGNED_SHORT,0);
-				}
-			}
-		}
-	};
-	Object.defineProperty(Shape,'axisX',{value:axisX(),writable:false,enumerable:true,configurable:false});
-	function axisX() {
-		return function(gl){
-console.log("here");
-			return Shape.line(gl,new Point(0,0,0),new Point(10,0,0),new Color(1,0,0,1));	
-		}
-	};
-	Object.defineProperty(Shape,'axisY',{value:new axisY(),writable:false,enumerable:true,configurable:false});
-	function axisY(){
-		return function(gl) {
-			return Shape.line(gl,new Point(0,0,0),new Point(0,10,0),new Color(0,1,0,1));	
-		}
-	};
-	Object.defineProperty(Shape,'axisZ',{value:new axisZ(),writable:false,enumerable:true,configurable:false});
-	function axisZ(){
-		return function(gl) {
-			return Shape.line(gl,new Point(0,0,0),new Point(0,0,10),new Color(0,0,1,1));	
-		}
-	};
-
-/*
-	var positions = [
-		 0.0, 0.0, 0.0,
-		10.0, 0.0, 0.0,
-		10.0, 0.1, 0.0,
-		 0.0, 0.1, 0.0
-	];
-	var normals = [
-		0,0,1,
-		0,0,1,
-		0,0,1,
-		0,0,1
-
-	];
-	var colors = [
-		1,0,0,1,
-		1,0,0,1,
-		1,0,0,1,
-		1,0,0,1
-	];
-	var textureCoordinates = [
-		0.0,0.0,
-		1.0,0.0,
-		1.0,1.0,
-		0.0,1.0
-	];
-	var indices = [
-		0,1,2,0,2,3
-	];
-	return {
-		n:6,
-		pos:positions,
-		nor:normals,
-		col:colors,
-		tex:textureCoordinates,
-		ind:indices,
-		draw:function(){
-			gl.drawElements(gl.LINE_STRIP,6,gl.UNSIGNED_SHORT,0);
-		}
-
-	}
-};	
-function axisY(gl) {
-	var positions = [
-		 0.0,  0.0, 0.0,
-		 0.0, 10.0, 0.0,
-		 0.0, 10.0, 0.1,
-		 0.0,  0.0, 0.1
-	];
-	var normals = [
-		1,0,0,
-		1,0,0,
-		1,0,0,
-		1,0,0,
-
-	];
-	var colors = [
-		0,1,0,1,
-		0,1,0,1,
-		0,1,0,1,
-		0,1,0,1
-	];
-	var textureCoordinates = [
-		0.0,0.0,
-		1.0,0.0,
-		1.0,1.0,
-		0.0,1.0
-	];
-	var indices = [
-		0,1,2,0,2,3
-	];
-	return {
-		n:6,
-		pos:positions,
-		nor:normals,
-		col:colors,
-		tex:textureCoordinates,
-		ind:indices,
-		draw:function(){
-			gl.drawElements(gl.LINE_STRIP,6,gl.UNSIGNED_SHORT,0);
-		}
-
-	}
-};	
-
-
-function axisZ(gl) {
-	var positions = [
-		 0.0, 0.0,  0.0,
-		 0.0, 0.0, 10.0,
-		 0.1, 0.0, 10.0,
-		 0.1, 0.0,  0.0
-	];
-	var normals = [
-		1,1,1,
-		1,1,1,
-		1,1,1,
-		1,1,1
-
-	];
-	var colors = [
-		0,0,1,1,
-		0,0,1,1,
-		0,0,1,1,
-		0,0,1,1
-	];
-	var textureCoordinates = [
-		0.0,0.0,
-		1.0,0.0,
-		1.0,1.0,
-		0.0,1.0
-	];
-	var indices = [
-		0,1,2,0,2,3
-	];
-	return {
-		n:6,
-		pos:positions,
-		nor:normals,
-		col:colors,
-		tex:textureCoordinates,
-		ind:indices,
-		draw:function(){
-			gl.drawElements(gl.LINE_STRIP,6,gl.UNSIGNED_SHORT,0);
-		}
-
-	}
-};	
-
-*/
-
-
 })();
 
 
@@ -1955,3 +1881,4 @@ console.log("z.prop=",this.z);
 <p id="PRINT_INFO" style="position:relative;top:0px;left:0px:offset:0px"></p>
 <p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;offset:0px;background-color:white;"></p>
 </div></body></html>
+
