@@ -361,6 +361,7 @@
 	Object.defineProperty(myGLSape,'axisX'		,{value:axisX(),writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLSape,'axisY'		,{value:new axisY(),writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLSape,'axisZ'		,{value:new axisZ(),writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'tetra'		,{value:tetrahedron,writable:false,enumerable:true,configurable:false});
 
 	//entities
 	function point(){
@@ -460,6 +461,114 @@
 			return myGLSape.line(gl,new myGeoClass.Point(0,0,0),new myGeoClass.Point(0,0,10),new myColorName.blue(1));	
 		}
 	};
+function tetrahedron(gl){
+	//create tetrahedron
+	var ra=1.0;
+	var rb=2*Math.pow(2,0.5)/3*ra;
+	var x1=0,y1=0,z1=ra;
+	var x2=0,y2=rb,z2=-ra/4;
+	var x3=rb*Math.sin(120*Math.PI/180),y3=rb*Math.cos(120*Math.PI/180),z3=-ra/4;
+	var x4=rb*Math.sin(240*Math.PI/180),y4=rb*Math.cos(240*Math.PI/180),z4=-ra/4;
+
+	//頂点の位置情報をバッファを作ってそこに入れる
+	var positions = [
+		x1,y1,z1,
+		x2,y2,z2,
+		x3,y3,z3,
+
+		x1,y1,z1,
+		x2,y2,z2,
+		x4,y4,z4,
+
+		x1,y1,z1,
+		x3,y3,z3,
+		x4,y4,z4,
+
+		x2,y2,z2,
+		x3,y3,z3,
+		x4,y4,z4
+	];
+	var p1 = new myGeoClass.Point(x1,y1,z1);
+	var p2 = new myGeoClass.Point(x2,y2,z2);
+	var p3 = new myGeoClass.Point(x3,y3,z3);
+	var p4 = new myGeoClass.Point(x4,y4,z4);
+	var pInner = new myGeoClass.Point(0,0,0);
+	var v1 = getNormalVector(gl,p1,p2,p3,pInner);
+	var v2 = getNormalVector(gl,p1,p2,p4,pInner);
+	var v3 = getNormalVector(gl,p1,p3,p4,pInner);
+	var v4 = getNormalVector(gl,p2,p3,p4,pInner);
+
+	var normals = [
+		v1.x,v1.y,v1.z,
+		v1.x,v1.y,v1.z,
+		v1.x,v1.y,v1.z,
+		v2.x,v2.y,v2.z,
+		v2.x,v2.y,v2.z,
+		v2.x,v2.y,v2.z,
+		v3.x,v3.y,v3.z,
+		v3.x,v3.y,v3.z,
+		v3.x,v3.y,v3.z,
+		v4.x,v4.y,v4.z,
+		v4.x,v4.y,v4.z,
+		v4.x,v4.y,v4.z
+	];
+
+
+
+	//頂点の色情報をバッファを作ってそこに入れる
+	var colors = [
+		1.0, 1.0, 1.0, 1.0,
+		0.0,0.0,0.9,1.0,
+		0.9,0.1,0.1,1.0,
+		1.0, 1.0, 1.0, 1.0,
+		0.0,0.0,0.9,1.0,
+		0.1,1.0,0.2,1.0,
+		1.0, 1.0, 1.0, 1.0,
+		0.9,0.1,0.1,1.0,
+		0.1,1.0,0.2,1.0,
+		0.0,0.0,0.9,1.0,
+		0.9,0.1,0.1,1.0,
+		0.1,1.0,0.2,1.0,
+	];
+
+	var textureCoordinates = [
+		0.0,0.0,
+		1.0,0.0,
+		1.0,1.0,
+
+		0.0,0,0,
+		0.0,1.0,
+		1.0,1.0,
+
+		0.0,0.0,
+		1.0,0.0,
+		1.0,1.0,
+
+		0.0,0,0,
+		0.0,1.0,
+		1.0,1.0
+	];
+
+	var indices = [
+0,1,2,
+3,4,5,
+6,7,8,
+9,10,11
+];	
+
+			return {
+				name:'regularTetrahedron',
+				n:12,
+				pos:positions,
+				nor:normals,
+				col:colors,
+				tex:textureCoordinates,
+				ind:indices,
+				draw:function(){
+					gl.drawElements(gl.TRIANGLES,12,gl.UNSIGNED_SHORT,0);
+				}
+			}
+};
 
 	/**
 	 *Get Normal Vector from 3 points and an inner point
@@ -489,34 +598,35 @@
 
 
 	//		Draw.triangle(gl,p1,p2,p3,magenta,mvm1,mvm2,mvm3,mvm4,mvm5);
-			Draw.point(gl,p1,red,mvm1,mvm2,mvm3,mvm4,mvm5);
-			Draw.point(gl,p2,cyan,mvm1,mvm2,mvm3,mvm4,mvm5);
-			Draw.point(gl,p3,blue,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.point(gl,p1,red,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.point(gl,p2,cyan,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.point(gl,p3,blue,mvm1,mvm2,mvm3,mvm4,mvm5);
 		var pCenter = new myGeoClass.Point((p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3);
-			Draw.point(gl,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-			Draw.line(gl,pCenter,p1,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-			Draw.point(gl,pInnerBody,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-			Draw.line(gl,pInnerBody,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.point(gl,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.line(gl,pCenter,p1,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.point(gl,pInnerBody,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.line(gl,pInnerBody,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 		var vio = new myGeoClass.Vector(pCenter.x-pInnerBody.x,pCenter.y-pInnerBody.y,pCenter.z-pInnerBody.z);
 		var pio = pCenter.calcTranslated(vio);
-			Draw.point(gl,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-			Draw.line(gl,pCenter,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.point(gl,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.line(gl,pCenter,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 		var vP = new myGeoClass.Vector(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
 		var vQ = new myGeoClass.Vector(p3.x-p1.x,p3.y-p1.y,p3.z-p1.z);
 
 		var vN = new myGeoClass.Vector(vP.y*vQ.z-vP.z*vQ.y,vP.z*vQ.x-vP.x*vQ.z,vP.x*vQ.y-vP.y*vQ.x);
 		var pCN = new myGeoClass.Point(pCenter.x+vN.x,pCenter.y+vN.y,pCenter.z+vN.z);
-			Draw.point(gl,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-			Draw.line(gl,pCenter,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.point(gl,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
+	//		Draw.line(gl,pCenter,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 		var l1=vio.calcLength();//Math.pow(vio.x*vio.x+vio.y*vio.y+vio.z*vio.z,0.5);//calcLength();
-		var l2=vio.calcLength();//Math.pow(vN.x*vN.x+vN.y*vN.y+vN.z*vN.z,0.5);//.calcLength();
+		var l2=vN.calcLength();//Math.pow(vN.x*vN.x+vN.y*vN.y+vN.z*vN.z,0.5);//.calcLength();
 		if(l1==0 || l2==0){
 			vN = new myGeoClass.Vector(0,0,0);
 PRINT_CAUTION.innerHTML+="vN=(0,0,0)<br>";
 			return vN;
 		}else{
 			var theta = Math.acos((vio.x*vN.x+vio.y*vN.y+vio.z*vN.z)/(l1*l2));
-			if(theta>Math.PI/2)vN = new myGeoClass.Vector(-vN.x,-vN.y,-vN.z);
+			if(theta>Math.PI/2){vN.x=-vN.x;vN.y=-vN.y;vN.z=-vN.z;}
+console.log("theta=",theta);
 		}
 		var pCN2 = new myGeoClass.Point(pCenter.x + vN.x,pCenter.y + vN.y,pCenter.z + vN.z);
 			Draw.line(gl,pCenter,pCN2,yellow,mvm1,mvm2,mvm3,mvm4,mvm5);
@@ -552,12 +662,12 @@ console.log("vN=",vN);
 
 	void main(void) {
 //x		gl_FragColor = texture2D(uSampler,vec2(vTextureCoord.s,vTextureCoord.t));
-		gl_FragColor = texture2D(uSampler,vTextureCoord);//mediump型
+//		gl_FragColor = texture2D(uSampler,vTextureCoord);//mediump型
 //		gl_FragColor = vColor;
 
-		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
-//○		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
-//●		gl_FragColor = vec4(texelColor.rgb * vLighting,texelColor.a);//●
+//		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
+		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
+		gl_FragColor = vec4(texelColor.rgb * vLighting,texelColor.a);//●
 
 	}
 </script>
@@ -742,13 +852,12 @@ function start(){
 	initTextures(gl);
 	var oShader = initShaders(gl);
 
-	var p1 = new myGeoClass.Point(1.0,0.5,0.4);
-	var p2 = new myGeoClass.Point(0.5,0.2,1.4);
-	var p3 = new myGeoClass.Point(0.7,1.5,0.8);
+//	var p1 = new myGeoClass.Point(1.0,0.5,0.4);
+//	var p2 = new myGeoClass.Point(0.5,0.2,1.4);
+//	var p3 = new myGeoClass.Point(0.7,1.5,0.8);
+//	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),mvm1,mvm2,mvm3,mvm4,mvm5);
 
-
-
-	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),mvm1,mvm2,mvm3,mvm4,mvm5);
+	Draw.tetra(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
 
 	var timeBefore=0;
 	var angle=0;
@@ -1159,7 +1268,6 @@ console.log("line");
 	};
 	Object.defineProperty(Draw,'triangle',{value:triangle,writable:false,enumerable:true});
 	function triangle(gl,p1,p2,p3,color,mvm1,mvm2,mvm3,mvm4,mvm5){
-console.log("triangle");
 			var oModel = { };
 			oModel.base = myGLSape.triangle(gl,p1,p2,p3,color);
 			oModel.buffers = setModelToBuffer(gl,oModel);
@@ -1212,6 +1320,18 @@ console.log("triangle");
 			Draw.pushModel(oModel);
 		}
 	};
+	Object.defineProperty(Draw,'tetra',{value:tetrahedron,writable:false,enumerable:true});
+	function tetrahedron(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
+			var oModel = { };
+			oModel.base = myGLSape.tetra(gl);
+			oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
+			oModel.mvm1 = mvm1;
+			oModel.mvm2 = mvm2;
+			oModel.mvm3 = mvm3;
+			oModel.mvm4 = mvm4;
+			oModel.mvm5 = mvm5;
+			Draw.pushModel(oModel);
+	};
 	
 })();
 
@@ -1228,83 +1348,6 @@ console.log("triangle");
 
 
 
-function regularTetrahedron(){
-	//create tetrahedron
-	var ra=1.0;
-	var rb=2*Math.pow(2,0.5)/3*ra;
-	var x1=0,y1=0,z1=ra;
-	var x2=0,y2=rb,z2=-ra/4;
-	var x3=rb*Math.sin(120*Math.PI/180),y3=rb*Math.cos(120*Math.PI/180),z3=-ra/4;
-	var x4=rb*Math.sin(240*Math.PI/180),y4=rb*Math.cos(240*Math.PI/180),z4=-ra/4;
-
-	//頂点の位置情報をバッファを作ってそこに入れる
-	var positions = [
-		x1,y1,z1,
-		x2,y2,z2,
-		x3,y3,z3,
-
-		x1,y1,z1,
-		x2,y2,z2,
-		x4,y4,z4,
-
-		x1,y1,z1,
-		x3,y3,z3,
-		x4,y4,z4,
-
-		x2,y2,z2,
-		x3,y3,z3,
-		x4,y4,z4
-	];
-
-	//頂点の色情報をバッファを作ってそこに入れる
-	var colors = [
-		1.0, 1.0, 1.0, 1.0,
-		0.0,0.0,0.9,1.0,
-		0.9,0.1,0.1,1.0,
-		1.0, 1.0, 1.0, 1.0,
-		0.0,0.0,0.9,1.0,
-		0.1,1.0,0.2,1.0,
-		1.0, 1.0, 1.0, 1.0,
-		0.9,0.1,0.1,1.0,
-		0.1,1.0,0.2,1.0,
-		0.0,0.0,0.9,1.0,
-		0.9,0.1,0.1,1.0,
-		0.1,1.0,0.2,1.0,
-	];
-
-	var textureCoordinates = [
-		0.0,0.0,
-		1.0,0.0,
-		1.0,1.0,
-
-		0.0,0,0,
-		0.0,1.0,
-		1.0,1.0,
-
-		0.0,0.0,
-		1.0,0.0,
-		1.0,1.0,
-
-		0.0,0,0,
-		0.0,1.0,
-		1.0,1.0
-	];
-
-	var indices = [
-0,1,2,
-3,4,5,
-6,7,8,
-9,10,11
-];	
-
-	return {
-		n:positions.length/3,
-		pos:positions,
-		col:colors,
-		tex:textureCoordinates,
-		ind:indices
-	}
-};
 
 //********************************** HEXAHEDRON ******************************************
 
