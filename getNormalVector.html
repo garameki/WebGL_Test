@@ -325,7 +325,7 @@
 		this.y=y;
 		this.z=z;
 	};
-	Point.prototype.calcTranslated = function(v){
+	Point.prototype.calcTranslate = function(v){
 		//@param {Point} out
 		//@param {Vector} v
 		return new myClass.Point(this.x+v.x,this.y+v.y,this.z+v.z);
@@ -344,6 +344,7 @@
 	Vector.prototype.arr = function(){
 		return [this.x,this.y,this.z];
 	};
+	Object.defineProperty(Vector.prototype,'length',{get:function(){return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5);},enumerable:true,configurable:false});
 	Vector.prototype.calcLength = function(){
 		return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5);
 	};
@@ -371,6 +372,7 @@
 	Object.defineProperty(myGLSape,'axisZ'		,{value:new axisZ,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLSape,'tetra'		,{value:tetrahedron,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLSape,'hexa'		,{value:hexahedron,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'sphere'		,{value:sphere2,writable:false,enumerable:true,configurable:false});
 
 	//entities
 	function point(gl,p,c){
@@ -578,7 +580,6 @@
 		p7 = new myClass.Point(-1,-1,-1);
 		p8 = new myClass.Point(-1,1,-1);
 		pInner = new myClass.Point(0,0,0);
-console.log("p1.arr=",p1.arr);
 		var positions = [];
 		positions = positions.concat(p1.arr);
 		positions = positions.concat(p2.arr);
@@ -604,7 +605,6 @@ console.log("p1.arr=",p1.arr);
 		positions = positions.concat(p6.arr);
 		positions = positions.concat(p7.arr);
 		positions = positions.concat(p3.arr);
-console.log("positions=",positions);
 
 		v1 = getNormalVector(gl,p1,p2,p3,pInner);
 		v2 = getNormalVector(gl,p4,p8,p3,pInner);
@@ -724,6 +724,189 @@ console.log("positions=",positions);
 			}
 		}
 	};
+	function sphere2(gl){
+
+		var rad = Math.PI / 180;
+		var alpha;//latitude
+		var gamma;//longitude
+		var rr=2.0;//radius
+		var dal=20;//diffential of alpha
+		var dgam=20;//differential of gamma
+
+		var nLongitude = 0,nLatitude = 0;
+//○		var px=[],py=[],pz=[];
+		var points=[];
+		var flagFirstTime=true;
+		var x,y,z;
+		for(gamma=-90;gamma<=90;gamma+=dgam){
+			nLongitude++;
+			for(alpha=-180;alpha<=180;alpha+=dal){
+				if(flagFirstTime){
+					//console.log("alpha=",alpha);
+					nLatitude++;
+				}
+
+				
+				x=rr * Math.cos(rad * gamma) * Math.cos(rad * alpha);
+				y=rr * Math.cos(rad * gamma) * Math.sin(rad * alpha);
+				z=rr * Math.sin(rad * gamma);
+				points.push(new myClass.Point(x,y,z));
+//○				px.push(x);
+//○				py.push(y);
+//○				pz.push(z);
+
+			}
+			flagFirstTime=false;
+		}
+		var pointInner = new myClass.Point(0,0,0);
+	console.log(" nLongitude=",nLongitude," nLatitude=",nLatitude);
+		var countRectangle=0;
+		var ii,kk;
+		var n1,n2,n3,n4;
+		var tempNorm;
+		var normals = [];
+		var positions = [];
+		for(kk=0;kk<nLongitude-1;kk++){
+			for(ii=0;ii<nLatitude-1;ii++){
+				countRectangle++;
+				n1=kk * nLatitude + ii;
+				positions = positions.concat(points[n1].arr);
+			//	positions.push(px[n1]);
+			//	positions.push(py[n1]);
+			//	positions.push(pz[n1]);
+
+				n2 = kk * nLatitude + ii + 1;
+				positions = positions.concat(points[n2].arr);
+			//	positions.push(px[n2]);
+			//	positions.push(py[n2]);
+			//	positions.push(pz[n2]);
+
+				n3 = kk * nLatitude + ii + nLatitude;
+				positions = positions.concat(points[n3].arr);
+			//	positions.push(px[n3]);
+			//	positions.push(py[n3]);
+			//	positions.push(pz[n3]);
+
+				n4 = kk * nLatitude + ii + nLatitude + 1;
+				positions = positions.concat(points[n4].arr);
+			//	positions.push(px[n4]); 
+			//	positions.push(py[n4]);
+			//	positions.push(pz[n4]);
+
+				var vN1 = getNormalVector(gl,points[n1],points[n2],points[n3],pointInner);
+				var vN2 = getNormalVector(gl,points[n2],points[n3],points[n4],pointInner);
+				var vN;
+				if(vN1.length>vN2.length){
+					vN = vN1;
+				}else{
+					vN = vN2;
+					if(vN2.length==0)PRINT_CAUTION.innerHTML+="It is not a triangle which is made from points["+n1.toString()+"],points["+n2.toString()+"],points["+n3.toString()+"],points["+n4.toString()+"]<br>";
+				}
+			//	tempNorm = norm(//set points orderd like a sector around the center as first argument
+			//		px[n1],py[n1],pz[n1],
+			//		px[n2],py[n2],pz[n2],
+			//		px[n4],py[n4],pz[n4],
+			//		px[n3],py[n3],pz[n3]
+			//	);
+
+if(countRectangle==152){
+	var none = Motion.none();
+	Draw.point(gl,points[n1],myColorName.blue(1),Motion.axisY(),none,none,none,none);
+	Draw.point(gl,points[n2],myColorName.blue(1),Motion.axisY(),none,none,none,none);
+	Draw.point(gl,points[n3],myColorName.blue(1),Motion.axisY(),none,none,none,none);
+	Draw.point(gl,points[n4],myColorName.blue(1),Motion.axisY(),none,none,none,none);
+
+	Draw.triangle(gl,points[n1],points[n2],points[n3],myColorName.red(1),Motion.translate(0,0,1),Motion.axisY(),none,none,none);
+	Draw.line(gl,points[n1],points[n1].calcTranslate(vN1),myColorName.red(1),Motion.translate(0,0,1),Motion.axisY(),none,none,none);
+	Draw.line(gl,points[n1],points[n1].calcTranslate(vN2),myColorName.red(1),Motion.translate(0,0,1),Motion.axisY(),none,none,none);
+	console.log(points[n1]);
+
+	console.log(points[n2]);
+	console.log(points[n3]);
+	console.log(points[n4]);
+	console.log(vN1.arr,vN1.length);
+	console.log(vN2.arr,vN2.length);
+	console.log(vN.arr);
+	vN = vN1;
+}
+				normals = normals.concat(vN.arr);
+				normals = normals.concat(vN.arr);
+				normals = normals.concat(vN.arr);
+				normals = normals.concat(vN.arr);
+			//	normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+			//	normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+			//	normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+			//	normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
+
+
+			}
+		}
+
+
+	console.log("number of rectangles",countRectangle);
+
+	if(countRectangle!=(nLatitude-1)*(nLongitude-1))PRINT_CAUTION.innerHTML+="Unmatch the number of rectangles and the numner of culculation result of it.<br>";
+
+
+		var colors = [];
+		for(var ii=0,len=countRectangle*4;ii<len;ii++){
+			colors.push(0.5);
+			colors.push(0.5);
+			colors.push(1.0);
+			colors.push(0.1);
+		}
+//	console.log("colors n=",colors.length/4);
+
+		var textureCoordinates = [];
+		for(kk=0;kk<nLongitude-1;kk++){
+			for(ii=0;ii<nLatitude-1;ii++){
+				textureCoordinates.push(1/nLatitude * ii);
+				textureCoordinates.push(1/nLongitude * kk);
+
+				textureCoordinates.push(1/nLatitude * (ii + 1));
+				textureCoordinates.push(1/nLongitude * kk);
+
+				textureCoordinates.push(1/nLatitude * ii);
+				textureCoordinates.push(1/nLongitude * (kk + 1));
+
+				textureCoordinates.push(1/nLatitude * (ii + 1));
+				textureCoordinates.push(1/nLongitude * (kk + 1));
+			}
+		}
+
+
+		var countTriangle=0;
+
+		var indices = new Array();//2 triangles by indices make a rectangle
+		for(kk=0;kk<(nLongitude-1)*(nLatitude-1);kk++){
+			countTriangle++;
+			//triangle
+			indices.push(kk * 4 );
+			indices.push(kk * 4  + 1);
+			indices.push(kk * 4  + 2);
+
+
+			countTriangle++;
+			//triangle
+			indices.push(kk * 4  + 1);
+			indices.push(kk * 4  + 2);
+			indices.push(kk * 4  + 3);
+		}
+
+	console.log("nVerteces(of all triangles)=",countTriangle*3);
+		return {
+			n:countTriangle*3,//countTriangle*3,//全ての三角形の頂点の総数
+			pos:positions,
+			nor:normals,
+			col:colors,
+			tex:textureCoordinates,
+			ind:indices,
+			draw:function(){
+				gl.drawElements(gl.TRIANGLES,countTriangle*3,gl.UNSIGNED_SHORT,0);
+			}
+
+		}
+	};//sphere2
 
 	/**
 	 *Get Normal Vector from 3 points and an inner point
@@ -737,11 +920,11 @@ console.log("positions=",positions);
 	*/
 	function getNormalVector(gl,p1,p2,p3,pInnerBody){
 			//kkkk
-			var mvm1 = Motion.axisY;
-			var mvm2 = Motion.none;
-			var mvm3 = Motion.none;
-			var mvm4 = Motion.none;
-			var mvm5 = Motion.none;
+			var mvm1 = Motion.axisY();
+			var mvm2 = Motion.none();
+			var mvm3 = Motion.none();
+			var mvm4 = Motion.none();
+			var mvm5 = Motion.none();
 
 
 			var magenta = myColorName.magenta(1);
@@ -762,7 +945,7 @@ console.log("positions=",positions);
 	//		Draw.point(gl,pInnerBody,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 	//		Draw.line(gl,pInnerBody,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 		var vio = new myClass.Vector(pCenter.x-pInnerBody.x,pCenter.y-pInnerBody.y,pCenter.z-pInnerBody.z);
-		var pio = pCenter.calcTranslated(vio);
+		var pio = pCenter.calcTranslate(vio);
 	//		Draw.point(gl,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 	//		Draw.line(gl,pCenter,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 		var vP = new myClass.Vector(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
@@ -781,11 +964,11 @@ PRINT_CAUTION.innerHTML+="vN=(0,0,0)<br>";
 		}else{
 			var theta = Math.acos((vio.x*vN.x+vio.y*vN.y+vio.z*vN.z)/(l1*l2));
 			if(theta>Math.PI/2){vN.x=-vN.x;vN.y=-vN.y;vN.z=-vN.z;}
-console.log("theta=",theta);
+//console.log("theta=",theta);
 		}
 		var pCN2 = new myClass.Point(pCenter.x + vN.x,pCenter.y + vN.y,pCenter.z + vN.z);
 			Draw.line(gl,pCenter,pCN2,yellow,mvm1,mvm2,mvm3,mvm4,mvm5);
-console.log("vN=",vN);
+//console.log("vN=",vN);
 		vN.makeMyselfUnitVector();
 
 //			Draw.axisX(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
@@ -997,11 +1180,11 @@ function start(){
 //    gl.clear(gl.COLOR_BUFFER_BIT);
 };
 
-			var mvm1 = Motion.axisY;
-			var mvm2 = Motion.none;
-			var mvm3 = Motion.none;
-			var mvm4 = Motion.none;
-			var mvm5 = Motion.none;
+			var mvm1 = Motion.axisY();
+			var mvm2 = Motion.none();
+			var mvm3 = Motion.none();
+			var mvm4 = Motion.none();
+			var mvm5 = Motion.none();
 
 
 	initTextures(gl);
@@ -1013,7 +1196,8 @@ function start(){
 //	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),mvm1,mvm2,mvm3,mvm4,mvm5);
 
 //	Draw.tetra(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
-	Draw.hexa(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
+//	Draw.hexa(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
+	Draw.sphere(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
 	
 	var timeBefore=0;
 	var angle=0;
@@ -1121,17 +1305,30 @@ function sendBufferData(gl,oShader,oBuffer){
 
 (function(){
 	Motion = { };
-//kkk
-	Object.defineProperty(Motion,'none'	,{value:unit(),writable:false,enumerable:false});
-	Object.defineProperty(Motion,'random'	,{get:function(){return (new random());}});
-	Object.defineProperty(Motion,'axisY'	,{value:axisY(),writable:false});
 
+	Object.defineProperty(Motion,'none'	,{value:unit,enumerable:true});
+	Object.defineProperty(Motion,'random'	,{value:random,enumerable:true});
+	Object.defineProperty(Motion,'axisY'	,{value:axisY,writable:false,enumerable:true});
+	Object.defineProperty(Motion,'translate',{value:translate,enumerable:true});
+
+
+	function translate(x,y,z){
+		return function(angle){
+			var a = new Array(16);
+			myMat4.loadIdentity();
+			myMat4.trans(x,y,z);
+			myMat4.storeTo(a);
+			return a;
+		};
+	};
 	function unit(){
-		var a = new Array(16);
-		myMat4.loadIdentity();
-		myMat4.storeTo(a);
-		return a;
-	}
+		return function(angle){
+			var a = new Array(16);
+			myMat4.loadIdentity();
+			myMat4.storeTo(a);
+			return a;
+		};
+	};
 	function random(){
 
 		var rx = Math.floor(Math.random()*100)/10;
@@ -1284,7 +1481,7 @@ function drawScene(gl,oShader,angle){
 		member = Draw.memberByIndex(ii);
 		sendBufferData(gl,oShader,member.buffers);
 		sendPerspectiveMatrix(gl,oShader);
-		aMatrices = [member.mvm1(angle),member.mvm2,member.mvm3,member.mvm4,member.mvm5];//kkkkkkkkkk
+		aMatrices = [member.mvm1(angle),member.mvm2(angle),member.mvm3(angle),member.mvm4(angle),member.mvm5(angle)];//kkkkkkkkkk
 		var mat = sendModelViewMatrix(gl,oShader,aMatrices);
 		sendNormalMatrix(gl,oShader,mat);
 		sendPointSize(gl,oShader,nPointSize);
@@ -1399,6 +1596,7 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	Object.defineProperty(Draw,'axisZ',{value:axisZ,writable:false,enumerable:true});
 	Object.defineProperty(Draw,'tetra',{value:tetrahedron,writable:false,enumerable:true});
 	Object.defineProperty(Draw,'hexa',{value:hexahedron,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'sphere',{value:sphere,writable:false,enumerable:true});
 
 	function point(gl,p1,color,mvm1,mvm2,mvm3,mvm4,mvm5){
 		var oModel = { };
@@ -1491,178 +1689,20 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 			oModel.mvm5 = mvm5;
 			Draw.pushModel(oModel);
 	};
+	function sphere(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
+			var oModel = { };
+			oModel.base = myGLSape.sphere(gl);
+			oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
+			oModel.mvm1 = mvm1;
+			oModel.mvm2 = mvm2;
+			oModel.mvm3 = mvm3;
+			oModel.mvm4 = mvm4;
+			oModel.mvm5 = mvm5;
+			Draw.pushModel(oModel);
+	};
+
 	
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//********************************** HEXAHEDRON ******************************************
-
-
-
-//******************************** SPHERE ***********************************************
-/**
- *
- *Calculation of Normal Vector from any points in 4 which are on same plane
- *
- *@param-set {number}{number}{number} x,y,z positions. The remain arguments as the number devided by 3 is ignored.
- *
-*/
-
-
-function sphere(gl){
-
-	var rad = Math.PI / 180;
-	var alpha;//latitude
-	var gamma;//longitude
-	var rr=2.0;//radius
-	var dal=20;//diffential of alpha
-	var dgam=20;//differential of gamma
-
-	var nLongitude = 0,nLatitude = 0;
-	var px=[],py=[],pz=[];
-	var flagFirstTime=true;
-	var x,y,z,count=0;
-	for(gamma=-90;gamma<=90;gamma+=dgam){
-		nLongitude++;
-		for(alpha=-180;alpha<=180;alpha+=dal){
-			if(flagFirstTime){
-				//console.log("alpha=",alpha);
-				nLatitude++;
-			}
-
-			x=rr * Math.cos(rad * gamma) * Math.cos(rad * alpha);
-			y=rr * Math.cos(rad * gamma) * Math.sin(rad * alpha);
-			z=rr * Math.sin(rad * gamma);
-			px.push(x);
-			py.push(y);
-			pz.push(z);
-
-		}
-		flagFirstTime=false;
-	}
-console.log(" nLongitude=",nLongitude," nLatitude=",nLatitude);
-	var countRectangle=0;
-	var ii,kk;
-	var n1,n2,n3,n4;
-	var tempNorm;
-	var normals = [];
-	var positions = [];
-	for(kk=0;kk<nLongitude-1;kk++){
-		for(ii=0;ii<nLatitude-1;ii++){
-			countRectangle++;
-			n1=kk * nLatitude + ii;
-			positions.push(px[n1]);
-			positions.push(py[n1]);
-			positions.push(pz[n1]);
-
-			n2 = kk * nLatitude + ii + 1;
-			positions.push(px[n2]);
-			positions.push(py[n2]);
-			positions.push(pz[n2]);
-
-			n3 = kk * nLatitude + ii + nLatitude;
-			positions.push(px[n3]);
-			positions.push(py[n3]);
-			positions.push(pz[n3]);
-
-			n4 = kk * nLatitude + ii + nLatitude + 1;
-			positions.push(px[n4]); 
-			positions.push(py[n4]);
-			positions.push(pz[n4]);
-
-			tempNorm = norm(//set points orderd like a sector around the center as first argument
-				px[n1],py[n1],pz[n1],
-				px[n2],py[n2],pz[n2],
-				px[n4],py[n4],pz[n4],
-				px[n3],py[n3],pz[n3]
-			);
-console.log("norm=",tempNorm);
-
-			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
-			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
-			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
-			normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
-		}
-	}
-
-
-console.log("number of rectangles",countRectangle);
-
-if(countRectangle!=(nLatitude-1)*(nLongitude-1))console.error("error123");
-
-
-	var colors = [];
-	for(var ii=0,len=countRectangle*4;ii<len;ii++){
-		colors.push(0.5);
-		colors.push(0.5);
-		colors.push(1.0);
-		colors.push(0.1);
-	}
-console.log("colors n=",colors.length/4);
-
-	var textureCoordinates = [];
-	for(kk=0;kk<nLongitude-1;kk++){
-		for(ii=0;ii<nLatitude-1;ii++){
-			textureCoordinates.push(1/nLatitude * ii);
-			textureCoordinates.push(1/nLongitude * kk);
-
-			textureCoordinates.push(1/nLatitude * (ii + 1));
-			textureCoordinates.push(1/nLongitude * kk);
-
-			textureCoordinates.push(1/nLatitude * ii);
-			textureCoordinates.push(1/nLongitude * (kk + 1));
-
-			textureCoordinates.push(1/nLatitude * (ii + 1));
-			textureCoordinates.push(1/nLongitude * (kk + 1));
-		}
-	}
-
-
-	var countTriangle=0;
-
-	var indices = new Array();//2 triangles by indices make a rectangle
-	for(kk=0;kk<(nLongitude-1)*(nLatitude-1);kk++){
-		countTriangle++;
-		//triangle
-		indices.push(kk * 4 );
-		indices.push(kk * 4  + 1);
-		indices.push(kk * 4  + 2);
-
-
-		countTriangle++;
-		//triangle
-		indices.push(kk * 4  + 1);
-		indices.push(kk * 4  + 2);
-		indices.push(kk * 4  + 3);
-	}
-
-console.log("nVerteces(of all triangles)=",countTriangle*3);
-	return {
-		n:countTriangle*3,//countTriangle*3,//全ての三角形の頂点の総数
-		pos:positions,
-		nor:normals,
-		col:colors,
-		tex:textureCoordinates,
-		ind:indices,
-		draw:function(){
-			gl.drawElements(gl.LINE_STRIP,countTriangle*3,gl.UNSIGNED_SHORT,0);
-		}
-
-	}
-};
 
 </script>
 
