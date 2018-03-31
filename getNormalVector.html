@@ -730,8 +730,8 @@
 		var alpha;//latitude
 		var gamma;//longitude
 		var rr=2.0;//radius
-		var dal=20;//diffential of alpha
-		var dgam=20;//differential of gamma
+		var dal=10;//diffential of alpha
+		var dgam=10;//differential of gamma
 
 		var nLongitude = 0,nLatitude = 0;
 //○		var px=[],py=[],pz=[];
@@ -967,7 +967,7 @@ PRINT_CAUTION.innerHTML+="vN=(0,0,0)<br>";
 //console.log("theta=",theta);
 		}
 		var pCN2 = new myClass.Point(pCenter.x + vN.x,pCenter.y + vN.y,pCenter.z + vN.z);
-			Draw.line(gl,pCenter,pCN2,yellow,mvm1,mvm2,mvm3,mvm4,mvm5);
+//			Draw.line(gl,pCenter,pCN2,yellow,mvm1,mvm2,mvm3,mvm4,mvm5);
 //console.log("vN=",vN);
 		vN.makeMyselfUnitVector();
 
