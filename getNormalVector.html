@@ -316,9 +316,9 @@
 <script id="tagIdGeoClass" type='text/javascript'>
 
 (function(){
-	myGeoClass = { };
-	Object.defineProperty(myGeoClass,'Point',{value:Point,writable:false,enumerable:true});
-	Object.defineProperty(myGeoClass,'Vector',{value:Vector,writable:false,enumerable:true});
+	myClass = { };
+	Object.defineProperty(myClass,'Point',{value:Point,writable:false,enumerable:true});
+	Object.defineProperty(myClass,'Vector',{value:Vector,writable:false,enumerable:true});
 
 	function Point(x,y,z){
 		this.x=x;
@@ -328,14 +328,21 @@
 	Point.prototype.calcTranslated = function(v){
 		//@param {Point} out
 		//@param {Vector} v
-		return new myGeoClass.Point(this.x+v.x,this.y+v.y,this.z+v.z);
+		return new myClass.Point(this.x+v.x,this.y+v.y,this.z+v.z);
 	};
+	Object.defineProperty(Point.prototype,'arr',{get:function(){return [this.x,this.y,this.z];},enumerable:true});
+//	Point.prototype.arr = function(){
+//		return [this.x,this.y,this.z];
+//	};
 
 
 	function Vector(x,y,z){
 		this.x=x;
 		this.y=y;
 		this.z=z;
+	};
+	Vector.prototype.arr = function(){
+		return [this.x,this.y,this.z];
 	};
 	Vector.prototype.calcLength = function(){
 		return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5);
@@ -346,6 +353,7 @@
 		this.y=this.y*len;
 		this.z=this.z*len;
 	};
+	Object.defineProperty(Vector.prototype,'arr',{get:function(){return [this.x,this.y,this.z];},enumerable:true,configurable:false});
 })();
 
 </script>
@@ -355,220 +363,367 @@
 
 (function(){
 	myGLSape = { };
-	Object.defineProperty(myGLSape,'point'		,{value:point(),writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'line'		,{value:line(),writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'triangle'	,{value:triangle(),writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'axisX'		,{value:axisX(),writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'axisY'		,{value:new axisY(),writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'axisZ'		,{value:new axisZ(),writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'triangle'	,{value:triangle,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'axisX'		,{value:axisX,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'axisY'		,{value:new axisY,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'axisZ'		,{value:new axisZ,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLSape,'tetra'		,{value:tetrahedron,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLSape,'hexa'		,{value:hexahedron,writable:false,enumerable:true,configurable:false});
 
 	//entities
-	function point(){
-		return function(gl,p,c){
-			var positions = [];
-			positions.push(p.x,p.y,p.z);
-			var normals = [1,1,1];
-			var colors = [c.r,c.g,c.b,c.a];
-			var textureCoordinates = [0,0];
-			var indices = [0];
-			return {
-				name:'point',
-				n:1,
-				pos:positions,
-				nor:normals,
-				col:colors,
-				tex:textureCoordinates,
-				ind:indices,
-				draw:function(){
-					gl.drawElements(gl.POINTS,1,gl.UNSIGNED_SHORT,0);//to do
-				}
+	function point(gl,p,c){
+		var positions = [];
+		positions.push(p.x,p.y,p.z);
+		var normals = [1,1,1];
+		var colors = [c.r,c.g,c.b,c.a];
+		var textureCoordinates = [0,0];
+		var indices = [0];
+		return {
+			name:'point',
+			n:1,
+			pos:positions,
+			nor:normals,
+			col:colors,
+			tex:textureCoordinates,
+			ind:indices,
+			draw:function(){
+				gl.drawElements(gl.POINTS,1,gl.UNSIGNED_SHORT,0);//to do
 			}
 		}
 	};
-	function line(){
-		return function(gl,pointStart,pointEnd,color){
-			var positions = [];
-			positions.push(pointStart.x,pointStart.y,pointStart.z,pointEnd.x,pointEnd.y,pointEnd.z);
-			var normals = [1,1,1,1,1,1];
-			var colors = [];
-			colors.push(color.r,color.g,color.b,color.a);
-			colors.push(color.r,color.g,color.b,color.a);
-			var textureCoordinates = [0,0,1,1];
-			var indices = [0,1];
-			return {
-				name:'line',
-				n:2,
-				pos:positions,
-				nor:normals,
-				col:colors,
-				tex:textureCoordinates,
-				ind:indices,
-				draw:function(){
-					gl.drawElements(gl.LINE_STRIP,2,gl.UNSIGNED_SHORT,0);//to do
-				}
+	function line(gl,pointStart,pointEnd,color){
+		var positions = [];
+		positions.push(pointStart.x,pointStart.y,pointStart.z,pointEnd.x,pointEnd.y,pointEnd.z);
+		var normals = [1,1,1,1,1,1];
+		var colors = [];
+		colors.push(color.r,color.g,color.b,color.a);
+		colors.push(color.r,color.g,color.b,color.a);
+		var textureCoordinates = [0,0,1,1];
+		var indices = [0,1];
+		return {
+			name:'line',
+			n:2,
+			pos:positions,
+			nor:normals,
+			col:colors,
+			tex:textureCoordinates,
+			ind:indices,
+			draw:function(){
+				gl.drawElements(gl.LINE_STRIP,2,gl.UNSIGNED_SHORT,0);//to do
 			}
 		}
 	};
-	function triangle(){
-		return function(gl,p1,p2,p3,color){
-			var positions = [];
-			positions.push(p1.x,p1.y,p1.z,p2.x,p2.y,p2.z,p3.x,p3.y,p3.z,p1.x,p1.y,p1.z);
-			var vN = getNormalVector(gl,p1,p2,p3,new myGeoClass.Point(0,0,0));
-			var normals = [
-				vN.x,vN.y,vN.z,
-				vN.x,vN.y,vN.z,
-				vN.x,vN.y,vN.z
-			];
-			var colors = [];
-			colors.push(color.r,color.g,color.b,color.a);
-			colors.push(color.r,color.g,color.b,color.a);
-			colors.push(color.r,color.g,color.b,color.a);
-			var textureCoordinates = [
-				0,0,
-				0,1,
-				1,1,
-			];
-			var indices = [
-				0,1,2
-			];
-			return {
-				name:'triangle',
-				n:3,
-				pos:positions,
-				nor:normals,
-				col:colors,
-				tex:textureCoordinates,
-				ind:indices,
-				draw:function(){
-					gl.drawElements(gl.TRIANGLES,3,gl.UNSIGNED_SHORT,0);
-				}
+	function triangle(gl,p1,p2,p3,color){
+		var positions = [];
+		positions.push(p1.x,p1.y,p1.z,p2.x,p2.y,p2.z,p3.x,p3.y,p3.z,p1.x,p1.y,p1.z);
+		var vN = getNormalVector(gl,p1,p2,p3,new myClass.Point(0,0,0));
+		var normals = [
+			vN.x,vN.y,vN.z,
+			vN.x,vN.y,vN.z,
+			vN.x,vN.y,vN.z
+		];
+		var colors = [];
+		colors.push(color.r,color.g,color.b,color.a);
+		colors.push(color.r,color.g,color.b,color.a);
+		colors.push(color.r,color.g,color.b,color.a);
+		var textureCoordinates = [
+			0,0,
+			0,1,
+			1,1,
+		];
+		var indices = [
+			0,1,2
+		];
+		return {
+			name:'triangle',
+			n:3,
+			pos:positions,
+			nor:normals,
+			col:colors,
+			tex:textureCoordinates,
+			ind:indices,
+			draw:function(){
+				gl.drawElements(gl.TRIANGLES,3,gl.UNSIGNED_SHORT,0);
 			}
 		}
 	};
-	function axisX() {
-		return function(gl){
-			return myGLSape.line(gl,new myGeoClass.Point(0,0,0),new myGeoClass.Point(10,0,0),new myColorName.red(1));	
-		}
+	function axisX(gl) {
+			return myGLSape.line(gl,new myClass.Point(0,0,0),new myClass.Point(10,0,0),new myColorName.red(1));	
 	};
-	function axisY(){
-		return function(gl) {
-			return myGLSape.line(gl,new myGeoClass.Point(0,0,0),new myGeoClass.Point(0,10,0),new myColorName.green(1));	
-		}
+	function axisY(gl){
+			return myGLSape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,10,0),new myColorName.green(1));	
 	};
-	function axisZ(){
-		return function(gl) {
-			return myGLSape.line(gl,new myGeoClass.Point(0,0,0),new myGeoClass.Point(0,0,10),new myColorName.blue(1));	
-		}
+	function axisZ(gl){
+			return myGLSape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,10),new myColorName.blue(1));	
 	};
-function tetrahedron(gl){
-	//create tetrahedron
-	var ra=1.0;
-	var rb=2*Math.pow(2,0.5)/3*ra;
-	var x1=0,y1=0,z1=ra;
-	var x2=0,y2=rb,z2=-ra/4;
-	var x3=rb*Math.sin(120*Math.PI/180),y3=rb*Math.cos(120*Math.PI/180),z3=-ra/4;
-	var x4=rb*Math.sin(240*Math.PI/180),y4=rb*Math.cos(240*Math.PI/180),z4=-ra/4;
+	function tetrahedron(gl){
+		//create tetrahedron
+		var ra=1.0;
+		var rb=2*Math.pow(2,0.5)/3*ra;
+		var x1=0,y1=0,z1=ra;
+		var x2=0,y2=rb,z2=-ra/4;
+		var x3=rb*Math.sin(120*Math.PI/180),y3=rb*Math.cos(120*Math.PI/180),z3=-ra/4;
+		var x4=rb*Math.sin(240*Math.PI/180),y4=rb*Math.cos(240*Math.PI/180),z4=-ra/4;
 
-	//頂点の位置情報をバッファを作ってそこに入れる
-	var positions = [
-		x1,y1,z1,
-		x2,y2,z2,
-		x3,y3,z3,
+		//頂点の位置情報をバッファを作ってそこに入れる
+		var positions = [
+			x1,y1,z1,
+			x2,y2,z2,
+			x3,y3,z3,
 
-		x1,y1,z1,
-		x2,y2,z2,
-		x4,y4,z4,
+			x1,y1,z1,
+			x2,y2,z2,
+			x4,y4,z4,
 
-		x1,y1,z1,
-		x3,y3,z3,
-		x4,y4,z4,
+			x1,y1,z1,
+			x3,y3,z3,
+			x4,y4,z4,
 
-		x2,y2,z2,
-		x3,y3,z3,
-		x4,y4,z4
-	];
-	var p1 = new myGeoClass.Point(x1,y1,z1);
-	var p2 = new myGeoClass.Point(x2,y2,z2);
-	var p3 = new myGeoClass.Point(x3,y3,z3);
-	var p4 = new myGeoClass.Point(x4,y4,z4);
-	var pInner = new myGeoClass.Point(0,0,0);
-	var v1 = getNormalVector(gl,p1,p2,p3,pInner);
-	var v2 = getNormalVector(gl,p1,p2,p4,pInner);
-	var v3 = getNormalVector(gl,p1,p3,p4,pInner);
-	var v4 = getNormalVector(gl,p2,p3,p4,pInner);
+			x2,y2,z2,
+			x3,y3,z3,
+			x4,y4,z4
+		];
+		var p1 = new myClass.Point(x1,y1,z1);
+		var p2 = new myClass.Point(x2,y2,z2);
+		var p3 = new myClass.Point(x3,y3,z3);
+		var p4 = new myClass.Point(x4,y4,z4);
+		var pInner = new myClass.Point(0,0,0);
+		var v1 = getNormalVector(gl,p1,p2,p3,pInner);
+		var v2 = getNormalVector(gl,p1,p2,p4,pInner);
+		var v3 = getNormalVector(gl,p1,p3,p4,pInner);
+		var v4 = getNormalVector(gl,p2,p3,p4,pInner);
 
-	var normals = [
-		v1.x,v1.y,v1.z,
-		v1.x,v1.y,v1.z,
-		v1.x,v1.y,v1.z,
-		v2.x,v2.y,v2.z,
-		v2.x,v2.y,v2.z,
-		v2.x,v2.y,v2.z,
-		v3.x,v3.y,v3.z,
-		v3.x,v3.y,v3.z,
-		v3.x,v3.y,v3.z,
-		v4.x,v4.y,v4.z,
-		v4.x,v4.y,v4.z,
-		v4.x,v4.y,v4.z
-	];
+		var normals = [
+			v1.x,v1.y,v1.z,
+			v1.x,v1.y,v1.z,
+			v1.x,v1.y,v1.z,
+			v2.x,v2.y,v2.z,
+			v2.x,v2.y,v2.z,
+			v2.x,v2.y,v2.z,
+			v3.x,v3.y,v3.z,
+			v3.x,v3.y,v3.z,
+			v3.x,v3.y,v3.z,
+			v4.x,v4.y,v4.z,
+			v4.x,v4.y,v4.z,
+			v4.x,v4.y,v4.z
+		];
 
 
 
-	//頂点の色情報をバッファを作ってそこに入れる
-	var colors = [
-		1.0, 1.0, 1.0, 1.0,
-		0.0,0.0,0.9,1.0,
-		0.9,0.1,0.1,1.0,
-		1.0, 1.0, 1.0, 1.0,
-		0.0,0.0,0.9,1.0,
-		0.1,1.0,0.2,1.0,
-		1.0, 1.0, 1.0, 1.0,
-		0.9,0.1,0.1,1.0,
-		0.1,1.0,0.2,1.0,
-		0.0,0.0,0.9,1.0,
-		0.9,0.1,0.1,1.0,
-		0.1,1.0,0.2,1.0,
-	];
+		//頂点の色情報をバッファを作ってそこに入れる
+		var colors = [
+			1.0, 1.0, 1.0, 1.0,
+			0.0,0.0,0.9,1.0,
+			0.9,0.1,0.1,1.0,
+			1.0, 1.0, 1.0, 1.0,
+			0.0,0.0,0.9,1.0,
+			0.1,1.0,0.2,1.0,
+			1.0, 1.0, 1.0, 1.0,
+			0.9,0.1,0.1,1.0,
+			0.1,1.0,0.2,1.0,
+			0.0,0.0,0.9,1.0,
+			0.9,0.1,0.1,1.0,
+			0.1,1.0,0.2,1.0,
+		];
 
-	var textureCoordinates = [
-		0.0,0.0,
-		1.0,0.0,
-		1.0,1.0,
+		var textureCoordinates = [
+			0.0,0.0,
+			1.0,0.0,
+			1.0,1.0,
 
-		0.0,0,0,
-		0.0,1.0,
-		1.0,1.0,
+			0.0,0,0,
+			0.0,1.0,
+			1.0,1.0,
 
-		0.0,0.0,
-		1.0,0.0,
-		1.0,1.0,
+			0.0,0.0,
+			1.0,0.0,
+			1.0,1.0,
 
-		0.0,0,0,
-		0.0,1.0,
-		1.0,1.0
-	];
+			0.0,0,0,
+			0.0,1.0,
+			1.0,1.0
+		];
 
-	var indices = [
-0,1,2,
-3,4,5,
-6,7,8,
-9,10,11
-];	
+		var indices = [
+			0,1,2,
+			3,4,5,
+			6,7,8,
+			9,10,11
+		];	
 
-			return {
-				name:'regularTetrahedron',
-				n:12,
-				pos:positions,
-				nor:normals,
-				col:colors,
-				tex:textureCoordinates,
-				ind:indices,
-				draw:function(){
-					gl.drawElements(gl.TRIANGLES,12,gl.UNSIGNED_SHORT,0);
-				}
+		return {
+			name:'regularTetrahedron',
+			n:12,
+			pos:positions,
+			nor:normals,
+			col:colors,
+			tex:textureCoordinates,
+			ind:indices,
+			draw:function(){
+				gl.drawElements(gl.TRIANGLES,12,gl.UNSIGNED_SHORT,0);
 			}
-};
+		}
+	};
+	function hexahedron(gl){
+		//regular hexahedron
+
+		p1 = new myClass.Point(1,1,1);
+		p2 = new myClass.Point(1,-1,1);
+		p3 = new myClass.Point(-1,-1,1);
+		p4 = new myClass.Point(-1,1,1);
+		p5 = new myClass.Point(1,1,-1);
+		p6 = new myClass.Point(1,-1,-1);
+		p7 = new myClass.Point(-1,-1,-1);
+		p8 = new myClass.Point(-1,1,-1);
+		pInner = new myClass.Point(0,0,0);
+console.log("p1.arr=",p1.arr);
+		var positions = [];
+		positions = positions.concat(p1.arr);
+		positions = positions.concat(p2.arr);
+		positions = positions.concat(p3.arr);
+		positions = positions.concat(p4.arr);
+		positions = positions.concat(p4.arr);
+		positions = positions.concat(p3.arr);
+		positions = positions.concat(p7.arr);
+		positions = positions.concat(p8.arr);
+		positions = positions.concat(p8.arr);
+		positions = positions.concat(p7.arr);
+		positions = positions.concat(p6.arr);
+		positions = positions.concat(p5.arr);
+		positions = positions.concat(p5.arr);
+		positions = positions.concat(p6.arr);
+		positions = positions.concat(p2.arr);
+		positions = positions.concat(p1.arr);
+		positions = positions.concat(p5.arr);
+		positions = positions.concat(p1.arr);
+		positions = positions.concat(p4.arr);
+		positions = positions.concat(p8.arr);
+		positions = positions.concat(p2.arr);
+		positions = positions.concat(p6.arr);
+		positions = positions.concat(p7.arr);
+		positions = positions.concat(p3.arr);
+console.log("positions=",positions);
+
+		v1 = getNormalVector(gl,p1,p2,p3,pInner);
+		v2 = getNormalVector(gl,p4,p8,p3,pInner);
+		v3 = getNormalVector(gl,p8,p5,p6,pInner);
+		v4 = getNormalVector(gl,p1,p2,p6,pInner);
+		v5 = getNormalVector(gl,p1,p4,p8,pInner);
+		v6 = getNormalVector(gl,p2,p3,p7,pInner);
+		var normals = [];
+		normals = normals.concat(v1.arr);
+		normals = normals.concat(v1.arr);
+		normals = normals.concat(v1.arr);
+		normals = normals.concat(v1.arr);
+		normals = normals.concat(v2.arr);
+		normals = normals.concat(v2.arr);
+		normals = normals.concat(v2.arr);
+		normals = normals.concat(v2.arr);
+		normals = normals.concat(v3.arr);
+		normals = normals.concat(v3.arr);
+		normals = normals.concat(v3.arr);
+		normals = normals.concat(v3.arr);
+		normals = normals.concat(v4.arr);
+		normals = normals.concat(v4.arr);
+		normals = normals.concat(v4.arr);
+		normals = normals.concat(v4.arr);
+		normals = normals.concat(v5.arr);
+		normals = normals.concat(v5.arr);
+		normals = normals.concat(v5.arr);
+		normals = normals.concat(v5.arr);
+		normals = normals.concat(v6.arr);
+		normals = normals.concat(v6.arr);
+		normals = normals.concat(v6.arr);
+		normals = normals.concat(v6.arr);
+		var colors = [
+			1.0,1.0,1.0,1.0,
+			1.0,1.0,1.0,1.0,
+			1.0,1.0,1.0,1.0,
+			1.0,1.0,1.0,1.0,
+	
+			1.0,0.2,0.5,0.5,
+			1.0,0.2,0.5,0.5,
+			1.0,0.2,0.5,0.5,
+			1.0,0.2,0.5,0.5,
+
+			0.7,0.3,0.8,0.9,
+			0.7,0.3,0.8,0.9,
+			0.7,0.3,0.8,0.9,
+			0.7,0.3,0.8,0.9,
+
+			0.6,1.0,0.6,0.9,
+			0.6,1.0,0.6,0.9,
+			0.6,1.0,0.6,0.9,
+			0.6,1.0,0.6,0.9,
+
+			0.4,0.2,0.1,0.9,
+			0.4,0.2,0.1,0.9,
+			0.4,0.2,0.1,0.9,
+			0.4,0.2,0.1,0.9,
+
+			1.0,1.0,0.1,0.9,
+			1.0,1.0,0.1,0.9,
+			1.0,1.0,0.1,0.9,
+			1.0,1.0,0.1,0.9,
+
+		];
+
+
+		var textureCoordinates = [
+			1.0,0.0,
+			1.0,1.0,
+			0.0,1.0,
+			0.0,0.0,
+	
+			1.0,0.0,
+			1.0,1.0,
+			0.0,1.0,
+			0.0,0.0,
+
+			1.0,0.0,
+			1.0,1.0,
+			0.0,1.0,
+			0.0,0.0,
+
+			1.0,0.0,
+			1.0,1.0,
+			0.0,1.0,
+			0.0,0.0,
+
+			1.0,0.0,
+			1.0,1.0,
+			0.0,1.0,
+			0.0,0.0,
+	
+			1.0,0.0,
+			1.0,1.0,
+			0.0,1.0,
+			0.0,0.0
+		];
+
+
+		var indices = [
+			0,1,2,0,2,3,
+			4,5,6,4,6,7,
+			8,9,10,8,10,11,
+			12,13,14,12,14,15,
+			16,17,18,16,18,19,
+			20,21,22,20,22,23
+		];
+		return {
+			n:36,
+			pos:positions,
+			nor:normals,
+			col:colors,
+			tex:textureCoordinates,
+			ind:indices,
+			draw:function(){
+				gl.drawElements(gl.TRIANGLES,36,gl.UNSIGNED_SHORT,0);
+			}
+		}
+	};
 
 	/**
 	 *Get Normal Vector from 3 points and an inner point
@@ -601,26 +756,26 @@ function tetrahedron(gl){
 	//		Draw.point(gl,p1,red,mvm1,mvm2,mvm3,mvm4,mvm5);
 	//		Draw.point(gl,p2,cyan,mvm1,mvm2,mvm3,mvm4,mvm5);
 	//		Draw.point(gl,p3,blue,mvm1,mvm2,mvm3,mvm4,mvm5);
-		var pCenter = new myGeoClass.Point((p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3);
+		var pCenter = new myClass.Point((p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3);
 	//		Draw.point(gl,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 	//		Draw.line(gl,pCenter,p1,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 	//		Draw.point(gl,pInnerBody,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 	//		Draw.line(gl,pInnerBody,pCenter,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-		var vio = new myGeoClass.Vector(pCenter.x-pInnerBody.x,pCenter.y-pInnerBody.y,pCenter.z-pInnerBody.z);
+		var vio = new myClass.Vector(pCenter.x-pInnerBody.x,pCenter.y-pInnerBody.y,pCenter.z-pInnerBody.z);
 		var pio = pCenter.calcTranslated(vio);
 	//		Draw.point(gl,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 	//		Draw.line(gl,pCenter,pio,green,mvm1,mvm2,mvm3,mvm4,mvm5);
-		var vP = new myGeoClass.Vector(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
-		var vQ = new myGeoClass.Vector(p3.x-p1.x,p3.y-p1.y,p3.z-p1.z);
+		var vP = new myClass.Vector(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
+		var vQ = new myClass.Vector(p3.x-p1.x,p3.y-p1.y,p3.z-p1.z);
 
-		var vN = new myGeoClass.Vector(vP.y*vQ.z-vP.z*vQ.y,vP.z*vQ.x-vP.x*vQ.z,vP.x*vQ.y-vP.y*vQ.x);
-		var pCN = new myGeoClass.Point(pCenter.x+vN.x,pCenter.y+vN.y,pCenter.z+vN.z);
+		var vN = new myClass.Vector(vP.y*vQ.z-vP.z*vQ.y,vP.z*vQ.x-vP.x*vQ.z,vP.x*vQ.y-vP.y*vQ.x);
+		var pCN = new myClass.Point(pCenter.x+vN.x,pCenter.y+vN.y,pCenter.z+vN.z);
 	//		Draw.point(gl,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 	//		Draw.line(gl,pCenter,pCN,green,mvm1,mvm2,mvm3,mvm4,mvm5);
 		var l1=vio.calcLength();//Math.pow(vio.x*vio.x+vio.y*vio.y+vio.z*vio.z,0.5);//calcLength();
 		var l2=vN.calcLength();//Math.pow(vN.x*vN.x+vN.y*vN.y+vN.z*vN.z,0.5);//.calcLength();
 		if(l1==0 || l2==0){
-			vN = new myGeoClass.Vector(0,0,0);
+			vN = new myClass.Vector(0,0,0);
 PRINT_CAUTION.innerHTML+="vN=(0,0,0)<br>";
 			return vN;
 		}else{
@@ -628,7 +783,7 @@ PRINT_CAUTION.innerHTML+="vN=(0,0,0)<br>";
 			if(theta>Math.PI/2){vN.x=-vN.x;vN.y=-vN.y;vN.z=-vN.z;}
 console.log("theta=",theta);
 		}
-		var pCN2 = new myGeoClass.Point(pCenter.x + vN.x,pCenter.y + vN.y,pCenter.z + vN.z);
+		var pCN2 = new myClass.Point(pCenter.x + vN.x,pCenter.y + vN.y,pCenter.z + vN.z);
 			Draw.line(gl,pCenter,pCN2,yellow,mvm1,mvm2,mvm3,mvm4,mvm5);
 console.log("vN=",vN);
 		vN.makeMyselfUnitVector();
@@ -852,13 +1007,14 @@ function start(){
 	initTextures(gl);
 	var oShader = initShaders(gl);
 
-//	var p1 = new myGeoClass.Point(1.0,0.5,0.4);
-//	var p2 = new myGeoClass.Point(0.5,0.2,1.4);
-//	var p3 = new myGeoClass.Point(0.7,1.5,0.8);
+//	var p1 = new myClass.Point(1.0,0.5,0.4);
+//	var p2 = new myClass.Point(0.5,0.2,1.4);
+//	var p3 = new myClass.Point(0.7,1.5,0.8);
 //	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),mvm1,mvm2,mvm3,mvm4,mvm5);
 
-	Draw.tetra(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
-
+//	Draw.tetra(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
+	Draw.hexa(gl,mvm1,mvm2,mvm3,mvm4,mvm5);
+	
 	var timeBefore=0;
 	var angle=0;
 	function render(timeStamp){
@@ -965,17 +1121,17 @@ function sendBufferData(gl,oShader,oBuffer){
 
 (function(){
 	Motion = { };
+//kkk
+	Object.defineProperty(Motion,'none'	,{value:unit(),writable:false,enumerable:false});
+	Object.defineProperty(Motion,'random'	,{get:function(){return (new random());}});
+	Object.defineProperty(Motion,'axisY'	,{value:axisY(),writable:false});
 
-	Object.defineProperty(Motion,'none',{value:unit(),writable:false,enumerable:false});
 	function unit(){
 		var a = new Array(16);
 		myMat4.loadIdentity();
 		myMat4.storeTo(a);
 		return a;
 	}
-
-
-	Object.defineProperty(Motion,'random',{get:function(){return (new random());}});
 	function random(){
 
 		var rx = Math.floor(Math.random()*100)/10;
@@ -998,8 +1154,6 @@ function sendBufferData(gl,oShader,oBuffer){
 			return matrix;
 		}
 	};
-
-	Object.defineProperty(Motion,'axisY',{value:axisY(),writable:false});
 	function axisY(){
 
 		var rAxisX = 0;
@@ -1238,8 +1392,15 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	Object.defineProperty(Draw,'length',{get:function(){return length;},enumerable:true,configurable:false});
 
 	Object.defineProperty(Draw,'point',{value:point,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'line',{value:line,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'triangle',{value:triangle,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'axisX',{value:axisX,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'axisY',{value:axisY,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'axisZ',{value:axisZ,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'tetra',{value:tetrahedron,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'hexa',{value:hexahedron,writable:false,enumerable:true});
+
 	function point(gl,p1,color,mvm1,mvm2,mvm3,mvm4,mvm5){
-console.log("point p1=",p1);
 		var oModel = { };
 		oModel.base = myGLSape.point(gl,p1,color);
 		oModel.buffers = setModelToBuffer(gl,oModel);
@@ -1251,9 +1412,7 @@ console.log("point p1=",p1);
 		Draw.pushModel(oModel);
 
 	};
-	Object.defineProperty(Draw,'line',{value:line,writable:false,enumerable:true});
 	function line(gl,pointStart,pointEnd,color,mvm1,mvm2,mvm3,mvm4,mvm5){
-console.log("line");
 		var oModel = { };
 		oModel.base = myGLSape.line(gl,pointStart,pointEnd,color);
 
@@ -1266,7 +1425,6 @@ console.log("line");
 		Draw.pushModel(oModel);
 		
 	};
-	Object.defineProperty(Draw,'triangle',{value:triangle,writable:false,enumerable:true});
 	function triangle(gl,p1,p2,p3,color,mvm1,mvm2,mvm3,mvm4,mvm5){
 			var oModel = { };
 			oModel.base = myGLSape.triangle(gl,p1,p2,p3,color);
@@ -1278,9 +1436,7 @@ console.log("line");
 			oModel.mvm5 = mvm5;
 			Draw.pushModel(oModel);
 	};
-	Object.defineProperty(Draw,'axisX',{value:axisX(),writable:false,enumerable:true});
-	function axisX(){
-		return function(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
+	function axisX(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
 			var oModel = { };
 			oModel.base = myGLSape.axisX(gl);
 			oModel.buffers = setModelToBuffer(gl,oModel);
@@ -1290,11 +1446,8 @@ console.log("line");
 			oModel.mvm4 = mvm4;
 			oModel.mvm5 = mvm5;
 			Draw.pushModel(oModel);
-		}
 	};
-	Object.defineProperty(Draw,'axisY',{value:axisY(),writable:false,enumerable:true});
-	function axisY(){
-		return function(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
+	function axisY(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
 			var oModel = { };
 			oModel.base = myGLSape.axisY(gl);
 			oModel.buffers = setModelToBuffer(gl,oModel);
@@ -1304,11 +1457,8 @@ console.log("line");
 			oModel.mvm4 = mvm4;
 			oModel.mvm5 = mvm5;
 			Draw.pushModel(oModel);
-		}
 	};
-	Object.defineProperty(Draw,'axisZ',{value:axisZ(),writable:false,enumerable:true});
-	function axisZ(){
-		return function(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
+	function axisZ(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
 			var oModel = { };
 			oModel.base = myGLSape.axisZ(gl);
 			oModel.buffers = setModelToBuffer(gl,oModel);
@@ -1318,12 +1468,21 @@ console.log("line");
 			oModel.mvm4 = mvm4;
 			oModel.mvm5 = mvm5;
 			Draw.pushModel(oModel);
-		}
 	};
-	Object.defineProperty(Draw,'tetra',{value:tetrahedron,writable:false,enumerable:true});
 	function tetrahedron(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
 			var oModel = { };
 			oModel.base = myGLSape.tetra(gl);
+			oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
+			oModel.mvm1 = mvm1;
+			oModel.mvm2 = mvm2;
+			oModel.mvm3 = mvm3;
+			oModel.mvm4 = mvm4;
+			oModel.mvm5 = mvm5;
+			Draw.pushModel(oModel);
+	};
+	function hexahedron(gl,mvm1,mvm2,mvm3,mvm4,mvm5){
+			var oModel = { };
+			oModel.base = myGLSape.hexa(gl);
 			oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
 			oModel.mvm1 = mvm1;
 			oModel.mvm2 = mvm2;
@@ -1351,305 +1510,6 @@ console.log("line");
 
 //********************************** HEXAHEDRON ******************************************
 
-function regularHexahedron(gl){
-		//regular hexahedron
-var newPositions2 = [
--1.0,-1.0,1.0,
-1.0,-1.0,1.0,
-1.0,1.0,1.0,
--1.0,1.0,1.0,
-
--1.0,-1.0,-1.0,
--1.0,1.0,-1.0,
-1.0,1.0,-1.0,
-1.0,-1.0,-1.0,
-
--1.0,1.0,-1.0,
--1.0,1.0,1.0,
-1.0,1.0,1.0,
-1.0,1.0,-1.0,
-
--1.0,-1.0,-1.0,
-1.0,-1.0,-1.0,
-1.0,-1.0,1.0,
--1.0,-1.0,1.0,
-
-1.0,-1.0,-1.0,
-1.0,1.0,-1.0,
-1.0,1.0,1.0,1.0,-1.0,1.0,
-
--1.0,-1.0,-1.0,
--1.0,-1.0,1.0,
--1.0,1.0,1.0,
--1.0,1.0,-1.0
-];
-
-	var newPositions = [
-
--1.0,1.0,1.0,
--1.0,-1.0,1.0,
-1.0,-1.0,1.0,
-1.0,1.0,1.0,
-
--1.0,1.0,-1.0,
-1.0,1.0,-1.0,
-1.0,-1.0,-1.0,
--1.0,-1.0,1.0,
-
--1.0,1.0,1.0,
--1.0,1.0,-1.0,
-1.0,1.0,-1.0,
-1.0,1.0,1.0,
-
--1.0,-1.0,1.0,
--1.0,-1.0,1.0,
--1.0,-1.0,-1.0,
--1.0,-1.0,-1.0,
-
-1.0,-1.0,1.0,
-1.0,1.0,1.0,
-1.0,1.0,-1.0,
-1.0,-1.0,-1.0,
-
--1.0,-1.0,1.0,
--1.0,-1.0,-1.0,
--1.0,1.0,-1.0,
--1.0,1.0,1.0
-
-];
-
-
-	var positions = [
-		1.0,1.0,1.0,
-		-1.0,1.0,1.0,
-		-1.0,-1.0,1.0,
-			1.0,1.0,1.0,
-			-1.0,-1.0,1.0,
-			1.0,-1.0,1.0,	
-
-		1.0,1.0,1.0,
-		-1.0,1.0,1.0,
-		-1.0,1.0,-1.0,
-			1.0,1.0,1.0,
-			-1.0,1.0,-1.0,
-			1.0,1.0,-1.0,
-
-		1.0,1.0,1.0,
-		1.0,-1.0,1.0,
-		1.0,-1.0,-1.0,
-			1.0,1.0,1.0,
-			1.0,-1.0,-1.0,
-			1.0,1.0,-1.0,
-
-		1.0,1.0,-1.0,
-		-1.0,1.0,-1.0,
-		-1.0,-1.0,-1.0,
-			1.0,1.0,-1.0,
-			-1.0,-1.0,-1.0,
-			1.0,-1.0,-1.0,	
-
-		1.0,-1.0,1.0,
-		-1.0,-1.0,1.0,
-		-1.0,-1.0,-1.0,
-			1.0,-1.0,1.0,
-			-1.0,-1.0,-1.0,
-			1.0,-1.0,-1.0,
-
-		-1.0,1.0,1.0,
-		-1.0,-1.0,1.0,
-		-1.0,-1.0,-1.0,
-			-1.0,1.0,1.0,
-			-1.0,-1.0,-1.0,
-			-1.0,1.0,-1.0
-	];
-
-	var normals = [
-
-0.0,0.0,1.0,
-0.0,0.0,1.0,
-0.0,0.0,1.0,
-0.0,0.0,1.0,
-
-0.0,0.0,-1.0,
-0.0,0.0,-1.0,
-0.0,0.0,-1.0,
-0.0,0.0,-1.0,
-
-0.0,1.0,0.0,
-0.0,1.0,0.0,
-0.0,1.0,0.0,
-0.0,1.0,0.0,
-
-0.0,-1.0,0.0,
-0.0,-1.0,0.0,
-0.0,-1.0,0.0,
-0.0,-1.0,0.0,
-
-1.0,0.0,0.0,
-1.0,0.0,0.0,
-1.0,0.0,0.0,
-1.0,0.0,0.0,
-
--1.0,0.0,0.0,
--1.0,0.0,0.0,
--1.0,0.0,0.0,
--1.0,0.0,0.0,
-
-];
-	var newNormals = [];
-	var m = newPositions.length/3;
-	var n = m/4;
-	for(var ii=0;ii<n;ii++){
-		tempNorm = norm(//set points orderd like a sector around the center as first argument
-			positions[ii*12+0],positions[ii*12+1],positions[ii*12+2],
-			positions[ii*12+3],positions[ii*12+4],positions[ii*12+5],
-			positions[ii*12+6],positions[ii*12+7],positions[ii*12+8],
-			positions[ii*12+9],positions[ii*12+10],positions[ii*12+11]
-		);
-console.log("norm=",tempNorm);
-
-		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
-		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
-		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
-		newNormals.push(tempNorm.x);newNormals.push(tempNorm.y);newNormals.push(tempNorm.z);
-	}
-
-	var newColors = [
-
-		1.0,1.0,1.0,1.0,
-		1.0,1.0,1.0,1.0,
-		1.0,1.0,1.0,1.0,
-		1.0,1.0,1.0,1.0,
-
-		1.0,0.2,0.5,0.5,
-		1.0,0.2,0.5,0.5,
-		1.0,0.2,0.5,0.5,
-		1.0,0.2,0.5,0.5,
-
-		0.7,0.3,0.8,0.9,
-		0.7,0.3,0.8,0.9,
-		0.7,0.3,0.8,0.9,
-		0.7,0.3,0.8,0.9,
-
-		0.6,1.0,0.6,0.9,
-		0.6,1.0,0.6,0.9,
-		0.6,1.0,0.6,0.9,
-		0.6,1.0,0.6,0.9,
-
-		0.4,0.2,0.1,0.9,
-		0.4,0.2,0.1,0.9,
-		0.4,0.2,0.1,0.9,
-		0.4,0.2,0.1,0.9,
-
-		1.0,1.0,0.1,0.9,
-		1.0,1.0,0.1,0.9,
-		1.0,1.0,0.1,0.9,
-		1.0,1.0,0.1,0.9,
-
-];
-	var colors = [
-		0.3,1.0,1.0,0.1,
-		0.3,1.0,1.0,0.1,
-		0.3,1.0,1.0,0.1,
-			0.3,1.0,1.0,0.1,
-			0.3,1.0,1.0,0.1,
-			0.3,1.0,1.0,0.1,
-
-		1.0,0.2,0.5,0.5,
-		1.0,0.2,0.5,0.5,
-		1.0,0.2,0.5,0.5,
-			1.0,0.2,0.5,0.5,
-			1.0,0.2,0.5,0.5,
-			1.0,0.2,0.5,0.5,
-
-		0.7,0.3,0.8,0.9,
-		0.7,0.3,0.8,0.9,
-		0.7,0.3,0.8,0.9,
-			0.7,0.3,0.8,0.9,
-			0.7,0.3,0.8,0.9,
-			0.7,0.3,0.8,0.9,
-
-		0.6,1.0,0.6,0.9,
-		0.6,1.0,0.6,0.9,
-		0.6,1.0,0.6,0.9,
-			0.6,1.0,0.6,0.9,
-			0.6,1.0,0.6,0.9,
-			0.6,1.0,0.6,0.9,
-
-		0.4,0.2,0.1,0.9,
-		0.4,0.2,0.1,0.9,
-		0.4,0.2,0.1,0.9,
-			0.4,0.2,0.1,0.9,
-			0.4,0.2,0.1,0.9,
-			0.4,0.2,0.1,0.9,
-
-		1.0,1.0,0.1,0.9,
-		1.0,1.0,0.1,0.9,
-		1.0,1.0,0.1,0.9,
-			1.0,1.0,0.1,0.9,
-			1.0,1.0,0.1,0.9,
-			1.0,1.0,0.1,0.9
-	];
-
-
-	var textureCoordinates = [
-		1.0,0.0,
-		1.0,1.0,
-		0.0,1.0,
-		0.0,0.0,
-
-		1.0,0.0,
-		1.0,1.0,
-		0.0,1.0,
-		0.0,0.0,
-
-		1.0,0.0,
-		1.0,1.0,
-		0.0,1.0,
-		0.0,0.0,
-
-		1.0,0.0,
-		1.0,1.0,
-		0.0,1.0,
-		0.0,0.0,
-
-		1.0,0.0,
-		1.0,1.0,
-		0.0,1.0,
-		0.0,0.0,
-
-		1.0,0.0,
-		1.0,1.0,
-		0.0,1.0,
-		0.0,0.0
-];
-
-
-	var indices = [
-0,1,2,0,2,3,
-4,5,6,4,6,7,
-8,9,10,8,10,11,
-12,13,14,12,14,15,
-16,17,18,16,18,19,
-20,21,22,20,22,23
-];
-
-
-	return {
-		n:positions.length/3,
-		pos:newPositions,
-//		pos:newPositions2,
-//○		nor:newNormals,//●
-		nor:normals,
-		col:newColors,
-		tex:textureCoordinates,
-		ind:indices,
-		draw:function(){
-			gl.drawElements(gl.LINE_STRIP,positions.length/3,gl.UNSIGNED_SHORT,0);
-		}
-
-	}
-};
 
 
 //******************************** SPHERE ***********************************************
@@ -1805,115 +1665,6 @@ console.log("nVerteces(of all triangles)=",countTriangle*3);
 };
 
 </script>
-<script id="matrix-library" type='text/javascript'>
-//****************************************** class Point, class Vector *******************************************************
-var norm = function getNormalVectorForm4Points(){
-	/**
-	 *class Point
-	 *
-	*/
-	var Poi = function Point(x,y,z){
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	};
-	/**
-	 *class Vector
-	 *
-	*/
-	var Vec = function Vector2(x,y,z){
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	};
-	Vec.prototype.calcLength2 = function(){
-console.log("x.prop=",this.x);
-console.log("y.prop=",this.y);
-console.log("z.prop=",this.z);
-		return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5);
-	};
-	/**
-	 *get cross vector from 3 points of cartesian
-	 *
-	 *@param {Vector} out cross vector
-	 *@param {Point} pL,pO,pR dimensional point each other
-	 *
-	*/
-	var cross = function getCrossVector(pO,pR,pL){
-		var vP = new Vec(pL.x-pO.x , pL.y-pO.y , pL.z-pO.z);
-		var vQ = new Vec(pR.x-pO.x , pR.y-pO.y , pR.z-pO.z);
-		var x = vP.x * vQ.z - vP.z * vQ.y;
-		var y = vP.z * vQ.x - vP.x * vQ.z;
-		var z = vP.x * vQ.y - vP.y * vQ.x;
-//console.log("x=",x);
-//console.log("y=",y);
-//console.log("z=",z);
-		return new Vec(x,y,z);
-	};
-
-
-	var vec;
-	var ii,jj,kk;
-	var maxLength = 0;
-	var maxVector=void 0;
-	var ii,jj,kk;
-	var pois = new Array();
-	var n = Math.floor(arguments.length/3);
-
-	for(var ii=0;ii<n;ii++){
-		pois.push(new Poi(arguments[3*ii],arguments[3*ii+1],arguments[3*ii+2]));
-	}
-//console.log(pois);
-	ii=0;
-	for(var jj=ii+1;jj<n-1;jj++){
-		for(var kk=jj+1;kk<n;kk++){
-//console.log("pois[ii]=",pois[ii]);
-//console.log("pois[jj]=",pois[jj]);
-//console.log("pois[kk]=",pois[kk]);
-			vec = cross(pois[ii],pois[jj],pois[kk]);
-//console.log("length=",vec.calcLength2());
-			if(vec.calcLength2() > maxLength){
-				maxLength = vec.length;
-				maxVector = vec;
-			}
-		}
-	}
-	if(!maxVector){
-//		console.log(arguments);
-		PRINT_CAUTION.innerHTML+="can't decide cross vector<br>";
-		return null;
-	}
-	return {
-		x:vec.x,
-		y:vec.y,
-		z:vec.z
-	}
-};
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</script>
-
-
-
-
-
-
-
-
-
 
 </head><body onload="start();"><div>
 <h3 style="offset:0px;">Animating objects with WebGL</h3>
