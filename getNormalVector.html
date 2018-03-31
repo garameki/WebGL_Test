@@ -795,8 +795,19 @@
 
 				var vN1 = getNormalVector(gl,points[n1],points[n2],points[n3],pointInner);
 				var vN2 = getNormalVector(gl,points[n2],points[n3],points[n4],pointInner);
+				var mx = points[n1].x+points[n2].x+points[n3].x+points[n4].x;
+				var my = points[n1].y+points[n2].y+points[n3].y+points[n4].y;
+				var mz = points[n1].z+points[n2].z+points[n3].z+points[n4].z;
+				mx=mx*0.25;
+				my=my*0.25;
+				mz=mz*0.25;
+				var vC = new myClass.Vector(mx,my,mz);
+				var aaa1 = (vC.x+vN1.x+vC.y*vN1.y+vC.z*vN1.z)/(vC.length+vN1.length);
+				var theta1 = Math.acos(aaa1);
+				var aaa2 = (vC.x+vN2.x+vC.y*vN2.y+vC.z*vN2.z)/(vC.length+vN2.length);
+				var theta2 = Math.acos(aaa2);
 				var vN;
-				if(vN1.length>vN2.length){
+				if(theta1<theta2){
 					vN = vN1;
 				}else{
 					vN = vN2;
@@ -809,26 +820,27 @@
 			//		px[n3],py[n3],pz[n3]
 			//	);
 
-if(countRectangle==152){
-	var none = Motion.none();
-	Draw.point(gl,points[n1],myColorName.blue(1),Motion.axisY(),none,none,none,none);
-	Draw.point(gl,points[n2],myColorName.blue(1),Motion.axisY(),none,none,none,none);
-	Draw.point(gl,points[n3],myColorName.blue(1),Motion.axisY(),none,none,none,none);
-	Draw.point(gl,points[n4],myColorName.blue(1),Motion.axisY(),none,none,none,none);
-
-	Draw.triangle(gl,points[n1],points[n2],points[n3],myColorName.red(1),Motion.translate(0,0,1),Motion.axisY(),none,none,none);
-	Draw.line(gl,points[n1],points[n1].calcTranslate(vN1),myColorName.red(1),Motion.translate(0,0,1),Motion.axisY(),none,none,none);
-	Draw.line(gl,points[n1],points[n1].calcTranslate(vN2),myColorName.red(1),Motion.translate(0,0,1),Motion.axisY(),none,none,none);
-	console.log(points[n1]);
-
-	console.log(points[n2]);
-	console.log(points[n3]);
-	console.log(points[n4]);
-	console.log(vN1.arr,vN1.length);
-	console.log(vN2.arr,vN2.length);
-	console.log(vN.arr);
-	vN = vN1;
-}
+//issue
+//if(countRectangle==152){
+//	var none = Motion.none();
+//	Draw.point(gl,points[n1],myColorName.blue(1),Motion.axisY(),none,none,none,none);
+//	Draw.point(gl,points[n2],myColorName.blue(1),Motion.axisY(),none,none,none,none);
+//	Draw.point(gl,points[n3],myColorName.blue(1),Motion.axisY(),none,none,none,none);
+//	Draw.point(gl,points[n4],myColorName.blue(1),Motion.axisY(),none,none,none,none);
+//
+//	Draw.triangle(gl,points[n1],points[n2],points[n3],myColorName.red(1),Motion.translate(0,0,1),Motion.axisY(),none,none,none);
+//	Draw.line(gl,points[n1],points[n1].calcTranslate(vN1),myColorName.red(1),Motion.translate(0,0,1),Motion.axisY(),none,none,none);
+//	Draw.line(gl,points[n1],points[n1].calcTranslate(vN2),myColorName.red(1),Motion.translate(0,0,1),Motion.axisY(),none,none,none);
+//	console.log(points[n1]);
+//
+//	console.log(points[n2]);
+//	console.log(points[n3]);
+//	console.log(points[n4]);
+//	console.log(vN1.arr,vN1.length);
+//	console.log(vN2.arr,vN2.length);
+//	console.log(vN.arr);
+//	vN = vN1;
+//}
 				normals = normals.concat(vN.arr);
 				normals = normals.concat(vN.arr);
 				normals = normals.concat(vN.arr);
