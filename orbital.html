@@ -19,6 +19,16 @@
 
 	Object.defineProperty(myXYZ,'length',{get:function(){return aMember.length;}});
 
+	Object.defineProperty(myXYZ,'member',{value:getMemberByIndex});
+	function getMemberByIndex(){
+		return function(num){
+			if(num>=aMember.length || num<0){
+				PRINT_CAUTION.innerHTML+='number is out of range. num='+num.toString()+'<br>';
+			}
+			return aMember[num];
+		};
+
+	};
 	Object.defineProperty(myXYZ,'join',{value:join});
 	function join(m,x,y,z,vx,vy,vz){
 		var mem =new Member(m,x,y,z,vx,vy,vz);
@@ -805,12 +815,12 @@ g=1/5;
 			}
 		}
 	};
-	function sphere2(gl){
+	function sphere2(gl,rr){
 
 		var rad = Math.PI / 180;
 		var alpha;//latitude
 		var gamma;//longitude
-		var rr=2.0;//radius
+//		var rr=2.0;//radius
 		var dal=10;//diffential of alpha
 		var dgam=10;//differential of gamma
 
@@ -936,7 +946,7 @@ g=1/5;
 		}
 
 
-	console.log("number of rectangles",countRectangle);
+//	console.log("number of rectangles",countRectangle);
 
 	if(countRectangle!=(nLatitude-1)*(nLongitude-1))PRINT_CAUTION.innerHTML+="Unmatch the number of rectangles and the numner of culculation result of it.<br>";
 
@@ -986,7 +996,7 @@ g=1/5;
 			indices.push(kk * 4  + 3);
 		}
 
-	console.log("nVerteces(of all triangles)=",countTriangle*3);
+//	console.log("nVerteces(of all triangles)=",countTriangle*3);
 		return {
 			n:countTriangle*3,//countTriangle*3,//全ての三角形の頂点の総数
 			pos:positions,
@@ -1068,6 +1078,14 @@ g=1/5;
 //			myMat4.trans(-5,0,-25);
 		};
 	};
+	Object.defineProperty(Motion,'replaceOrigin',{value:replaceCenterToOriginOf});
+	function replaceCenterToOriginOf(targetO){
+		return function(time){
+//console.log("x:",targetO.x,"y:",targetO.y,"z:",targetO.z);
+			myMat4.trans(-targetO.x,-targetO.y,-targetO.z);
+		};
+	};
+
 
 
 
@@ -1520,55 +1538,45 @@ function start(){
 
 
 
-
-
 		//center
-	var mem = myXYZ.join(1000,  0,0,0  ,0,0,0);
+	var m = 1000;
+	var r = Math.pow(0.23873241468*m,0.33333333333333333);
+	var memOrigin = myXYZ.join(m,  0,0,0  ,0,0,0);
 	var aMotions = [];
 	aMotions.push(Motion.rotate(0,1,0,1,0));
-				aMotions.push(Motion.transXYZ(mem));
-				aMotions.push(Motion.transOnce(0,0,-30));
+				aMotions.push(Motion.transXYZ(memOrigin));
+				aMotions.push(Motion.replaceOrigin(memOrigin));
+				aMotions.push(Motion.transOnce(0,0,-130));
 						//	aMotions.push(Motion.rotate(0,1,0,    1,-1,0));
 						//	aMotions.push(Motion.transOnce(0,0,-50));//center : sun
 						//	aMotions.push(Motion.none());
-	Draw.hexa(gl,aMotions);
+	Draw.sphere(gl,r,aMotions);
 
-/*
-	var mem = myXYZ.join(1,   20,0,0,   3,0,-3);
+var spread=1000;
+for(var hh=0;hh<100;hh++){
+	var aMotions=[];
+	var p1 = new myClass.Point(spread*(1-Math.random()*2),spread*(1-Math.random()*2),spread*(1-Math.random()*2));
+	aMotions.push(Motion.replaceOrigin(memOrigin));
+	aMotions.push(Motion.transOnce(0,0,-130));
+	Draw.point(gl,p1,myColorName.purple(1),aMotions);
+}
+
+
+
+for(var hh=0;hh<20;hh++){
+	var m = Math.random()*100;
+	var r = Math.pow(m*0.23873241,0.33333333);
+	var mem = myXYZ.join(m,   Math.random()*100-50,Math.random()*100-50,Math.random()*100-50,   0.5-Math.random()*1,0.5-Math.random()*1,0.5-Math.random()*1);
 	var aMotions = [];
 	aMotions.push(Motion.rotate(0,1,0,1,0));//rotation
 				aMotions.push(Motion.transXYZ(mem));//revolution
-				aMotions.push(Motion.transOnce(0,0,-30));//seen from the distance
+				aMotions.push(Motion.replaceOrigin(memOrigin));
+				aMotions.push(Motion.transOnce(0,0,-130));//seen from the distance
 						//	aMotions.push(Motion.axisY(1));
 						//	aMotions.push(Motion.transOnce(0,0,-50));
 						//	aMotions.push(Motion.none());
-	Draw.sphere(gl,aMotions);
-*/
-
-	var mem = myXYZ.join(10,   0,0,-50,   1,1,0.5);
-	var aMotions = [];
-	aMotions.push(Motion.rotate(0,1,0,1,0));//rotation
-				aMotions.push(Motion.transXYZ(mem));//revolution
-				aMotions.push(Motion.transOnce(0,0,-30));//seen from the distance
-						//	aMotions.push(Motion.axisY(1));
-						//	aMotions.push(Motion.transOnce(0,0,-50));
-						//	aMotions.push(Motion.none());
-	Draw.sphere(gl,aMotions);
-
-
-	var mem = myXYZ.join(10,   0,30,0,   0,1.5,-2);
-	var aMotions = [];
-	aMotions.push(Motion.rotate(0,1,0,1,0));//rotation
-				aMotions.push(Motion.transXYZ(mem));//revolution
-				aMotions.push(Motion.transOnce(0,0,-30));//seen from the distance
-						//	aMotions.push(Motion.axisY(1));
-						//	aMotions.push(Motion.transOnce(0,0,-50));
-						//	aMotions.push(Motion.none());
-	Draw.sphere(gl,aMotions);
-
-
-
-
+	Draw.sphere(gl,r,aMotions);
+};
 
 	
 	var timeBefore=0;
@@ -1784,9 +1792,9 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 			oModel.aMotions = aMotions;
 			Draw.pushModel(oModel);
 	};
-	function sphere(gl,aMotions){
+	function sphere(gl,rr,aMotions){
 			var oModel = { };
-			oModel.base = myGLSape.sphere(gl);
+			oModel.base = myGLSape.sphere(gl,rr);
 			oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
 			oModel.aMotions = aMotions;
 			Draw.pushModel(oModel);
@@ -1804,6 +1812,6 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 <p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html">WebGLFundamentals</a></p>
 <canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
 <p id="PRINT_INFO" style="position:relative;top:0px;left:0px:offset:0px"></p>
-<p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;offset:0px;background-color:white;"></p>
+<p id="PRINT_CAUTION" style="position:relative;top:0px;left:0px;color:red;offset:0px;background-color:white;"></p>
 </div></body></html>
 
