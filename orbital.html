@@ -1,6 +1,71 @@
 ﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
 <link rel="sylesheet" href="">
+<script id="gravity" type='text/javascript'>
+(function(){
 
+	myXYZ = { };
+
+	var aMember = [];
+	function Member(mass,x,y,z,vx,vy,vz){
+		this.m = mass;
+		this.x=x;
+		this.y=y;
+		this.z=z;
+		this.vx=vx;
+		this.vy=vy;
+		this.vz=vz;
+	};
+
+
+	Object.defineProperty(myXYZ,'length',{get:function(){return aMember.length;}});
+
+	Object.defineProperty(myXYZ,'join',{value:join});
+	function join(m,x,y,z,vx,vy,vz){
+		var mem =new Member(m,x,y,z,vx,vy,vz);
+		aMember.push(mem);
+		return mem;
+	};
+	Object.defineProperty(myXYZ,'repos',{value:reposition});
+	function reposition(dt){
+
+dt=dt/50;
+g=1/5;
+		var mem1,mem2,dist,force;
+		var sumFx,sumFy,sumFz;
+		var len = aMember.length;
+		for(var ii=0;ii<len;ii++){
+			sumFx=0;sumFy=0;sumFz=0;
+			mem1=aMember[ii];
+			for(var jj=0;jj<len;jj++){
+				if(ii==jj){
+					//nothing to do
+				}else{
+					mem2=aMember[jj];
+					dist = 1/((mem1.x-mem2.x)*(mem1.x-mem2.x)+(mem1.y-mem2.y)*(mem1.y-mem2.y)+(mem1.z-mem2.z)*(mem1.z-mem2.z));
+					force = -g*mem1.m*mem2.m*dist;
+//console.log("force=",force);
+					dist=Math.pow(dist,0.5);
+					sumFx += force * (mem1.x-mem2.x)*dist;
+					sumFy += force * (mem1.y-mem2.y)*dist;
+					sumFz += force * (mem1.z-mem2.z)*dist;
+				}
+			}
+
+			mem1.x+=mem1.vx*dt;
+			mem1.y+=mem1.vy*dt;
+			mem1.z+=mem1.vz*dt;
+			mem1.vx+=sumFx*dt/mem1.m;
+			mem1.vy+=sumFy*dt/mem1.m;
+			mem1.vz+=sumFz*dt/mem1.m;
+		}
+//		var mem;
+//		for(var kk=0;kk<aMember.length;kk++){
+//			mem = aMember[kk];
+//			console.log("mem["+kk.toString()+"] x:",mem.x,"y:",mem.y,"z:",mem.z);
+//		}
+	};
+})();
+</script>
 
 
 <script id="tagIdMatrix" type='text/javascript'>
@@ -996,6 +1061,17 @@
 	Object.defineProperty(Motion,'transOnce',{value:translateOnce,enumerable:true});
 	Object.defineProperty(Motion,'rotate',{value:rotate,writable:false,enumerable:true});
 
+	Object.defineProperty(Motion,'transXYZ',{value:translateXYZ});
+	function translateXYZ(mem){
+		return function(time){
+			myMat4.trans(mem.x,mem.y,mem.z);
+//			myMat4.trans(-5,0,-25);
+		};
+	};
+
+
+
+
 	function unit(){
 		return function(time){
 			//none
@@ -1220,74 +1296,6 @@ function getShader(gl,id){
 
 
 
-function start(){
-	var canvas = document.getElementById('glcanvas');
-	canvas.width=canvas.clientWidth;//necessary
-	canvas.height=canvas.clientHeight;//necessary
-	var gl=canvas.getContext("webgl");
-	if(!gl){
-		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
-		return;
-	}
-
-	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//クリップ空間の-1～1の値をcanvasの大きさに変換する
-	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
-	gl.clearDepth(1.0);			//Clear everything
-	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
-	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
-
-
-
-	//for rectangle test
-{
-//	gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
-//    gl.enable(gl.SCISSOR_TEST);
-//   gl.scissor(30, 10, 60, 60);//60x60の正方形
-//    gl.clearColor(1.0, 1.0, 0.0, 1.0);
-//    gl.clear(gl.COLOR_BUFFER_BIT);
-};
-
-
-
-	initTextures(gl);
-	var oShader = initShaders(gl);
-
-//	var p1 = new myClass.Point(1.0,0.5,0.4);
-//	var p2 = new myClass.Point(0.5,0.2,1.4);
-//	var p3 = new myClass.Point(0.7,1.5,0.8);
-//	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),aMotions);
-
-//	Draw.tetra(gl,aMotions);
-
-	var aMotions = [];
-	aMotions.push(Motion.rotate(0,1,0,1,0));
-	aMotions.push(Motion.transOnce(0,0,-30));
-	aMotions.push(Motion.rotate(0,1,0,    1,-1,0));
-	aMotions.push(Motion.transOnce(0,0,-50));//center : sun
-	aMotions.push(Motion.none());
-	Draw.hexa(gl,aMotions);
-
-	var aMotions = [];
-	aMotions.push(Motion.axisY(1));
-	aMotions.push(Motion.transOnce(0,0,-50));
-	//aMotions.push(Motion.none());
-	Draw.sphere(gl,aMotions);
-	
-	var timeBefore=0;
-	var angle=0;
-	function render(timeStamp){
-		if(timeStamp - timeBefore>10){
-			angle+=(timeStamp -timeBefore)/16;
-			//if(angle>360)angle=0;
-			PRINT_INFO.innerText=angle.toString();
-//			drawScene(gl,oShader,aModels,angle);
-			drawScene(gl,oShader,angle);
-			timeBefore = timeStamp;
-		}
-		window.requestAnimationFrame(render);
-	}
-	window.requestAnimationFrame(render);
-};
 
 
 
@@ -1393,7 +1401,7 @@ function sendPerspectiveMatrix(gl,oShader){
 	var fieldOfView = 70 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	var zNear = 0.1;
-	var zFar = 100.0;
+	var zFar = 1000.0;
 
 	//create a projectionMatrix array as the perspective matrix
 	var projectionMatrix=new Array(16);
@@ -1413,7 +1421,7 @@ function sendModelViewMatrix(gl,oShader,aMotions,angle){
 	//@param {Array} aMVMatrices motion view matrix in Array
 		//Set the shader uniforms culclated above and something
 
-	myMat4.loadIdentity();//initialize matrix to accumerate
+	myMat4.loadIdentity();//initialize accumerator of matrix to compute
 
 	for(var ii=0,len=aMotions.length;ii<len;ii++){
 		aMotions[ii](angle);
@@ -1459,8 +1467,128 @@ function sendSampler(gl,oShader,number){
 	if(!sampler){PRINT_CAUTION.innerHTML+="sampler is "+sampler+"<br>";return null;}
 	gl.uniform1i(sampler,number);
 };
-	
 
+
+//*************************************** START ****************************************************************	
+
+function start(){
+	var canvas = document.getElementById('glcanvas');
+	canvas.width=canvas.clientWidth;//necessary
+	canvas.height=canvas.clientHeight;//necessary
+	var gl=canvas.getContext("webgl");
+	if(!gl){
+		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
+		return;
+	}
+
+	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//クリップ空間の-1～1の値をcanvasの大きさに変換する
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
+	gl.clearDepth(1.0);			//Clear everything
+	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
+	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
+
+
+
+	//for rectangle test
+{
+//	gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
+//    gl.enable(gl.SCISSOR_TEST);
+//   gl.scissor(30, 10, 60, 60);//60x60の正方形
+//    gl.clearColor(1.0, 1.0, 0.0, 1.0);
+//    gl.clear(gl.COLOR_BUFFER_BIT);
+};
+
+
+
+	initTextures(gl);
+	var oShader = initShaders(gl);
+
+//	var p1 = new myClass.Point(1.0,0.5,0.4);
+//	var p2 = new myClass.Point(0.5,0.2,1.4);
+//	var p3 = new myClass.Point(0.7,1.5,0.8);
+//	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),aMotions);
+
+//	Draw.tetra(gl,aMotions);
+
+
+
+
+
+
+
+
+
+
+
+
+
+		//center
+	var mem = myXYZ.join(1000,  0,0,0  ,0,0,0);
+	var aMotions = [];
+	aMotions.push(Motion.rotate(0,1,0,1,0));
+				aMotions.push(Motion.transXYZ(mem));
+				aMotions.push(Motion.transOnce(0,0,-30));
+						//	aMotions.push(Motion.rotate(0,1,0,    1,-1,0));
+						//	aMotions.push(Motion.transOnce(0,0,-50));//center : sun
+						//	aMotions.push(Motion.none());
+	Draw.hexa(gl,aMotions);
+
+/*
+	var mem = myXYZ.join(1,   20,0,0,   3,0,-3);
+	var aMotions = [];
+	aMotions.push(Motion.rotate(0,1,0,1,0));//rotation
+				aMotions.push(Motion.transXYZ(mem));//revolution
+				aMotions.push(Motion.transOnce(0,0,-30));//seen from the distance
+						//	aMotions.push(Motion.axisY(1));
+						//	aMotions.push(Motion.transOnce(0,0,-50));
+						//	aMotions.push(Motion.none());
+	Draw.sphere(gl,aMotions);
+*/
+
+	var mem = myXYZ.join(10,   0,0,-50,   1,1,0.5);
+	var aMotions = [];
+	aMotions.push(Motion.rotate(0,1,0,1,0));//rotation
+				aMotions.push(Motion.transXYZ(mem));//revolution
+				aMotions.push(Motion.transOnce(0,0,-30));//seen from the distance
+						//	aMotions.push(Motion.axisY(1));
+						//	aMotions.push(Motion.transOnce(0,0,-50));
+						//	aMotions.push(Motion.none());
+	Draw.sphere(gl,aMotions);
+
+
+	var mem = myXYZ.join(10,   0,30,0,   0,1.5,-2);
+	var aMotions = [];
+	aMotions.push(Motion.rotate(0,1,0,1,0));//rotation
+				aMotions.push(Motion.transXYZ(mem));//revolution
+				aMotions.push(Motion.transOnce(0,0,-30));//seen from the distance
+						//	aMotions.push(Motion.axisY(1));
+						//	aMotions.push(Motion.transOnce(0,0,-50));
+						//	aMotions.push(Motion.none());
+	Draw.sphere(gl,aMotions);
+
+
+
+
+
+	
+	var timeBefore=0;
+	var angle=0;
+	var dt;
+	function render(timeStamp){
+		dt = timeStamp - timeBefore;
+		if(dt>10){
+			angle+=dt/16;
+			//if(angle>360)angle=0;
+			PRINT_INFO.innerText=angle.toString();
+			myXYZ.repos(dt);
+//			drawScene(gl,oShader,aModels,angle);
+			drawScene(gl,oShader,angle);
+			timeBefore = timeStamp;
+		}
+		window.requestAnimationFrame(render);
+	}
+	window.requestAnimationFrame(render);
+};
 
 //************************************** DRAW SCENE *************************************************
 
