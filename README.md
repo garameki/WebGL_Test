@@ -45,6 +45,13 @@ title & necessary files
 >
 
 
+>two objects rotate around a center object in 3D space
+>-----------------------------------------------------
+>`orbital.html`
+>`niku_stand2.png`
+>
+
+
 Environment
 =============
 >
