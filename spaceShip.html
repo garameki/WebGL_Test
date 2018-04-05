@@ -28,7 +28,7 @@
 
 
 
-
+	//for using trigonometric functions
 	(function(){//xyz follow to trigonometric functions
 
 		myXYZTrigonometry = { };
@@ -44,26 +44,28 @@
 		};
 		inherits(Member,SuperMember);
 		//@override
-		Member.prototype.reposition = function(time){
+		Member.prototype.reposition = function(totalTime){
 			time=time*0.5
-			this.x=this.rxy * Math.cos(this.ratioTime*time+this.alpha);
-			this.y=this.rxy * Math.sin(this.ratioTime*time+this.alpha);
-			this.z=this.rz  * Math.sin(this.ratioTime*time+this.gamma);
+			this.x=this.rxy * Math.cos(this.ratioTime*totalTime+this.alpha);
+			this.y=this.rxy * Math.sin(this.ratioTime*totalTime+this.alpha);
+			this.z=this.rz  * Math.sin(this.ratioTime*totalTime+this.gamma);
 		};
 		//@override
-		Member.prototype.ratioTme = Math.PI*0.00555555555*0.05;
+		Member.prototype.ratioTime = Math.PI*0.00555555555*0.05;
 
-		Object.defineProperty(myXYZTriangle,'createMember',{value:createMember});
+		Object.defineProperty(myXYZTrigonometry,'createMember',{value:createMember});
 		function createMember(){
 			var member = new Member();
 			aMember.push(member);
 			return member;
 		};
-		Object.defineProperty(myXYZTriangle,'reposAll',{value:repositionizeAllMembers()});
+		Object.defineProperty(myXYZTrigonometry,'reposAll',{value:repositionizeAllMembers()});
 		function repositionizeAllMembers(){
-			return function(time){
+			var sumTime=0;
+			return function(dt){
+				sumTime+=dt;
 				for(var ii=0,len=aMember.length;ii<len;ii++){
-					aMember[ii].reposition(time);
+					aMember[ii].reposition(sumTime);
 				}
 			};
 		};
@@ -71,7 +73,7 @@
 
 	})();//trigonometric functions
 
-		//for gravity use
+		//for using gravity
 	(function(){
 
 		myXYZGravity = { };
@@ -147,7 +149,7 @@
 		};
 	})();//gravity
 
-
+	//for translating members of anonymous functions above
 	(function(){
 		MotionXYZ = { };
 		/* for myXYZ object families */
