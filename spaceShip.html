@@ -16,6 +16,7 @@
 
 	//class
 	function SuperMember(){
+
 	};
 	SuperMember.prototype.x = void 0;
 	SuperMember.prototype.y = void 0;
@@ -26,7 +27,25 @@
 	};
 	SuperMember.prototype.ratioTime = 0.1;
 
+	//for using under controlled space ship
+	(fucntion(){
+		myXYZManipulation = { };
 
+		var Member = function(){
+			this.xx = 100;
+			this.yy = 100;
+			this.zz = 100;
+			this.speed = 0;
+		};
+		var member = new Member();
+		window.onkeydown = function(event){
+			console.log("key=",event);
+			if(event.key =="↑")m
+			if(event.key =="↓")member.vz++;
+			if(event.key =="→")member.前後のスピード、位置、向き（space ship中心の回転）
+				
+		};
+	})();
 
 	//for using trigonometric functions
 	(function(){//xyz follow to trigonometric functions
@@ -35,17 +54,16 @@
 
 
 		var aMember = [];
-		function Member(){
+		var Member = function(){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
 			SuperMember.call(this);
-			this.rxy = 1000*(Math.random-0.5);
-			this.rz  = 1000*(Math.random-0.5);
+			this.rxy = 1000*(Math.random()-0.5);
+			this.rz  = 1000*(Math.random()-0.5);
 			this.alpha = Math.random()*2*3.14;
 			this.gamma = Math.random()*2*3.14;
 		};
 		inherits(Member,SuperMember);
 		//@override
 		Member.prototype.reposition = function(totalTime){
-			time=time*0.5
 			this.x=this.rxy * Math.cos(this.ratioTime*totalTime+this.alpha);
 			this.y=this.rxy * Math.sin(this.ratioTime*totalTime+this.alpha);
 			this.z=this.rz  * Math.sin(this.ratioTime*totalTime+this.gamma);
@@ -79,7 +97,7 @@
 		myXYZGravity = { };
 
 		var aMember = [];
-		function Member(mass,x,y,z,vx,vy,vz){
+		var Member = function(mass,x,y,z,vx,vy,vz){
 			SuperMember.call(this);	
 			this.m = mass;
 			this.x=x;
@@ -1614,21 +1632,35 @@ function start(){
 
 
 
-		//center
+		//space ship
 	var m = 1000;
 	var r = Math.pow(0.23873241468*m,0.33333333333333333);
-	var memCenter = myXYZGravity.createMember(m,  0,0,0  ,0,0,0);
+	var memCenter = myXYZManipulation.createMember();
 	var aMotions = [];
 	aMotions.push(Motion.rotate(0,1,0,1,0));
-				aMotions.push(MotionXYZ.trans(memCenter));
-				aMotions.push(MotionXYZ.replaceOrigin(memCenter));
-				aMotions.push(Motion.translate(0,0,-130));
+		aMotions.push(MotionXYZ.trans(memCenter));
+		aMotions.push(MotionXYZ.replaceOrigin(memCenter));
+	aMotions.push(Motion.translate(0,0,-130));
+						//	aMotions.push(Motion.rotate(0,1,0,    1,-1,0));
+						//	aMotions.push(Motion.translate(0,0,-50));//center : sun
+						//	aMotions.push(Motion.none());
+	Draw.hexa(gl,aMotions);
+
+		//center planet
+	var m = 1000;
+	var r = Math.pow(0.23873241468*m,0.33333333333333333);
+	var mem = myXYZTrigonometry.createMember();
+	var aMotions = [];
+	aMotions.push(Motion.rotate(0,1,0,1,0));
+		aMotions.push(MotionXYZ.replaceOrigin(memCenter));
+	aMotions.push(Motion.translate(0,0,-130));
 						//	aMotions.push(Motion.rotate(0,1,0,    1,-1,0));
 						//	aMotions.push(Motion.translate(0,0,-50));//center : sun
 						//	aMotions.push(Motion.none());
 	Draw.sphere(gl,r,aMotions);
 
-var spread=1000;
+//stars far from planet
+var spread=500;
 for(var hh=0;hh<100;hh++){
 	var aMotions=[];
 	var p1 = new myClass.Point(spread*(1-Math.random()*2),spread*(1-Math.random()*2),spread*(1-Math.random()*2));
@@ -1638,16 +1670,16 @@ for(var hh=0;hh<100;hh++){
 }
 
 
-
+//space deblis thrown in various random directions
 for(var hh=0;hh<20;hh++){
 	var m = Math.random()*100;
 	var r = Math.pow(m*0.23873241,0.33333333);
-	var mem = myXYZGravity.createMember(m,   Math.random()*100-50,Math.random()*100-50,Math.random()*100-50,   0.5-Math.random()*1,0.5-Math.random()*1,0.5-Math.random()*1);
+	var mem = myXYZTrigonometry.createMember();
 	var aMotions = [];
 	aMotions.push(Motion.rotate(0,1,0,1,0));//rotation
-				aMotions.push(MotionXYZ.trans(mem));//revolution
-				aMotions.push(MotionXYZ.replaceOrigin(memCenter));
-				aMotions.push(Motion.translate(0,0,-130));//seen from the distance
+		aMotions.push(MotionXYZ.trans(mem));//revolution
+		aMotions.push(MotionXYZ.replaceOrigin(memCenter));
+	aMotions.push(Motion.translate(0,0,-130));//seen from the distance
 						//	aMotions.push(Motion.axisY(1));
 						//	aMotions.push(Motion.translate(0,0,-50));
 						//	aMotions.push(Motion.none());
@@ -1664,7 +1696,7 @@ for(var hh=0;hh<20;hh++){
 			angle+=dt/16;
 			//if(angle>360)angle=0;
 			PRINT_INFO.innerText=angle.toString();
-			myXYZGravity.reposAll(dt);
+			myXYZTrigonometry.reposAll(dt);
 //			drawScene(gl,oShader,aModels,angle);
 			drawScene(gl,oShader,angle);
 			timeBefore = timeStamp;
