@@ -3,7 +3,7 @@
 <script id="calculationXYZ" type='text/javascript'>
 
 (function(){
-	var drawStep = 1600;//milli seconds
+	var drawStep = 10;//milli seconds
 
 
 
@@ -28,7 +28,7 @@
 		//interface to override
 		alert("In SuperMember reposition() was not overrided yet.  this=",this);
 	};
-	SuperMember.prototype.ratioTime = 0.1;
+	SuperMember.prototype.ratioTime = 1;
 
 	//for using under controlled space ship
 	(function(){
@@ -80,7 +80,7 @@
 			this.rightY=0;
 			this.rightZ=0;
 
-			this.ratioR=1;
+			this.ratioR=0.001;
 
 			this.matAccume=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 		};
@@ -149,16 +149,16 @@
 				var n = Math.floor(sumRemainder/drawStep);
 				sumRemainder=sumRemainder%drawStep;
 				myMat4.load(member.matAccume);
-var test=new Array(16);
+//var test=new Array(16);
 				for(var ii=0;ii<n;ii++){
 					member.goForward();
 					myMat4.trans(-member.x,-member.y,-member.z);
 					myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
-myMat4.storeTo(test);
-console.log("test1=",test);
+//myMat4.storeTo(test);
+//console.log("test1=",test);
 					member.turnUD();
-myMat4.storeTo(test);
-console.log("test2=",test);
+//myMat4.storeTo(test);
+//console.log("test2=",test);
 					myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
 					member.turnLR();
 					myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
