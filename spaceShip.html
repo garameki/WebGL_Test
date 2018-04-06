@@ -3,6 +3,9 @@
 <script id="calculationXYZ" type='text/javascript'>
 
 (function(){
+	var drawStep = 1600;//milli seconds
+
+
 
 	var inherits = function(childCtor, parentCtor) {
 	  /** @constructor */
@@ -28,23 +31,212 @@
 	SuperMember.prototype.ratioTime = 0.1;
 
 	//for using under controlled space ship
-	(fucntion(){
-		myXYZManipulation = { };
+	(function(){
+		myXYZMani = myXYZManipulation = { };
+
+		//キーコード
+		//右左上下スペース
+		const R=39;//→
+		const L=37;//←
+		const U=38;//↑
+		const D=40;//↓
+//		const SP=32;//space key
+		const A=65;//a
+		const Z=90;//z
+		const W=87;//w
+		const Q=81;//q
+	
+		//動き(eventListener)
+		var gDSpeed   = 0;
+		var gDRoll    = 0;
+		var gDTurnUD  = 0;
+		var gDTurnLR  = 0;
+
+//		var gMissile=false;
+		var gR=false;
+		var gL=false;
+		var gU=false;
+		var gD=false;
+		var gA=false;
+		var gZ=false;
+		var gW=false;
+		var gQ=false;
 
 		var Member = function(){
-			this.xx = 100;
-			this.yy = 100;
-			this.zz = 100;
+			SuperMember.call(this);
+			this.vx = 0;
+			this.vy = 0;
+			this.vz = 1;
 			this.speed = 0;
+			this.topX=0;
+			this.topY=1;
+			this.topZ=0;
+			this.rightX=1;
+			this.rightY=0;
+			this.rightZ=0;
 		};
-		var member = new Member();
-		window.onkeydown = function(event){
-			console.log("key=",event);
-			if(event.key =="↑")m
-			if(event.key =="↓")member.vz++;
-			if(event.key =="→")member.前後のスピード、位置、向き（space ship中心の回転）
-				
+		inherits(Member,SuperMember);
+		Member.prototype.upToDate = function(){
+			this.x += this.vx;
+			this.y += this.vy;
+			this.z += this.vz;
+			var ux=this.vx;
+			var uy=this.vy;
+			var uz=this.vz;
+			var vx=this.topX;
+			var vy=this.topY;
+			var vz=this.topZ;
+			//cross product between forward vector and top vector must indicate right direction
+			this.rightX=uy*vz-uz*vy;
+			this.rightY=uz*vx-ux*vz;
+			this.rightZ=ux*vy-uy*vx;
+			this.thetaLR=gDTurnLR;
+			this.thetaUD=gDTurnUD;
+			this.thetaRoll=gDRoll;
 		};
+
+		Object.defineProperty(myXYZMani,'move',{value:move(member)});
+		function move(member){
+			var sumTime=0;
+			return function(dt){
+				sumTime+=dt;
+				var n = Math.floor(sumTime/drawStep);
+				for(var ii=0;ii<n;ii++){
+					speed+=gDd;
+					方向をどう表す
+					else if(keySpeed=='-')speed--;
+					if(keyDirection=='D')roll(gDs);
+					if(keyDirection=='U')rollUp();
+					if(keyD
+				}
+			};
+		};
+
+
+		window.addEventListener('keydown',keydown,false);
+		var keydown =  function(event){
+			var key = event.keyCode;
+
+			if(key==R){
+				gDd=-1;
+				gR=true;
+			}else if(key==L){
+				gDd=1;
+				gL=true;
+			}else if(key==U){
+				gDs=1;
+				gU=true;
+			}else if(key==D){
+				gDs=-1;
+				gD=true;
+			}else if(key==SP){	
+//info.text("eventListvers.js       space");
+				if(gMissile==false)gMissile=true;
+			}else if(key==A){
+				gA=true;
+				gDzoom=1;
+			}else if(key==Z){
+				gZ=true;
+				gDzoom=-1
+			}else if(key==W){
+				gW=true;
+			};
+		};
+		window.addEventListener('keyup',keyup,false);
+		function keyup(){
+			var key = event.keyCode;
+	
+			if(key==R){
+				if(gR){
+					gR=false;
+				}else{
+					console.error("RのkeyDownを捉えていなかった");
+				};
+				if(gL){
+					gDTurnLR=1;
+				}else{
+					gDTurnLR=0;
+				};
+			}else if(key==L){
+				if(gL){
+					gL=false;
+				}else{
+					console.error("LのkeyDownを捉えていなかった");
+				};
+				if(gR){
+					gDTurnLR=-1;
+				}else{
+					gDTurnLR=0;
+				};
+			}else if(key==U){
+				if(gU){
+					gU=false;
+				}else{
+					console.error("UのkeyDownを捉えていなかった");
+				};
+				if(gD){
+					gDTurnUD=-1;
+				}else{
+					gDTurnUD=0;
+				};
+			}else if(key==D){
+				if(gD){
+					gD=false;
+				}else{
+					console.error("DのkeyDownを捉えていなかった");
+				};
+				if(gU){
+					gDTurnUD=1;
+				}else{
+					gDTurnUD=0;
+				};
+			}else if(key==A){
+				if(gA){
+					gA=false;
+				}else{
+					console.error("AのkeyDownを捉えていなかった");
+				};
+				if(gZ){
+					gDSpeed=-1;
+				}else{
+					gDSpeed=0;
+				};
+			}else if(key==Z){
+				if(gZ){
+					gZ=false;
+				}else{
+					console.error("ZのkeyDownを捉えていなかった");
+				};
+				if(gA){
+					gDSpeed=1;
+				}else{
+					gDSpeed=0;
+				};
+			}else if(key==W){
+				if(gW){
+					gW=false;
+				}else{
+					console.log("WのkeyDownを捉えていなかった");
+				}
+				if(gQ){
+					gDRoll=-1;
+				}else{
+					gDRoll=0;
+				}
+			}else if(key==Q){
+				if(gQ){
+					gQ=false;
+				}else{
+					console.log("QのkeyDownを捉えていなかった");
+				}
+				if(gW){
+					gDRoll=1
+				}else{
+					gDRoll=0;
+				}
+			};
+		};
+
 	})();
 
 	//for using trigonometric functions
@@ -177,10 +369,11 @@
 				myMat4.trans(member.x,member.y,member.z);
 			};
 		};
-		Object.defineProperty(MotionXYZ,'replaceOrigin',{value:replaceCenterToOriginOf});
-		function replaceCenterToOriginOf(member){
+		Object.defineProperty(MotionXYZ,'replaceView',{value:replaceCenterAndViewOn});
+		function replaceCenterAndViewOn(member){
 			return function(time){
 				myMat4.trans(-member.x,-member.y,-member.z);
+				myMat4.rot(member.axisX,member.axisY,member.axisZ,member.angle);
 			};
 		};
 	})();//motion
@@ -1639,7 +1832,8 @@ function start(){
 	var aMotions = [];
 	aMotions.push(Motion.rotate(0,1,0,1,0));
 		aMotions.push(MotionXYZ.trans(memCenter));
-		aMotions.push(MotionXYZ.replaceOrigin(memCenter));
+		aMotions.push(MotionXYZ.replaceView(memCenter));
+
 	aMotions.push(Motion.translate(0,0,-130));
 						//	aMotions.push(Motion.rotate(0,1,0,    1,-1,0));
 						//	aMotions.push(Motion.translate(0,0,-50));//center : sun
@@ -1652,7 +1846,7 @@ function start(){
 	var mem = myXYZTrigonometry.createMember();
 	var aMotions = [];
 	aMotions.push(Motion.rotate(0,1,0,1,0));
-		aMotions.push(MotionXYZ.replaceOrigin(memCenter));
+		aMotions.push(MotionXYZ.replaceView(memCenter));
 	aMotions.push(Motion.translate(0,0,-130));
 						//	aMotions.push(Motion.rotate(0,1,0,    1,-1,0));
 						//	aMotions.push(Motion.translate(0,0,-50));//center : sun
@@ -1664,7 +1858,7 @@ var spread=500;
 for(var hh=0;hh<100;hh++){
 	var aMotions=[];
 	var p1 = new myClass.Point(spread*(1-Math.random()*2),spread*(1-Math.random()*2),spread*(1-Math.random()*2));
-	aMotions.push(MotionXYZ.replaceOrigin(memCenter));
+	aMotions.push(MotionXYZ.replaceView(memCenter));
 	aMotions.push(Motion.translate(0,0,-130));
 	Draw.point(gl,p1,myColorName.purple(1),aMotions);
 }
@@ -1678,7 +1872,7 @@ for(var hh=0;hh<20;hh++){
 	var aMotions = [];
 	aMotions.push(Motion.rotate(0,1,0,1,0));//rotation
 		aMotions.push(MotionXYZ.trans(mem));//revolution
-		aMotions.push(MotionXYZ.replaceOrigin(memCenter));
+		aMotions.push(MotionXYZ.replaceView(memCenter));
 	aMotions.push(Motion.translate(0,0,-130));//seen from the distance
 						//	aMotions.push(Motion.axisY(1));
 						//	aMotions.push(Motion.translate(0,0,-50));
