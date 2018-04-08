@@ -141,7 +141,9 @@ body {
 //			this.thetaRoll=gDRoll  *this.ratioR;
 //		};
 		Member.prototype.goForward = function(){
-			this.speed+=gDSpeed*0.00001;
+			this.speed+=gDSpeed*0.0001;
+			if(this.speed>0.001)this.speed=0.001;
+			else if(this.speed<-0.001)this.speed=-0.001;
 
 			var length = 1/Math.pow(this.frontX*this.frontX+this.frontY*this.frontY+this.frontZ*this.frontZ,0.5);
 			this.x+=this.frontX*length*this.speed;
@@ -202,8 +204,8 @@ body {
 				myMat4.load(member.matAccume);
 //var test=new Array(16);
 				for(var ii=0;ii<n;ii++){
-		//			member.goForward();
-		//			myMat4.trans(-member.x,-member.y,-member.z);
+					member.goForward();
+					myMat4.trans(-member.x,-member.y,-member.z);
 					myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
 //myMat4.storeTo(test);
 //console.log("test1=",test);
@@ -990,7 +992,7 @@ console.log("offset = ",offset);
 			// myMat4.load(pmat); 	must be done outside until before arriving here
 			// myMat4.multi(mvmat);	muse be done outside until before arriving here
 			var newP = myMat4.get2D(this.x,this.y,this.z);
-			console.log("is z zero? z=",this.z);
+			//console.log("is z zero? z=",newP[2]);//->shows not 1
 			this.elementDiv.style.left = Math.floor((newP[0]+1)*gl.canvas.width*0.5+this.offsetLeft).toString()+"px";
 			this.elementDiv.style.top = Math.floor((1-newP[1])*gl.canvas.height*0.5+this.offsetTop).toString()+"px";
 
@@ -2111,7 +2113,7 @@ function start(){
 	Draw.hexa(gl,aAccumeUnits,labels);
 
 
-	//x,y,z axises
+	//x,y,z axes
 	var aAccumeUnits = [];
 	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
 	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
