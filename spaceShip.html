@@ -1,5 +1,51 @@
 ﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
 <link rel="sylesheet" href="">
+<style type="text/css">
+
+body {
+	overflow:hidden;
+}
+
+#canvasContainer {/* this has one canvas and more than one text elements*/
+	position:relative;
+	overflow:hidden;
+
+}
+
+.divGLText {/*this have a element as textNode*/
+	position:absolute;
+	overflow:hidden;
+	z-index:1000;
+}
+
+.textGLText {/* text printed on weggl canvas */
+	color:red;
+}
+
+
+</style>
+<script id="myLibrary" type='text/javascript'>
+(function(){
+	//mylib
+	myLib = { };
+
+	/**
+	 *calculate  total offsetTop and offsetLeft of ancestors recursively
+	 *@param {DOMElement} element 
+	*/
+	Object.defineProperty(myLib,'getOffset',{value:getOffset,enumerable:true,configurable:false});
+	function getOffset(element){
+		function getAllOffset(element){
+			if(element.tagName=='HTML') return {left:0,top:0};
+			var left = element.offsetLeft;
+			var top = element.offsetTop;
+			var parentOffset = getAllOffset(element.parentNode);
+			return {left:left+parentOffset.left,top:top+parentOffset.top};
+		};
+		return getAllOffset(element);
+	};
+})();
+</script>
 <script id="calculationXYZ" type='text/javascript'>
 
 (function(){
@@ -70,6 +116,7 @@
 
 
 			this.speed = 0;
+
 			this.frontX = 0;
 			this.frontY = 0;
 			this.frontZ = 1;
@@ -80,7 +127,7 @@
 			this.rightY=0;
 			this.rightZ=0;
 
-			this.ratioR=0.001;
+			this.ratioR=0.01;
 
 			this.matAccume=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 		};
@@ -94,25 +141,29 @@
 //			this.thetaRoll=gDRoll  *this.ratioR;
 //		};
 		Member.prototype.goForward = function(){
-			this.speed+=gDSpeed;
+			this.speed+=gDSpeed*0.00001;
+
 			var length = 1/Math.pow(this.frontX*this.frontX+this.frontY*this.frontY+this.frontZ*this.frontZ,0.5);
 			this.x+=this.frontX*length*this.speed;
 			this.y+=this.frontY*length*this.speed;
 			this.z+=this.frontZ*length*this.speed;
 		};
 		Member.prototype.turnLR = function(){
-			var theta = gDTurnLR*this.ratioR;
+			var theta = -gDTurnLR*this.ratioR;
 			var point = myMat4.rotXYZ(this.topX,this.topY,this.topZ,theta,this.frontX,this.frontY,this.frontZ)
 			this.frontX=point[0];
 			this.frontY=point[1];
 			this.frontZ=point[2];
+//if(theta){
+//	Draw.line(gl,new myClass.Point(0,0,0),new myClassPoint(),myColorName.magenta(1),function(time){return [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];});
+//}
 			var ux=this.frontX,uy=this.frontY,uz=this.frontZ,vx=this.topX,vy=this.topY,vz=this.topZ;
 			this.rightX=uy*vz-uz*vy;
 			this.rightY=uz*vx-ux*vz;
 			this.rightZ=ux*vy-uy*vx;
 		};
 		Member.prototype.turnUD = function(){
-			var theta = gDTurnUD*this.ratioR;
+			var theta = -gDTurnUD*this.ratioR;
 			var point = myMat4.rotXYZ(this.rightX,this.rightY,this.rightZ,theta,this.frontX,this.frontY,this.frontZ)
 			this.frontX=point[0];
 			this.frontY=point[1];
@@ -123,7 +174,7 @@
 			this.topZ=ux*vy-uy*vx;
 		};
 		Member.prototype.roll = function(){
-			var theta = gDRoll*this.ratioR;
+			var theta = -gDRoll*this.ratioR;
 			var point = myMat4.rotXYZ(this.frontX,this.frontY,this.frontZ,theta,this.topX,this.topY,this.topZ)
 			this.topX=point[0];
 			this.topY=point[1];
@@ -151,8 +202,8 @@
 				myMat4.load(member.matAccume);
 //var test=new Array(16);
 				for(var ii=0;ii<n;ii++){
-					member.goForward();
-					myMat4.trans(-member.x,-member.y,-member.z);
+		//			member.goForward();
+		//			myMat4.trans(-member.x,-member.y,-member.z);
 					myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
 //myMat4.storeTo(test);
 //console.log("test1=",test);
@@ -476,6 +527,7 @@
  *
 */
 (function(){
+	//mymat4
 	myMat4 = { };
 	Object.defineProperty(myMat4,'loadIdentity'	,{value:prepareAM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'loadPerspective'	,{value:preparePM,writable:false,enumerable:true,configurable:false});
@@ -485,6 +537,33 @@
 	Object.defineProperty(myMat4,'load'		,{value:loadToA44,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'inverse'		,{value:inverseAM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'transpose'	,{value:transposeAM,writable:false,enumerable:true,configurable:false});
+
+	Object.defineProperty(myMat4,'get2D'		,{value:getNew2DPosition,writable:false,enumerable:true,configurable:false});
+	function getNew2DPosition(x,y,z){
+		var w=1
+
+		// P・A = P`
+		_x11=_a11*x+_a21*y+_a31*z+_a41*w;
+		_x12=_a12*x+_a22*y+_a32*z+_a42*w;
+		_x13=_a13*x+_a23*y+_a33*z+_a43*w;
+		_x14=_a14*x+_a24*y+_a34*z+_a44*w;
+		_x11=_x11/_x14;
+		_x12=_x12/_x14;
+		_x13=_x13/_x14;
+		return [_x11,_x12,_x13];
+/*
+
+		// A・P = P'
+		_x11=_a11*x+_a12*y+_a13*z+_a14*w;
+		_x21=_a21*x+_a22*y+_a23*z+_a24*w;
+		_x31=_a31*x+_a32*y+_a33*z+_a34*w;
+		_x41=_a41*x+_a42*y+_a43*z+_a44*w;
+		_x11=_x11/_x41;
+		_x21=_x21/_x41;
+		_x31=_x31/_x41;
+		return [_x11,_x21,_x31];
+*/
+	};
 
 	Object.defineProperty(myMat4,'multiArray'		,{value:multiplyArray,writable:false,enumerable:true,configurable:false});
 
@@ -834,6 +913,7 @@
 <script id="tagIdGeoClass" type='text/javascript'>
 
 (function(){
+	//myclass
 	myClass = { };
 	Object.defineProperty(myClass,'Point',{value:Point,writable:false,enumerable:true});
 	Object.defineProperty(myClass,'Vector',{value:Vector,writable:false,enumerable:true});
@@ -849,9 +929,6 @@
 		return new myClass.Point(this.x+v.x,this.y+v.y,this.z+v.z);
 	};
 	Object.defineProperty(Point.prototype,'arr',{get:function(){return [this.x,this.y,this.z];},enumerable:true});
-//	Point.prototype.arr = function(){
-//		return [this.x,this.y,this.z];
-//	};
 
 
 	function Vector(x,y,z){
@@ -872,7 +949,74 @@
 		this.y=this.y*len;
 		this.z=this.z*len;
 	};
+
+
+
 	Object.defineProperty(Vector.prototype,'arr',{get:function(){return [this.x,this.y,this.z];},enumerable:true,configurable:false});
+
+
+
+
+
+//kkkk
+	(function(){
+		//inner class
+		function Text(x,y,z,str,color){
+			this.x=x;
+			this.y=y;
+			this.z=z;
+			this.str=str;
+			this.elementDiv=document.createElement("div");
+			this.elementDiv.className='divGLText';
+			this.elementDiv.style.color="red";//color;
+			document.getElementById("canvasContainer").appendChild(this.elementDiv);//kkk #canvasContainer only
+
+			this.elementText = document.createTextNode("");
+			this.elementText.className='textGLText';
+			this.elementDiv.appendChild(this.elementText);
+			this.elementText.nodeValue = str;
+
+			var offset = myLib.getOffset(this.elementDiv.parentNode);//kkk to do that offsets get to be changable
+			this.offsetLeft=0;//offset.left;
+			this.offsetTop=0;//offset.top;
+console.log("offset = ",offset);
+
+			//kkkk
+			this.elementText.onclick=function(event){console.log("event=",event);};
+
+
+		};
+		Text.prototype.reposition = function(gl){
+			// myMat4.load(pmat); 	must be done outside until before arriving here
+			// myMat4.multi(mvmat);	muse be done outside until before arriving here
+			var newP = myMat4.get2D(this.x,this.y,this.z);
+			console.log("is z zero? z=",this.z);
+			this.elementDiv.style.left = Math.floor((newP[0]+1)*gl.canvas.width*0.5+this.offsetLeft).toString()+"px";
+			this.elementDiv.style.top = Math.floor((1-newP[1])*gl.canvas.height*0.5+this.offsetTop).toString()+"px";
+
+		};
+		Text.prototype.setText = function(str){
+			this.elementText.nodeValue=str;
+		};
+//i think that the functions of myMat4 must be limited not to use globaly but to be used by suitable functions.
+
+		//outer class
+		Object.defineProperty(myClass,'Labels',{value:Labels,writable:false,enumerable:true,configurable:false});
+		function Labels(){
+			this.aTexts = [];
+		};
+		Labels.prototype.addText = function(x,y,z,str,color){
+			this.aTexts.push(new Text(x,y,z,str,color));
+		};
+		Labels.prototype.repos = function(gl,pmat,mvmat){
+			myMat4.load(mvmat);// 	must be done outside until before arriving here
+			myMat4.multiArray(pmat);//	muse be done outside until before arriving here
+			for(var ii=0;ii<this.aTexts.length;ii++){
+				this.aTexts[ii].reposition(gl);
+			}
+		};
+
+	})();
 
 })();
 
@@ -1840,6 +1984,7 @@ function sendPerspectiveMatrix(gl,oShader){
 	if(!pUniform){PRINT_CAUTION.innerHTML+="pUniform is "+pUniform+"<br>";return null;}
 	gl.uniformMatrix4fv(pUniform,false,new Float32Array(projectionMatrix));
 
+	return projectionMatrix;
 };
 
 
@@ -1916,6 +2061,8 @@ function start(){
 
 
 
+
+
 	//for rectangle test
 {
 //	gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
@@ -1940,7 +2087,7 @@ function start(){
 
 
 
-
+//最後にtopを画面の上に直す
 
 
 
@@ -1952,20 +2099,43 @@ function start(){
 	var r = Math.pow(0.23873241468*m,0.33333333333333333);
 	var memCenter = myXYZManipulation.createMember();
 	var aAccumeUnits = [];
-	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0));
+//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0))
 	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-	aAccumeUnits.push(DoAccumeration.translate(0,0,-130));
+	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
 						//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(DoAccumeration.none());
-	Draw.hexa(gl,aAccumeUnits);
+
+	var labels = new myClass.Labels();
+	labels.addText(0,-5,0,"hexa",myColorName.red(1));
+	Draw.hexa(gl,aAccumeUnits,labels);
 
 
+	//x,y,z axises
+	var aAccumeUnits = [];
+	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
+	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+	var labels = new myClass.Labels();
+	labels.addText(0,0,-5,"-z",myColorName.red(1));
+	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,-5),myColorName.magenta(1),aAccumeUnits,labels);
+	var aAccumeUnits = [];
+	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
+	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+	var labels = new myClass.Labels();
+	labels.addText(0,7,0,"y",myColorName.red(1));
+	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1),aAccumeUnits,labels);
+	var aAccumeUnits = [];
+	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
+	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+	var labels = new myClass.Labels();
+	labels.addText(7,0,0,"x",myColorName.red(1));
+	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1),aAccumeUnits,labels);
 
 
+//kkkk
 
 
-
+/*
 
 		//center planet
 	var m = 1000;
@@ -1974,20 +2144,25 @@ function start(){
 	var aAccumeUnits = [];
 	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0));
 	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-	aAccumeUnits.push(DoAccumeration.translate(0,0,-130));
+	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
 						//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(DoAccumeration.none());
-	Draw.sphere(gl,r,aAccumeUnits);
+	Draw.sphere(gl,r,aAccumeUnits,[]);
+*/
+
+
 
 	//stars far from planet
-	var spread=500;
+	var spread=100;
 	for(var hh=0;hh<100;hh++){
 		var aAccumeUnits=[];
 		var p1 = new myClass.Point(spread*(1-Math.random()*2),spread*(1-Math.random()*2),spread*(1-Math.random()*2));
 		aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-		aAccumeUnits.push(DoAccumeration.translate(0,0,-130));
-		Draw.point(gl,p1,myColorName.purple(1),aAccumeUnits);
+		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+		var labels = new myClass.Labels();
+		//labels.addText(0,0,-10,"hexa",myColorName.red(1));
+		Draw.point(gl,p1,myColorName.purple(1),aAccumeUnits,labels);
 	}
 
 
@@ -2000,11 +2175,13 @@ function start(){
 		aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0));//rotation
 			aAccumeUnits.push(DoAccumerationXYZ.trans(mem));//revolution
 			aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-		aAccumeUnits.push(DoAccumeration.translate(0,0,-130));//seen from the distance
+		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));//seen from the distance
 							//	aAccumeUnits.push(DoAccumeration.axisY(1));
 							//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));
 							//	aAccumeUnits.push(DoAccumeration.none());
-		Draw.sphere(gl,r,aAccumeUnits);
+		var labels = new myClass.Labels();
+		//labels.addText(0,0,-10,"hexa",myColorName.red(1));//kkk
+		Draw.sphere(gl,r,aAccumeUnits,labels);
 	};
 
 //********************************************** animation ****************************************************	
@@ -2041,18 +2218,20 @@ function drawScene(gl,oShader,angle){
 	var vertexOffset = 0;//このoffsetは頂点のx,y,zごとに進むので、データ的にはoffset*3(4?)ごとに進む
 	var nPointSize = 3.0;
 
-	var member;
-	var aMatrices;//5 matrices now
+	var member,mvmat,pmat;
+//	var aMatrices;//5 matrices now
 	for(var ii=0;ii<Draw.length;ii++){
 		member = Draw.memberByIndex(ii);
 		sendBufferData(gl,oShader,member.buffers);
-		sendPerspectiveMatrix(gl,oShader);
-		var mat = sendModelViewMatrix(gl,oShader,member.aAccumeUnits,angle);
-		sendNormalMatrix(gl,oShader,mat);
+		pmat = sendPerspectiveMatrix(gl,oShader);
+		mvmat = sendModelViewMatrix(gl,oShader,member.aAccumeUnits,angle);
+		sendNormalMatrix(gl,oShader,mvmat);
 		sendPointSize(gl,oShader,nPointSize);
 		sendSampler(gl,oShader,0);//unit number
 		member.base.draw();
 
+//kkkk
+		member.labels.repos(gl,pmat,mvmat);
 //		gl.drawElements(gl.LINE_STRIP,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
 //		gl.drawElements(gl.TRIANGLES,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
 //		gl.drawElements(gl.TRIANGLES,154,gl.UNSIGNED_SHORT,vertexOffset);
@@ -2144,7 +2323,7 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 //**************************** 3D SHAPES *************************************************
 
 
-
+/* all the things to be wanted to draw must be thrown into 'oModel',e.g. shape or text with its position x,y,z*/
 (function(){
 	Draw = { };
 	var aModels=[];
@@ -2163,71 +2342,79 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	Object.defineProperty(Draw,'hexa',{value:hexahedron,writable:false,enumerable:true});
 	Object.defineProperty(Draw,'sphere',{value:sphere,writable:false,enumerable:true});
 
-	function point(gl,p1,color,aAccumeUnits){
+	function point(gl,p1,color,aAccumeUnits,labels){
 		var oModel = { };
 		oModel.base = myGLSape.point(gl,p1,color);
 		oModel.buffers = setModelToBuffer(gl,oModel);
 		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
 		Draw.pushModel(oModel);
 
 	};
-	function line(gl,pointStart,pointEnd,color,aAccumeUnits){
+	function line(gl,pointStart,pointEnd,color,aAccumeUnits,labels){
 		var oModel = { };
 		oModel.base = myGLSape.line(gl,pointStart,pointEnd,color);
-
 		oModel.buffers = setModelToBuffer(gl,oModel);
 		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
 		Draw.pushModel(oModel);
 		
 	};
-	function triangle(gl,p1,p2,p3,color,aAccumeUnits){
-			var oModel = { };
-			oModel.base = myGLSape.triangle(gl,p1,p2,p3,color);
-			oModel.buffers = setModelToBuffer(gl,oModel);
-			oModel.aAccumeUnits = aAccumeUnits;
-			Draw.pushModel(oModel);
+	function triangle(gl,p1,p2,p3,color,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.triangle(gl,p1,p2,p3,color);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
 	};
-	function axisX(gl,aAccumeUnits){
-			var oModel = { };
-			oModel.base = myGLSape.axisX(gl);
-			oModel.buffers = setModelToBuffer(gl,oModel);
-			oModel.aAccumeUnits = aAccumeUnits;
-			Draw.pushModel(oModel);
+	function axisX(gl,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.axisX(gl);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
 	};
-	function axisY(gl,aAccumeUnits){
-			var oModel = { };
-			oModel.base = myGLSape.axisY(gl);
-			oModel.buffers = setModelToBuffer(gl,oModel);
-			oModel.aAccumeUnits = aAccumeUnits;
-			Draw.pushModel(oModel);
+	function axisY(gl,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.axisY(gl);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
 	};
-	function axisZ(gl,aAccumeUnits){
-			var oModel = { };
-			oModel.base = myGLSape.axisZ(gl);
-			oModel.buffers = setModelToBuffer(gl,oModel);
-			oModel.aAccumeUnits = aAccumeUnits;
-			Draw.pushModel(oModel);
+	function axisZ(gl,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.axisZ(gl);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
 	};
-	function tetrahedron(gl,aAccumeUnits){
-			var oModel = { };
-			oModel.base = myGLSape.tetra(gl);
-			oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
-			oModel.aAccumeUnits = aAccumeUnits;
-			Draw.pushModel(oModel);
+	function tetrahedron(gl,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.tetra(gl);
+		oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
 	};
-	function hexahedron(gl,aAccumeUnits){
-			var oModel = { };
-			oModel.base = myGLSape.hexa(gl);
-			oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
-			oModel.aAccumeUnits = aAccumeUnits;
-			Draw.pushModel(oModel);
+	function hexahedron(gl,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.hexa(gl);
+		oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
 	};
-	function sphere(gl,rr,aAccumeUnits){
-			var oModel = { };
-			oModel.base = myGLSape.sphere(gl,rr);
-			oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
-			oModel.aAccumeUnits = aAccumeUnits;
-			Draw.pushModel(oModel);
+	function sphere(gl,rr,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.sphere(gl,rr);
+		oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
 	};
 
 	
@@ -2240,7 +2427,9 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 <h5 style="offset:0px;">using gl.TRIANGLES mode to draw and not using gl.ELEMENT_ARRAY_BUFFER mode to buffer</h5>
 <p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/Tutorial/Lighting_in_WebGL">MDN web docs moz://a(click next page)</a></p>
 <p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html">WebGLFundamentals</a></p>
+<div id="canvasContainer">
 <canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
+</div>
 <p id="PRINT_INFO" style="position:relative;top:0px;left:0px:offset:0px"></p>
 <p id="PRINT_CAUTION" style="position:relative;top:0px;left:0px;color:red;offset:0px;background-color:white;"></p>
 </div></body></html>
