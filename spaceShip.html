@@ -76,7 +76,7 @@ body {
 	};
 	SuperMember.prototype.ratioTime = 1;
 
-	//for using under controlled space ship
+	//for using under controlled space ship, follow to key board
 	(function(){
 		myXYZMani = myXYZManipulation = { };
 
@@ -130,6 +130,7 @@ body {
 			this.ratioR=0.01;
 
 			this.matAccume=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
+			this.matAccumeNotTranslated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 		};
 		inherits(Member,SuperMember);
 		Object.defineProperty(Member.prototype,'thetaLR',{get:function(){return gDTurnLR*this.ratioR;}});
@@ -141,30 +142,37 @@ body {
 //			this.thetaRoll=gDRoll  *this.ratioR;
 //		};
 		Member.prototype.goForward = function(){
-			this.speed+=gDSpeed*0.0001;
+//console.log(this.speed*10000);
+			if(gDSpeed>0)this.speed+=gDSpeed*0.0001;
+			else if(gDSpeed<0)this.speed+=gDSpeed*0.0005;
+			
 			if(this.speed>0.001)this.speed=0.001;
 			else if(this.speed<-0.001)this.speed=-0.001;
+//			else if(Math.abs(this.speed)<0.0002)this.speed=0;
 
 			var length = 1/Math.pow(this.frontX*this.frontX+this.frontY*this.frontY+this.frontZ*this.frontZ,0.5);
-			this.x+=this.frontX*length*this.speed;
-			this.y+=this.frontY*length*this.speed;
-			this.z+=this.frontZ*length*this.speed;
+		//	this.x+=this.frontX*length*this.speed;
+		//	this.y+=this.frontY*length*this.speed;
+		//	this.z-=gDSpeed*0.0001;//this.frontZ*length*this.speed;
+			this.z-=gDSpeed*0.01;//this.frontZ*length*this.speed;
 		};
 		Member.prototype.turnLR = function(){
+			var theta = gDTurnLR*this.ratioR;
+/*
 			var theta = -gDTurnLR*this.ratioR;
 			var point = myMat4.rotXYZ(this.topX,this.topY,this.topZ,theta,this.frontX,this.frontY,this.frontZ)
 			this.frontX=point[0];
 			this.frontY=point[1];
 			this.frontZ=point[2];
-//if(theta){
-//	Draw.line(gl,new myClass.Point(0,0,0),new myClassPoint(),myColorName.magenta(1),function(time){return [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];});
-//}
 			var ux=this.frontX,uy=this.frontY,uz=this.frontZ,vx=this.topX,vy=this.topY,vz=this.topZ;
 			this.rightX=uy*vz-uz*vy;
 			this.rightY=uz*vx-ux*vz;
 			this.rightZ=ux*vy-uy*vx;
+*/
 		};
 		Member.prototype.turnUD = function(){
+			var theta = -gDTurnUD*this.ratioR;
+/*
 			var theta = -gDTurnUD*this.ratioR;
 			var point = myMat4.rotXYZ(this.rightX,this.rightY,this.rightZ,theta,this.frontX,this.frontY,this.frontZ)
 			this.frontX=point[0];
@@ -174,9 +182,11 @@ body {
 			this.topX=uy*vz-uz*vy;
 			this.topY=uz*vx-ux*vz;
 			this.topZ=ux*vy-uy*vx;
+*/
 		};
 		Member.prototype.roll = function(){
-			var theta = -gDRoll*this.ratioR;
+			var theta = gDRoll*this.ratioR;
+/*
 			var point = myMat4.rotXYZ(this.frontX,this.frontY,this.frontZ,theta,this.topX,this.topY,this.topZ)
 			this.topX=point[0];
 			this.topY=point[1];
@@ -185,6 +195,7 @@ body {
 			this.rightX=uy*vz-uz*vy;
 			this.rightY=uz*vx-ux*vz;
 			this.rightZ=ux*vy-uy*vx;
+*/
 		};
 
 		var hero = new Member();//only one member is allowed to be made
@@ -205,20 +216,28 @@ body {
 //var test=new Array(16);
 				for(var ii=0;ii<n;ii++){
 					member.goForward();
-					myMat4.trans(-member.x,-member.y,-member.z);
+					myMat4.trans(-member.x,-member.y,-member.z);//これがなければいつも前に表示される
 					myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
-//myMat4.storeTo(test);
-//console.log("test1=",test);
 					member.turnUD();
-//myMat4.storeTo(test);
-//console.log("test2=",test);
 					myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
 					member.turnLR();
 					myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
 					member.roll();
 				}
-//console.log("member=",member);
 				myMat4.storeTo(member.matAccume);
+
+				myMat4.load(member.matAccumeNotTranslated);
+				for(var ii=0;ii<n;ii++){
+					//member.goForward();
+					//myMat4.trans(-member.x,-member.y,-member.z);//これがなければいつも前に表示される
+					myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
+					//member.turnUD();
+					myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
+					//member.turnLR();
+					myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
+					//member.roll();
+				}
+				myMat4.storeTo(member.matAccumeNotTranslated);
 			};
 		};
 
@@ -372,7 +391,7 @@ body {
 			this.z=this.rz  * Math.sin(this.ratioTime*totalTime+this.gamma);
 		};
 		//@override
-		Member.prototype.ratioTime = Math.PI*0.00555555555*0.05;
+		Member.prototype.ratioTime = Math.PI*0.00555555555*0.005;
 
 		Object.defineProperty(myXYZTrigonometry,'createMember',{value:createMember});
 		function createMember(){
@@ -394,7 +413,7 @@ body {
 
 	})();//trigonometric functions
 
-		//for using gravity
+		//for using gravity, follow to gravity (between members only)
 	(function(){
 
 		myXYZGravity = { };
@@ -470,25 +489,21 @@ body {
 		};
 	})();//gravity
 
-	//for translating members of anonymous functions above
+	//for translating or rotating members of anonymous functions above
 	(function(){
 		DoAccumerationXYZ = { };
 		/* for myXYZ object families */
 		Object.defineProperty(DoAccumerationXYZ,'replaceView',{value:replaceCenterAndDirection});
 		function replaceCenterAndDirection(member){
-
-
-
-
-
 			return function(time){
 				myMat4.multiArray(member.matAccume);
 			};
-
-
-
-
-
+		};
+		Object.defineProperty(DoAccumerationXYZ,'replaceViewNotTrans',{value:replaceCenterAndDirectionNotTranslated});
+		function replaceCenterAndDirectionNotTranslated(member){
+			return function(time){
+				myMat4.multiArray(member.matAccumeNotTranslated);
+			};
 		};
 		Object.defineProperty(DoAccumerationXYZ,'trans',{value:translateXYZ});
 		function translateXYZ(member){
@@ -981,7 +996,7 @@ body {
 			var offset = myLib.getOffset(this.elementDiv.parentNode);//kkk to do that offsets get to be changable
 			this.offsetLeft=0;//offset.left;
 			this.offsetTop=0;//offset.top;
-console.log("offset = ",offset);
+//console.log("offset = ",offset);
 
 			//kkkk
 			this.elementText.onclick=function(event){console.log("event=",event);};
@@ -2096,41 +2111,36 @@ function start(){
 
 
 
-		//space ship
+		//base
 	var m = 1000;
 	var r = Math.pow(0.23873241468*m,0.33333333333333333);
 	var memCenter = myXYZManipulation.createMember();
 	var aAccumeUnits = [];
 //	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0))
 	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+//	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
 						//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(DoAccumeration.none());
 
 	var labels = new myClass.Labels();
-	labels.addText(0,-5,0,"hexa",myColorName.red(1));
-	Draw.hexa(gl,aAccumeUnits,labels);
+	labels.addText(0,-5,0,"HOME BASE",myColorName.red(1));
+//	Draw.hexa(gl,aAccumeUnits,labels);
+	Draw.sphere(gl,10,aAccumeUnits,labels);
 
 
 	//x,y,z axes
 	var aAccumeUnits = [];
-	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+	aAccumeUnits.push(DoAccumerationXYZ.replaceViewNotTrans(memCenter));
+	aAccumeUnits.push(DoAccumeration.translate(-30,-15,-30));
 	var labels = new myClass.Labels();
-	labels.addText(0,0,-5,"-z",myColorName.red(1));
-	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,-5),myColorName.magenta(1),aAccumeUnits,labels);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+	labels.addText(0,0,5,"z",myColorName.red(1));
+	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1),aAccumeUnits,labels);
 	var labels = new myClass.Labels();
-	labels.addText(0,7,0,"y",myColorName.red(1));
+	labels.addText(0,5,0,"y",myColorName.red(1));
 	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1),aAccumeUnits,labels);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
 	var labels = new myClass.Labels();
-	labels.addText(7,0,0,"x",myColorName.red(1));
+	labels.addText(5,0,0,"x",myColorName.red(1));
 	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1),aAccumeUnits,labels);
 
 
@@ -2146,7 +2156,7 @@ function start(){
 	var aAccumeUnits = [];
 	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0));
 	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+//	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
 						//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(DoAccumeration.none());
@@ -2161,7 +2171,7 @@ function start(){
 		var aAccumeUnits=[];
 		var p1 = new myClass.Point(spread*(1-Math.random()*2),spread*(1-Math.random()*2),spread*(1-Math.random()*2));
 		aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+//		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
 		var labels = new myClass.Labels();
 		//labels.addText(0,0,-10,"hexa",myColorName.red(1));
 		Draw.point(gl,p1,myColorName.purple(1),aAccumeUnits,labels);
@@ -2169,7 +2179,7 @@ function start(){
 
 
 	//space deblis thrown in various random directions
-	for(var hh=0;hh<20;hh++){
+	for(var hh=0;hh<10;hh++){
 		var m = Math.random()*100;
 		var r = Math.pow(m*0.23873241,0.33333333);
 		var mem = myXYZTrigonometry.createMember();
@@ -2177,7 +2187,7 @@ function start(){
 		aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0));//rotation
 			aAccumeUnits.push(DoAccumerationXYZ.trans(mem));//revolution
 			aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));//seen from the distance
+//		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));//seen from the distance
 							//	aAccumeUnits.push(DoAccumeration.axisY(1));
 							//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));
 							//	aAccumeUnits.push(DoAccumeration.none());
