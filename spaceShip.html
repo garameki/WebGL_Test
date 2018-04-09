@@ -2116,7 +2116,7 @@ function start(){
 	var r = Math.pow(0.23873241468*m,0.33333333333333333);
 	var memCenter = myXYZManipulation.createMember();
 	var aAccumeUnits = [];
-//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0))
+	aAccumeUnits.push(DoAccumeration.rotate(0,0,1,-.5,0))
 	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
 //	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
 						//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,    1,-1,0));
@@ -2293,7 +2293,7 @@ function initTextures(gl){
 	};
 
 //kkk	handleTextureDefault(gl);//●issue occured
-	h.open('GET',"http://localhost:8000/documents/games/3d/niku_stand2.png");
+	h.open('GET',"http://localhost:8000/documents/games/3d/geo.png");
 	h.send();
 	//To get url data, it's necessary to have been executing two applications listed below
 	// ・chrome.exe --disable-web-security --user-data-dir//
