@@ -1,0 +1,742 @@
+﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
+<link rel="stylesheet"		type="text/css"		href="./styleSheet.css"></link>
+<script id="myLibrary"		type="text/javascript"	src="./myLib.js"></script>
+<script id="calculationXYZ"	type="text/javascript"	src="./myXYZ.js"></script>
+<script id="myMatrix"		type="text/javascript"	src="./myMatrix.js"></script>
+<script id="myColor"		type="text/javascript"	src="./myColor.js"></script>
+<script id="myClass"		type="text/javascript"	src="./myClass.js"></script>
+<script id="myShape"		type="text/javascript"	src="./myShape.js"></script>
+<script id="myMatrix"		type="text/javascript"	src="./matrixAccume.js"></script>
+
+
+
+
+
+
+<!--******************************* SHADER PROGMRAMS *****************************************************-->
+<!--Fragment shader-->
+<script id="shader-fs" type="x-shader/x-fragment">
+//○	varying lowp vec4 vColor;
+	varying highp vec4 vColor;//●
+	varying highp vec2 vTextureCoord;
+	varying highp vec3 vLighting;//●
+
+	uniform sampler2D uSampler;
+
+	void main(void) {
+//x		gl_FragColor = texture2D(uSampler,vec2(vTextureCoord.s,vTextureCoord.t));
+//		gl_FragColor = texture2D(uSampler,vTextureCoord);//mediump型
+//		gl_FragColor = vColor;
+
+//		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
+		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
+		gl_FragColor = vec4(texelColor.rgb * vLighting,texelColor.a);//●
+
+	}
+</script>
+<!--Vertex shader-->
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexNormal;//●
+	attribute vec3 aVertexPosition;//x y z
+	attribute vec4 aVertexColor;//R G B Alpha
+	attribute vec2 aTextureCoord;//x y
+
+//○	uniform highp mat4 uNormalMatrix;//●
+	uniform mat4 uNormalMatrix;//●
+	uniform mat4 uModelViewMatrix;//homography matrix
+	uniform mat4 uProjectionMatrix;
+
+	uniform float uPointSizeFloat;//a float value
+
+//○	varying lowp vec4 vColor;
+//○	varying lowp vec2 vTextureCoord;
+	varying highp vec4 vColor;
+	varying highp vec2 vTextureCoord;
+	varying highp vec3 vLighting;//●
+
+
+	void main(void) {
+		gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
+		gl_PointSize = uPointSizeFloat;
+		vColor = aVertexColor;
+		vTextureCoord = aTextureCoord;
+
+		//●below
+//○		highp vec3 ambientLight = vec3(0.6,0.6,0.6);//ja
+//○		highp vec3 ambientLight = vec3(0.3,0.3,0.3);//en
+		highp vec3 ambientLight = vec3(0.5,0.5,0.5);//●color and darkness of light
+//○		highp vec3 directionalLightColor = vec3(0.5,0.5,0.75);//ja
+//○		highp vec3 directionalLightColor = vec3(1,1,1);//en
+		highp vec3 directionalLightColor = vec3(1,1,1);//myself
+//○		highp vec3 directionalVector = vec3(0.85,0.8,0.75);//ja
+//○		highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));//en
+		highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));//myself
+
+		highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal,1.0);
+	
+		highp float directional = max(dot(transformedNormal.xyz,directionalVector),0.0);
+		vLighting = ambientLight + (directionalLightColor * directional);
+		//●above
+	}
+
+</script>
+
+<script type='text/javascript'>
+
+function initShaders(gl) {
+	var fragmentShader = getShader(gl,"shader-fs");//プログラムをロードしてコンパイルして返す
+	var vertexShader = getShader(gl,"shader-vs");//プログラムをロードしてコンパイルして返す
+
+
+
+
+		//シェーダープログラムを作成
+	var shaderProgram = gl.createProgram();
+	gl.attachShader(shaderProgram,vertexShader);
+	gl.attachShader(shaderProgram,fragmentShader);
+	gl.linkProgram(shaderProgram);
+
+	//シェーダープログラムを作成できない場合はアラートを表示
+	if(!gl.getProgramParameter(shaderProgram,gl.LINK_STATUS)){
+		alert("can't initialize the shader program");
+		return null;
+	}
+
+	gl.useProgram(shaderProgram);//githubではdrawScene()内で実行
+
+		//シェーダープログラムで使う配列変数を使用可能にする
+	//プログラムのどこにあるのかを取得
+	//使ってもいいよリストに登録
+	var positionsLocation = gl.getAttribLocation(shaderProgram,"aVertexPosition");//""内は特殊言語の実装参照してる
+	gl.enableVertexAttribArray(positionsLocation);//githubではdrawScene()内で実行
+
+	var normalsLocation = gl.getAttribLocation(shaderProgram,"aVertexNormal");//●
+	gl.enableVertexAttribArray(normalsLocation);//●
+
+	var colorsLocation = gl.getAttribLocation(shaderProgram,"aVertexColor");
+	gl.enableVertexAttribArray(colorsLocation);
+
+	var textcoordLocation = gl.getAttribLocation(shaderProgram,"aTextureCoord");
+	gl.enableVertexAttribArray(textcoordLocation);
+
+	return {
+		positionLoc:positionsLocation,
+		normalLoc:normalsLocation,//●
+		colorLoc:colorsLocation,
+		textcoordLoc:textcoordLocation,
+		prog:shaderProgram
+	}
+};
+
+function getShader(gl,id){
+	var shaderScript,theSource,currentChild,shader;
+
+	shaderScript = document.getElementById(id);
+
+	if(!shaderScript) {
+		return null;
+	}
+
+	theSource = "";
+	currentChild = shaderScript.firstChild;
+
+	while(currentChild) {
+		if(currentChild.nodeType == currentChild.TEXT_NODE){
+			theSource += currentChild.textContent;
+		}
+
+		currentChild = currentChild.nextSibling;
+	}
+
+	if (shaderScript.type == "x-shader/x-fragment"){
+		shader = gl.createShader(gl.FRAGMENT_SHADER);
+	} else if (shaderScript.type == "x-shader/x-vertex"){
+		shader = gl.createShader(gl.VERTEX_SHADER);
+	} else {
+		// 未知のシェーダータイプ
+		PRINT_CAUTION.innerHTML+="Unknown shader type.The element type of shader program must be 'x-shader/x-vertex' or 'x-shader/x-fragment' now."+"<br>";
+		return null;
+	}
+
+	gl.shaderSource(shader,theSource);
+
+	//シェーダープログラムをコンパイル
+	gl.compileShader(shader);
+
+	//whether or not success to compileコンパイルが成功したかを確認
+	if (!gl.getShaderParameter(shader,gl.COMPILE_STATUS)) {
+		alert("Shader compile error occured : " + id + " : " + gl.getShaderInfoLog(shader));
+		return null;
+	}
+
+	return shader;
+};
+
+
+
+
+
+
+
+
+
+
+//******************************** BUFFERS *******************************
+
+
+
+function setModelToBuffer(gl,oModel){
+	//生成したバッファをWebGLBufferにバインドしたら、
+	//あとはそれにvertexのattributionをbufferDataを使って
+	//頂点の座標、頂点の色、テキストデータなどをバッファに放り込むだけ
+
+console.log("setModelToBuffer oModel=",oModel);
+	//position to buffer
+	var positionsBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,positionsBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(oModel.base.pos),gl.STATIC_DRAW);
+
+	//normal vectors to buffer//●
+	var normalBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(oModel.base.nor),gl.STATIC_DRAW);
+
+	//color to buffer
+	var colorsBuffer = gl.createBuffer();//正方形のvertices
+	gl.bindBuffer(gl.ARRAY_BUFFER,colorsBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(oModel.base.col),gl.STATIC_DRAW);
+
+	//texture position to buffer
+	var textureCoordinateBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,textureCoordinateBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(oModel.base.tex),gl.STATIC_DRAW);
+
+	//indices to ELEMENT buffer
+	var indexBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(oModel.base.ind),gl.STATIC_DRAW);
+
+	return {
+		pointPos:positionsBuffer,
+		pointNor:normalBuffer,//●
+		pointCol:colorsBuffer,
+		pointTex:textureCoordinateBuffer,
+		pointInd:indexBuffer
+	}
+};
+
+function sendBufferData(gl,oShader,oBuffer){
+
+	//バッファにある頂点の位置情報や色情報をどう使用するかを決めてGLSLに渡す
+
+	//引数の準備
+	var type = gl.FLOAT;
+	var normalize = false;
+	var stride = 0;//shaderを呼び出すごとに進むバイト数//これは(buffer.slice((offset + i) * stride,size);)という意味
+	var offset = 0;
+
+	//positons
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffer.pointPos);
+	numComponents = 3;//number of column
+	gl.vertexAttribPointer(oShader.positionLoc,numComponents,type,normalize,stride,offset);
+
+	//normal vector//●
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffer.pointNor);
+	numComponents = 3;
+	gl.vertexAttribPointer(oShader.normalLoc,numComponents,type,normalize,stride,offset);
+
+	//color
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffer.pointCol);
+	numComponents = 4;//列の数
+	gl.vertexAttribPointer(oShader.colorLoc,numComponents,type,normalize,stride,offset);
+
+	//texture
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffer.pointTex);
+	numComponents = 2;//列の数
+	gl.vertexAttribPointer(oShader.textcoordLoc,numComponents,type,normalize,stride,offset);
+
+	//index
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,oBuffer.pointInd);//arrayのとおりにデータを使うのでPointerはいらない。
+//this part below is not necessary for the elements of indices (It's already defined as array data structure.)
+//	numComponents = 3;//列の数
+//	gl.vertexAttribPointer(oShader.indexLoc,numComponents,type,normalize,stride,offset);
+
+};
+
+//********************************** DATA FOR SHADER ****************************************
+
+
+
+function sendPerspectiveMatrix(gl,oShader){
+
+	/*
+		from cite site:
+		Create a perspective matrix, a special matrix that is
+		used to simulate the distortion of perspective in a camera.
+		Our field of view is 45 degrees, with a (width/height)
+		ratio that matches the display size of the canvas
+		and we only want ot see objects between 0.1 units
+		and 100 units away from the camera.
+	*/
+		//perspective matrix...myMat4 was already defined at global scope
+//	var fieldOfView = 70 * Math.PI / 180;	//in radian;
+	var fieldOfView = 70 * Math.PI / 180;	//in radian;
+	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+	var zNear = 0.1;
+	var zFar = 100000.0;
+
+	//create a projectionMatrix array as the perspective matrix
+	var projectionMatrix=new Array(16);
+	myMat4.loadPerspective(fieldOfView,aspect,zNear,zFar);
+	myMat4.storeTo(projectionMatrix);
+
+	//uniform mat4 uProjectionMatrixへ値を転送
+	var pUniform = gl.getUniformLocation(oShader.prog,"uProjectionMatrix");//""内は特殊言語の実装参照してる
+	if(!pUniform){PRINT_CAUTION.innerHTML+="pUniform is "+pUniform+"<br>";return null;}
+	gl.uniformMatrix4fv(pUniform,false,new Float32Array(projectionMatrix));
+
+	return projectionMatrix;
+};
+
+
+
+function sendModelViewMatrix(gl,oShader,aAccumeUnits,angle){
+	//@param {Array} aMVMatrices motion view matrix in Array
+		//Set the shader uniforms culclated above and something
+
+	myMat4.loadIdentity();//initialize accumerator of matrix to compute
+
+	for(var ii=0,len=aAccumeUnits.length;ii<len;ii++){
+		aAccumeUnits[ii](angle);
+	}
+	var mvMat = myMat4.arr;
+
+	//uniform mat4 uModelViewMatrixへ値を転送
+	var mvUniform = gl.getUniformLocation(oShader.prog,"uModelViewMatrix");
+	if(!mvUniform){PRINT_CAUTION.innerHTML+="mvUniform is "+mvUniform+"<br>";return null;}
+	gl.uniformMatrix4fv(mvUniform,false,new Float32Array(mvMat));
+
+	return mvMat;
+};
+
+function sendPointSize(gl,oShader,nSize){
+	//uniform float uPointSizeFloatへ値を転送
+	var psUniform = gl.getUniformLocation(oShader.prog,"uPointSizeFloat");
+	if(!psUniform){PRINT_CAUTION.innerHTML+="psUniform is "+psUniform+"<br>";return null;}
+	gl.uniform1f(psUniform,nSize);
+};
+
+function sendNormalMatrix(gl,oShader,mvMatrix){//●
+
+	var normMatrix = new Array(16);
+
+	//compute matrix
+	myMat4.load(mvMatrix);
+	myMat4.inverse();
+	myMat4.transpose();
+	myMat4.storeTo(normMatrix);
+//https://msdn.microsoft.com/ja-jp/library/ms810476.aspx
+//	say the reason 'inverse & transpose' above
+
+	//uniform highp mat4 uNormalMatrixに値を転送
+	var normUniform = gl.getUniformLocation(oShader.prog,"uNormalMatrix");
+	if(!normUniform){PRINT_CAUTION.innerHTML+="normUniform is "+normUniform+"<br>";return null;}
+	gl.uniformMatrix4fv(normUniform,false,new Float32Array(normMatrix));
+};
+
+function sendSampler(gl,oShader,number){
+	//uniform float uPointSizeFloatへ値を転送
+	var sampler = gl.getUniformLocation(oShader.prog,"uSampler");
+	if(!sampler){PRINT_CAUTION.innerHTML+="sampler is "+sampler+"<br>";return null;}
+	gl.uniform1i(sampler,number);
+};
+
+
+//*************************************** START ****************************************************************	
+
+function start(){
+	var canvas = document.getElementById('glcanvas');
+	canvas.width=canvas.clientWidth;//necessary
+	canvas.height=canvas.clientHeight;//necessary
+	var gl=canvas.getContext("webgl");
+	if(!gl){
+		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
+		return;
+	}
+
+	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//クリップ空間の-1～1の値をcanvasの大きさに変換する
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
+	gl.clearDepth(1.0);			//Clear everything
+	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
+	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
+
+
+
+
+
+	//for rectangle test
+{
+//	gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
+//    gl.enable(gl.SCISSOR_TEST);
+//   gl.scissor(30, 10, 60, 60);//60x60の正方形
+//    gl.clearColor(1.0, 1.0, 0.0, 1.0);
+//    gl.clear(gl.COLOR_BUFFER_BIT);
+};
+
+
+
+	initTextures(gl);
+	var oShader = initShaders(gl);
+
+//	var p1 = new myClass.Point(1.0,0.5,0.4);
+//	var p2 = new myClass.Point(0.5,0.2,1.4);
+//	var p3 = new myClass.Point(0.7,1.5,0.8);
+//	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),aAccumeUnits);
+
+//	Draw.tetra(gl,aAccumeUnits);
+
+
+
+
+//最後にtopを画面の上に直す
+
+
+
+
+
+
+		//base
+	var m = 1000;
+	var r = Math.pow(0.23873241468*m,0.33333333333333333);
+	var memCenter = myXYZManipulation.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(DoAccumeration.rotate(0,0,1,-.5,0))
+	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
+//	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+						//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,    1,-1,0));
+						//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));//center : sun
+						//	aAccumeUnits.push(DoAccumeration.none());
+
+	var labels = new myClass.Labels();
+	labels.addText(0,-5,0,"HOME BASE",myColorName.red(1));
+//	Draw.hexa(gl,aAccumeUnits,labels);
+	Draw.sphere(gl,10,aAccumeUnits,labels);
+
+
+	//x,y,z axes
+	var aAccumeUnits = [];
+	aAccumeUnits.push(DoAccumerationXYZ.replaceViewNotTrans(memCenter));
+	aAccumeUnits.push(DoAccumeration.translate(-30,-15,-30));
+	var labels = new myClass.Labels();
+	labels.addText(0,0,5,"z",myColorName.red(1));
+	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1),aAccumeUnits,labels);
+	var labels = new myClass.Labels();
+	labels.addText(0,5,0,"y",myColorName.red(1));
+	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1),aAccumeUnits,labels);
+	var labels = new myClass.Labels();
+	labels.addText(5,0,0,"x",myColorName.red(1));
+	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1),aAccumeUnits,labels);
+
+
+//kkkk
+
+
+/*
+
+		//center planet
+	var m = 1000;
+	var r = Math.pow(0.23873241468*m,0.33333333333333333);
+	var mem = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0));
+	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
+//	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+						//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,    1,-1,0));
+						//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));//center : sun
+						//	aAccumeUnits.push(DoAccumeration.none());
+	Draw.sphere(gl,r,aAccumeUnits,[]);
+*/
+
+
+
+	//stars far from planet
+	var spread=100;
+	for(var hh=0;hh<100;hh++){
+		var aAccumeUnits=[];
+		var p1 = new myClass.Point(spread*(1-Math.random()*2),spread*(1-Math.random()*2),spread*(1-Math.random()*2));
+		aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
+//		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+		var labels = new myClass.Labels();
+		//labels.addText(0,0,-10,"hexa",myColorName.red(1));
+		Draw.point(gl,p1,myColorName.purple(1),aAccumeUnits,labels);
+	}
+
+
+	//space deblis thrown in various random directions
+	for(var hh=0;hh<10;hh++){
+		var m = Math.random()*100;
+		var r = Math.pow(m*0.23873241,0.33333333);
+		var mem = myXYZTrigonometry.createMember();
+		var aAccumeUnits = [];
+		aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0));//rotation
+			aAccumeUnits.push(DoAccumerationXYZ.trans(mem));//revolution
+			aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
+//		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));//seen from the distance
+							//	aAccumeUnits.push(DoAccumeration.axisY(1));
+							//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));
+							//	aAccumeUnits.push(DoAccumeration.none());
+		var labels = new myClass.Labels();
+		//labels.addText(0,0,-10,"hexa",myColorName.red(1));//kkk
+		Draw.sphere(gl,r,aAccumeUnits,labels);
+	};
+
+//********************************************** animation ****************************************************	
+	var timeBefore=0;
+	var angle=0;
+	var dt;
+	function render(timeStamp){
+		dt = timeStamp - timeBefore;
+		if(dt>10){
+			angle+=dt/16;
+			//if(angle>360)angle=0;
+			PRINT_INFO.innerText=angle.toString();
+			myXYZTrigonometry.reposAll(dt);
+			myXYZManipulation.move(dt);
+//			drawScene(gl,oShader,aModels,angle);
+			drawScene(gl,oShader,angle);
+			timeBefore = timeStamp;
+		}
+		window.requestAnimationFrame(render);
+	}
+	window.requestAnimationFrame(render);
+};//start
+
+//************************************** DRAW SCENE *************************************************
+
+
+function drawScene(gl,oShader,angle){
+
+	// カラーバッファや深度バッファをクリアする
+	//Clear the canvas before we start drawing on it
+
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	var vertexOffset = 0;//このoffsetは頂点のx,y,zごとに進むので、データ的にはoffset*3(4?)ごとに進む
+	var nPointSize = 3.0;
+
+	var member,mvmat,pmat;
+//	var aMatrices;//5 matrices now
+	for(var ii=0;ii<Draw.length;ii++){
+		member = Draw.memberByIndex(ii);
+		sendBufferData(gl,oShader,member.buffers);
+		pmat = sendPerspectiveMatrix(gl,oShader);
+		mvmat = sendModelViewMatrix(gl,oShader,member.aAccumeUnits,angle);
+		sendNormalMatrix(gl,oShader,mvmat);
+		sendPointSize(gl,oShader,nPointSize);
+		sendSampler(gl,oShader,0);//unit number
+		member.base.draw();
+
+//kkkk
+		member.labels.repos(gl,pmat,mvmat);
+//		gl.drawElements(gl.LINE_STRIP,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
+//		gl.drawElements(gl.TRIANGLES,aModels[ii].base.n,gl.UNSIGNED_SHORT,vertexOffset);
+//		gl.drawElements(gl.TRIANGLES,154,gl.UNSIGNED_SHORT,vertexOffset);
+	}
+
+//	gl.drawArrays(gl.TRIANGLE_STRIP,vertexOffset,vertexCount);
+//	gl.drawArrays(gl.LINE_STRIP,vertexOffset,vertexCount);
+//	PRINT_INFO.innerHTML+=gl.hasOwnProperty("PointSize").toString()+"<br>";
+//	gl.drawArrays(gl.POINTS,vertexOffset,vertexCount);
+
+};
+
+//flag=true;
+
+//******************************* TEXTURE ******************************************************
+
+
+
+function initTextures(gl){
+	cubeTexture = gl.createTexture();
+	cubeImage = new Image();
+	cubeImage.onload = function (){
+		var canvas = document.createElement('canvas');
+		document.getElementsByTagName('body')[0].appendChild(canvas);
+		canvas.width = 100;
+		canvas.height = 50;
+		canvas.style.position='absolute';
+		canvas.style.left='0px';
+		canvas.style.top='0px';
+		canvas.style.backgroundColor='transparent';
+		canvas.style.globalAlpa=0.7;
+		canvas.style.zIndex=100;
+		var ctx = canvas.getContext('2d');
+		ctx.drawImage(cubeImage,0,0);
+		handleTextureLoaded(gl,cubeImage,cubeTexture);
+	};
+
+	var reader = new FileReader();
+	reader.onloadend = function(){
+		cubeImage.src = reader.result;
+	};
+
+	var h = new XMLHttpRequest();
+	h.responseType = "blob";
+	h.onload = function(){
+		reader.readAsDataURL(h.response);
+	};
+
+//kkk	handleTextureDefault(gl);//●issue occured
+	h.open('GET',"http://localhost:8000/documents/games/3d/geo.png");
+	h.send();
+	//To get url data, it's necessary to have been executing two applications listed below
+	// ・chrome.exe --disable-web-security --user-data-dir//
+	// ・ruby -run -e httpd . -p 8000
+	//2nd line is changable to python,php or other language to work as simple http local server.
+};
+function handleTextureLoaded(gl,image,texture){//gl.TEXTURE_2Dオブジェクトのプロパティーに値を入れる操作を行う
+
+	gl.bindTexture   (gl.TEXTURE_2D,texture);
+	gl.texImage2D    (gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+	gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+	gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
+	gl.generateMipmap(gl.TEXTURE_2D);//gl.TEXTURE_2Dをmipmapに適用
+	gl.activeTexture(gl.TEXTURE0);//●
+//bad	gl.bindTexture   (gl.TEXTURE_2D,null);
+	gl.activeTexture(gl.TEXTURE0);
+	gl.bindTexture   (gl.TEXTURE_2D,texture);//●
+};
+function handleTextureDefault(gl){//●//when image data can not get from url
+	//for webGL2
+	var level = 0;
+	var internalFormat = gl.RGBA;
+	var width = 1;
+	var height = 1;
+	var border = 0;
+	var srcFormat = gl.RGBA;
+	var srcType = gl.UNSIGNED_BYTE;
+	var pixel = new Uint8Array([0,0,255,255]);
+	gl.texImage2D	 (gl.TEXTURE_2D,level,internalFormat,width,height,border,srcFormat,srcType,pixel);
+};
+
+
+
+
+
+
+
+
+//**************************** 3D SHAPES *************************************************
+
+
+/* all the things to be wanted to draw must be thrown into 'oModel',e.g. shape or text with its position x,y,z*/
+(function(){
+	Draw = { };
+	var aModels=[];
+	var length=0;
+	Object.defineProperty(Draw,'pushModel',{value:function(oModel){aModels.push(oModel);length++;},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(Draw,'memberByIndex',{value:function(num){return aModels[num];},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(Draw,'length',{get:function(){return length;},enumerable:true,configurable:false});
+
+	Object.defineProperty(Draw,'point',{value:point,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'line',{value:line,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'triangle',{value:triangle,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'axisX',{value:axisX,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'axisY',{value:axisY,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'axisZ',{value:axisZ,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'tetra',{value:tetrahedron,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'hexa',{value:hexahedron,writable:false,enumerable:true});
+	Object.defineProperty(Draw,'sphere',{value:sphere,writable:false,enumerable:true});
+
+	function point(gl,p1,color,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.point(gl,p1,color);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
+
+	};
+	function line(gl,pointStart,pointEnd,color,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.line(gl,pointStart,pointEnd,color);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
+		
+	};
+	function triangle(gl,p1,p2,p3,color,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.triangle(gl,p1,p2,p3,color);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
+	};
+	function axisX(gl,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.axisX(gl);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
+	};
+	function axisY(gl,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.axisY(gl);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
+	};
+	function axisZ(gl,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.axisZ(gl);
+		oModel.buffers = setModelToBuffer(gl,oModel);
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
+	};
+	function tetrahedron(gl,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.tetra(gl);
+		oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
+	};
+	function hexahedron(gl,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.hexa(gl);
+		oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
+	};
+	function sphere(gl,rr,aAccumeUnits,labels){
+		var oModel = { };
+		oModel.base = myGLSape.sphere(gl,rr);
+		oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
+		oModel.aAccumeUnits = aAccumeUnits;
+		oModel.labels = labels;
+		Draw.pushModel(oModel);
+	};
+
+	
+})();
+
+</script>
+
+</head><body style="overflow:hidden;" onload="start();"><div>
+<h3 style="offset:0px;">Animating objects with WebGL</h3>
+<h5 style="offset:0px;">using gl.TRIANGLES mode to draw and not using gl.ELEMENT_ARRAY_BUFFER mode to buffer</h5>
+<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/Tutorial/Lighting_in_WebGL">MDN web docs moz://a(click next page)</a></p>
+<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html">WebGLFundamentals</a></p>
+<div id="canvasContainer">
+<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
+</div>
+<p id="PRINT_INFO" style="position:relative;top:0px;left:0px:offset:0px"></p>
+<p id="PRINT_CAUTION" style="position:relative;top:0px;left:0px;color:red;offset:0px;background-color:white;"></p>
+</div></body></html>
+
