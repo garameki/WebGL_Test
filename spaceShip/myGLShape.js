@@ -1,14 +1,14 @@
 ﻿(function(){
-	myGLSape = { };
-	Object.defineProperty(myGLSape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'triangle'	,{value:triangle,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'axisX'		,{value:axisX,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'axisY'		,{value:new axisY,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'axisZ'		,{value:new axisZ,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'tetra'		,{value:tetrahedron,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'hexa'		,{value:hexahedron,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLSape,'sphere'		,{value:sphere2,writable:false,enumerable:true,configurable:false});
+	myGLShape = { };
+	Object.defineProperty(myGLShape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'triangle'	,{value:triangle,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'axisX'		,{value:axisX,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'axisY'		,{value:new axisY,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'axisZ'		,{value:new axisZ,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'tetra'		,{value:tetrahedron,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'hexa'		,{value:hexahedron,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'sphere'		,{value:sphere2,writable:false,enumerable:true,configurable:false});
 
 	//entities
 	function point(gl,p,c){
@@ -88,13 +88,13 @@
 		}
 	};
 	function axisX(gl) {
-			return myGLSape.line(gl,new myClass.Point(0,0,0),new myClass.Point(10,0,0),new myColorName.red(1));	
+			return myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(10,0,0),new myColorName.red(1));	
 	};
 	function axisY(gl){
-			return myGLSape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,10,0),new myColorName.green(1));	
+			return myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,10,0),new myColorName.green(1));	
 	};
 	function axisZ(gl){
-			return myGLSape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,10),new myColorName.blue(1));	
+			return myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,10),new myColorName.blue(1));	
 	};
 	function tetrahedron(gl){
 		//create tetrahedron

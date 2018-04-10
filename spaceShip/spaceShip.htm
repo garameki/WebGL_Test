@@ -1,12 +1,13 @@
 ﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
 <link rel="stylesheet"		type="text/css"		href="./styleSheet.css"></link>
-<script id="myLibrary"		type="text/javascript"	src="./myLib.js"></script>
+<script id="library"		type="text/javascript"	src="./myLib.js"></script>
 <script id="calculationXYZ"	type="text/javascript"	src="./myXYZ.js"></script>
-<script id="myMatrix"		type="text/javascript"	src="./myMatrix.js"></script>
-<script id="myColor"		type="text/javascript"	src="./myColor.js"></script>
-<script id="myClass"		type="text/javascript"	src="./myClass.js"></script>
-<script id="myShape"		type="text/javascript"	src="./myShape.js"></script>
-<script id="myMatrix"		type="text/javascript"	src="./matrixAccume.js"></script>
+<script id="matrix"		type="text/javascript"	src="./myMatrix.js"></script>
+<script id="color"		type="text/javascript"	src="./myColor.js"></script>
+<script id="class"		type="text/javascript"	src="./myClass.js"></script>
+<script id="shape"		type="text/javascript"	src="./myGLShape.js"></script>
+<script id="motions"		type="text/javascript"	src="./motions.js"></script>
+<script id="textures"		type="text/javascript"	src="./myTextures.js"></script>
 
 
 
@@ -364,7 +365,7 @@ function start(){
 		return;
 	}
 
-	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//クリップ空間の-1～1の値をcanvasの大きさに変換する
+	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//(kkk bad)クリップ空間の-1～1の値をcanvasの大きさに変換する
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
 	gl.clearDepth(1.0);			//Clear everything
 	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
@@ -385,15 +386,21 @@ function start(){
 
 
 
-	initTextures(gl);
+//	initTextures(gl);
+	var nameTextureBase = "geo";
+	myTextures.create(gl,nameTextureBase);
+	var nameTextureAsteroid = "niku_stand2";
+	myTextures.create(gl,nameTextureAsteroid);
+
+
 	var oShader = initShaders(gl);
 
 //	var p1 = new myClass.Point(1.0,0.5,0.4);
 //	var p2 = new myClass.Point(0.5,0.2,1.4);
 //	var p3 = new myClass.Point(0.7,1.5,0.8);
-//	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),aAccumeUnits);
+//	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),aAccumeUnits,nameTexture);old
 
-//	Draw.tetra(gl,aAccumeUnits);
+//	Draw.tetra(gl,aAccumeUnits,nameTexture);old
 
 
 
@@ -419,8 +426,10 @@ function start(){
 
 	var labels = new myClass.Labels();
 	labels.addText(0,-5,0,"HOME BASE",myColorName.red(1));
-//	Draw.hexa(gl,aAccumeUnits,labels);
-	Draw.sphere(gl,10,aAccumeUnits,labels);
+//	var shape = myGLShape.hexa(gl);
+//	Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
+	var shape = myGLShape.sphere(gl,10);
+	Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
 
 
 	//x,y,z axes
@@ -429,13 +438,16 @@ function start(){
 	aAccumeUnits.push(DoAccumeration.translate(-30,-15,-30));
 	var labels = new myClass.Labels();
 	labels.addText(0,0,5,"z",myColorName.red(1));
-	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1),aAccumeUnits,labels);
+	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1));
+		Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
 	var labels = new myClass.Labels();
 	labels.addText(0,5,0,"y",myColorName.red(1));
-	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1),aAccumeUnits,labels);
+	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1));
+		Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
 	var labels = new myClass.Labels();
 	labels.addText(5,0,0,"x",myColorName.red(1));
-	Draw.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1),aAccumeUnits,labels);
+	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1));
+		Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
 
 
 //kkkk
@@ -463,12 +475,13 @@ function start(){
 	var spread=100;
 	for(var hh=0;hh<100;hh++){
 		var aAccumeUnits=[];
-		var p1 = new myClass.Point(spread*(1-Math.random()*2),spread*(1-Math.random()*2),spread*(1-Math.random()*2));
 		aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
 //		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
 		var labels = new myClass.Labels();
 		//labels.addText(0,0,-10,"hexa",myColorName.red(1));
-		Draw.point(gl,p1,myColorName.purple(1),aAccumeUnits,labels);
+		var p1 = new myClass.Point(spread*(1-Math.random()*2),spread*(1-Math.random()*2),spread*(1-Math.random()*2));
+		var shape = myGLShape.point(gl,p1,myColorName.purple(1));
+		Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
 	}
 
 
@@ -487,7 +500,8 @@ function start(){
 							//	aAccumeUnits.push(DoAccumeration.none());
 		var labels = new myClass.Labels();
 		//labels.addText(0,0,-10,"hexa",myColorName.red(1));//kkk
-		Draw.sphere(gl,r,aAccumeUnits,labels);
+		var shape = myGLShape.sphere(gl,r);
+		Draw.create(gl,shape,aAccumeUnits,labels,nameTextureAsteroid);
 	};
 
 //********************************************** animation ****************************************************	
@@ -534,7 +548,8 @@ function drawScene(gl,oShader,angle){
 		sendNormalMatrix(gl,oShader,mvmat);
 		sendPointSize(gl,oShader,nPointSize);
 		sendSampler(gl,oShader,0);//unit number
-		member.base.draw();
+		myTextures.member[member.nameTexture].activate();
+		member.base.draw();//in which texture activated is for use
 
 //kkkk
 		member.labels.repos(gl,pmat,mvmat);
@@ -550,79 +565,6 @@ function drawScene(gl,oShader,angle){
 
 };
 
-//flag=true;
-
-//******************************* TEXTURE ******************************************************
-
-
-
-function initTextures(gl){
-	cubeTexture = gl.createTexture();
-	cubeImage = new Image();
-	cubeImage.onload = function (){
-		var canvas = document.createElement('canvas');
-		document.getElementsByTagName('body')[0].appendChild(canvas);
-		canvas.width = 100;
-		canvas.height = 50;
-		canvas.style.position='absolute';
-		canvas.style.left='0px';
-		canvas.style.top='0px';
-		canvas.style.backgroundColor='transparent';
-		canvas.style.globalAlpa=0.7;
-		canvas.style.zIndex=100;
-		var ctx = canvas.getContext('2d');
-		ctx.drawImage(cubeImage,0,0);
-		handleTextureLoaded(gl,cubeImage,cubeTexture);
-	};
-
-	var reader = new FileReader();
-	reader.onloadend = function(){
-		cubeImage.src = reader.result;
-	};
-
-	var h = new XMLHttpRequest();
-	h.responseType = "blob";
-	h.onload = function(){
-		reader.readAsDataURL(h.response);
-	};
-
-//kkk	handleTextureDefault(gl);//●issue occured
-	h.open('GET',"http://localhost:8000/documents/games/3d/geo.png");
-	h.send();
-	//To get url data, it's necessary to have been executing two applications listed below
-	// ・chrome.exe --disable-web-security --user-data-dir//
-	// ・ruby -run -e httpd . -p 8000
-	//2nd line is changable to python,php or other language to work as simple http local server.
-};
-function handleTextureLoaded(gl,image,texture){//gl.TEXTURE_2Dオブジェクトのプロパティーに値を入れる操作を行う
-
-	gl.bindTexture   (gl.TEXTURE_2D,texture);
-	gl.texImage2D    (gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
-	gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-	gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
-	gl.generateMipmap(gl.TEXTURE_2D);//gl.TEXTURE_2Dをmipmapに適用
-	gl.activeTexture(gl.TEXTURE0);//●
-//bad	gl.bindTexture   (gl.TEXTURE_2D,null);
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture   (gl.TEXTURE_2D,texture);//●
-};
-function handleTextureDefault(gl){//●//when image data can not get from url
-	//for webGL2
-	var level = 0;
-	var internalFormat = gl.RGBA;
-	var width = 1;
-	var height = 1;
-	var border = 0;
-	var srcFormat = gl.RGBA;
-	var srcType = gl.UNSIGNED_BYTE;
-	var pixel = new Uint8Array([0,0,255,255]);
-	gl.texImage2D	 (gl.TEXTURE_2D,level,internalFormat,width,height,border,srcFormat,srcType,pixel);
-};
-
-
-
-
-
 
 
 
@@ -631,6 +573,31 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 
 /* all the things to be wanted to draw must be thrown into 'oModel',e.g. shape or text with its position x,y,z*/
 (function(){
+
+
+	//
+	//@param {myGLShape.obj} shape in which there are points,color,normal vector,indeces and so on
+	//
+	var ToolBox = function(gl,shape,aMotions,aLabels,sNameTexture){
+		this.base = shape;
+		this.buffers = setModelToBuffer(gl,this);
+		this.aAccumeUnits = aMotions;
+		this.labels = aLabels;
+		this.nameTexture = sNameTexture;
+	};
+
+	var aModels = [];
+
+	Draw = { };
+	Object.defineProperty(Draw,'create',{value:create,writable:false,enumerable:true,configurable:false});	
+	function create(gl,shape,aMotions,aLabels,sNameTexture){
+		aModels.push(new ToolBox(gl,shape,aMotions,aLabels,sNameTexture));
+	}
+	Object.defineProperty(Draw,'memberByIndex',{value:function(num){return aModels[num];},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(Draw,'length',{get:function(){return aModels.length;},enumerable:true,configurable:false});
+
+
+/*old
 	Draw = { };
 	var aModels=[];
 	var length=0;
@@ -650,7 +617,7 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 
 	function point(gl,p1,color,aAccumeUnits,labels){
 		var oModel = { };
-		oModel.base = myGLSape.point(gl,p1,color);
+		oModel.base = myGLShape.point(gl,p1,color);
 		oModel.buffers = setModelToBuffer(gl,oModel);
 		oModel.aAccumeUnits = aAccumeUnits;
 		oModel.labels = labels;
@@ -659,7 +626,7 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	};
 	function line(gl,pointStart,pointEnd,color,aAccumeUnits,labels){
 		var oModel = { };
-		oModel.base = myGLSape.line(gl,pointStart,pointEnd,color);
+		oModel.base = myGLShape.line(gl,pointStart,pointEnd,color);
 		oModel.buffers = setModelToBuffer(gl,oModel);
 		oModel.aAccumeUnits = aAccumeUnits;
 		oModel.labels = labels;
@@ -668,7 +635,7 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	};
 	function triangle(gl,p1,p2,p3,color,aAccumeUnits,labels){
 		var oModel = { };
-		oModel.base = myGLSape.triangle(gl,p1,p2,p3,color);
+		oModel.base = myGLShape.triangle(gl,p1,p2,p3,color);
 		oModel.buffers = setModelToBuffer(gl,oModel);
 		oModel.aAccumeUnits = aAccumeUnits;
 		oModel.labels = labels;
@@ -676,7 +643,7 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	};
 	function axisX(gl,aAccumeUnits,labels){
 		var oModel = { };
-		oModel.base = myGLSape.axisX(gl);
+		oModel.base = myGLShape.axisX(gl);
 		oModel.buffers = setModelToBuffer(gl,oModel);
 		oModel.aAccumeUnits = aAccumeUnits;
 		oModel.labels = labels;
@@ -684,7 +651,7 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	};
 	function axisY(gl,aAccumeUnits,labels){
 		var oModel = { };
-		oModel.base = myGLSape.axisY(gl);
+		oModel.base = myGLShape.axisY(gl);
 		oModel.buffers = setModelToBuffer(gl,oModel);
 		oModel.aAccumeUnits = aAccumeUnits;
 		oModel.labels = labels;
@@ -692,7 +659,7 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	};
 	function axisZ(gl,aAccumeUnits,labels){
 		var oModel = { };
-		oModel.base = myGLSape.axisZ(gl);
+		oModel.base = myGLShape.axisZ(gl);
 		oModel.buffers = setModelToBuffer(gl,oModel);
 		oModel.aAccumeUnits = aAccumeUnits;
 		oModel.labels = labels;
@@ -700,7 +667,7 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	};
 	function tetrahedron(gl,aAccumeUnits,labels){
 		var oModel = { };
-		oModel.base = myGLSape.tetra(gl);
+		oModel.base = myGLShape.tetra(gl);
 		oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
 		oModel.aAccumeUnits = aAccumeUnits;
 		oModel.labels = labels;
@@ -708,7 +675,7 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	};
 	function hexahedron(gl,aAccumeUnits,labels){
 		var oModel = { };
-		oModel.base = myGLSape.hexa(gl);
+		oModel.base = myGLShape.hexa(gl);
 		oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
 		oModel.aAccumeUnits = aAccumeUnits;
 		oModel.labels = labels;
@@ -716,13 +683,13 @@ function handleTextureDefault(gl){//●//when image data can not get from url
 	};
 	function sphere(gl,rr,aAccumeUnits,labels){
 		var oModel = { };
-		oModel.base = myGLSape.sphere(gl,rr);
+		oModel.base = myGLShape.sphere(gl,rr);
 		oModel.buffers = setModelToBuffer(gl,oModel);//kkk setModelToBeffer is independent from my library?
 		oModel.aAccumeUnits = aAccumeUnits;
 		oModel.labels = labels;
 		Draw.pushModel(oModel);
 	};
-
+*/
 	
 })();
 
