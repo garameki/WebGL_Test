@@ -1,6 +1,7 @@
 ﻿(function(){
 	myGLShape = { };
 	Object.defineProperty(myGLShape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'pointEmit'	,{value:pointEmit,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'triangle'	,{value:triangle,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'axisX'		,{value:axisX,writable:false,enumerable:true,configurable:false});
@@ -15,6 +16,26 @@
 		var positions = [];
 		positions.push(p.x,p.y,p.z);
 		var normals = [1,1,1];
+		var colors = [c.r,c.g,c.b,c.a];
+		var textureCoordinates = [0,0];
+		var indices = [0];
+		return {
+			name:'point',
+			n:1,
+			pos:positions,
+			nor:normals,
+			col:colors,
+			tex:textureCoordinates,
+			ind:indices,
+			draw:function(){
+				gl.drawElements(gl.POINTS,1,gl.UNSIGNED_SHORT,0);//to do
+			}
+		}
+	};
+	function pointEmit(gl,p,c){
+		var positions = [];
+		positions.push(p.x,p.y,p.z);
+		var normals = [-p.x,-p.y,-p.z];
 		var colors = [c.r,c.g,c.b,c.a];
 		var textureCoordinates = [0,0];
 		var indices = [0];

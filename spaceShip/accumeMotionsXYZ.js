@@ -28,10 +28,11 @@
 
 	//for using under controlled space ship, follow to key board
 	(function(){
+
+		/** global scope **/
 		myXYZMani = myXYZManipulation = { };
 
-		//キーコード
-		//右左上下スペース
+		//key codes
 		const R=39;//→
 		const L=37;//←
 		const U=38;//↑
@@ -322,6 +323,7 @@
 	//for using trigonometric functions
 	(function(){//xyz follow to trigonometric functions
 
+		/** global scope **/
 		myXYZTrigonometry = { };
 
 
@@ -439,29 +441,33 @@
 		};
 	})();//gravity
 
-	//for translating or rotating members of anonymous functions above
+	//for translating and/or rotating members above
 	(function(){
-		DoAccumerationXYZ = { };
+
+		/** global scope **/
+		AccumeMotionsXYZ = { };
+
+
 		/* for myXYZ object families */
-		Object.defineProperty(DoAccumerationXYZ,'replaceView',{value:replaceCenterAndDirection});
+		Object.defineProperty(AccumeMotionsXYZ,'replaceView',{value:replaceCenterAndDirection});
 		function replaceCenterAndDirection(member){
 			return function(time){
 				myMat4.multiArray(member.matAccume);
 			};
 		};
-		Object.defineProperty(DoAccumerationXYZ,'replaceViewNotTrans',{value:replaceCenterAndDirectionNotTranslated});
+		Object.defineProperty(AccumeMotionsXYZ,'replaceViewNotTrans',{value:replaceCenterAndDirectionNotTranslated});
 		function replaceCenterAndDirectionNotTranslated(member){
 			return function(time){
 				myMat4.multiArray(member.matAccumeNotTranslated);
 			};
 		};
-		Object.defineProperty(DoAccumerationXYZ,'trans',{value:translateXYZ});
+		Object.defineProperty(AccumeMotionsXYZ,'trans',{value:translateXYZ});
 		function translateXYZ(member){
 			return function(time){
 				myMat4.trans(member.x,member.y,member.z);
 			};
 		};
-		Object.defineProperty(DoAccumerationXYZ,'replaceOrigin',{value:replaceCenterToOriginOf});
+		Object.defineProperty(AccumeMotionsXYZ,'replaceOrigin',{value:replaceCenterToOriginOf});
 		function replaceCenterToOriginOf(member){
 			return function(time){
 				myMat4.trans(-member.x,-member.y,-member.z);

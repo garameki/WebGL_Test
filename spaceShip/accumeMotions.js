@@ -1,16 +1,16 @@
 ﻿(function(){
-//make a complex matrix multiplyed to be accumeration
+//make a complex matrix multiplyed to be accumerated
 
-	DoAccumeration = { };
+	AccumeMotions = { };
 
 	/* for usually use */
-	Object.defineProperty(DoAccumeration,'none'	,{value:doNothing,enumerable:true});
+	Object.defineProperty(AccumeMotions,'none'	,{value:doNothing,enumerable:true});
 	function doNothing(){
 		return function(time){
 			//nothing to do
 		};
 	};
-	Object.defineProperty(DoAccumeration,'random'	,{value:random,enumerable:true});
+	Object.defineProperty(AccumeMotions,'random'	,{value:random,enumerable:true});
 	function random(){
 		var rx = Math.floor(Math.random()*100)/10;
 		var ry = Math.floor(Math.random()*100)/10;
@@ -26,7 +26,7 @@
 			myMat4.rotO(rx,ry,rz,m*time*Math.PI/180);
 		}
 	};
-	Object.defineProperty(DoAccumeration,'axisY'	,{value:axisY,writable:false,enumerable:true});
+	Object.defineProperty(AccumeMotions,'axisY'	,{value:axisY,writable:false,enumerable:true});
 	function axisY(speed){
 		var vx = 0;
 		var vy = 1;
@@ -39,13 +39,13 @@
 			myMat4.rot(vx,vy,vz,time*ratio);//●
 		}
 	};
-	Object.defineProperty(DoAccumeration,'translate',{value:translateArbitaryQuantity,enumerable:true});
+	Object.defineProperty(AccumeMotions,'translate',{value:translateArbitaryQuantity,enumerable:true});
 	function translateArbitaryQuantity(x,y,z){
 		return function(time){
 			myMat4.trans(x,y,z);
 		};
 	};
-	Object.defineProperty(DoAccumeration,'rotate',{value:rotate,writable:false,enumerable:true});
+	Object.defineProperty(AccumeMotions,'rotate',{value:rotate,writable:false,enumerable:true});
 	function rotate(rx,ry,rz,ratio,deg0){
 		//@param {number} tx,ty,tz	quantum according to cartesian coordinate to translate
 		//@param {number} rx,ry,rz	vector of axis which is center of rotation

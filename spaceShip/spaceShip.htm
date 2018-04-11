@@ -1,12 +1,12 @@
 ﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
 <link rel="stylesheet"		type="text/css"		href="./styleSheet.css"></link>
 <script id="library"		type="text/javascript"	src="./myLib.js"></script>
-<script id="calculationXYZ"	type="text/javascript"	src="./myXYZ.js"></script>
+<script id="calculationXYZ"	type="text/javascript"	src="./accumeMotionsXYZ.js"></script>
 <script id="matrix"		type="text/javascript"	src="./myMatrix.js"></script>
 <script id="color"		type="text/javascript"	src="./myColor.js"></script>
 <script id="class"		type="text/javascript"	src="./myClass.js"></script>
 <script id="shape"		type="text/javascript"	src="./myGLShape.js"></script>
-<script id="motions"		type="text/javascript"	src="./motions.js"></script>
+<script id="motions"		type="text/javascript"	src="./accumeMotions.js"></script>
 <script id="textures"		type="text/javascript"	src="./myTextures.js"></script>
 
 
@@ -37,14 +37,17 @@
 </script>
 <!--Vertex shader-->
 <script id="shader-vs" type="x-shader/x-vertex">
-	attribute vec3 aVertexNormal;//●		//this type is used in vertex shader only
-	attribute vec3 aVertexPosition;//x y z		//this type is assigned on buffers defined in js
+
+	//'attribute' this type is used in vertex shader only.This type is assigned on buffers defined in js
+	attribute vec3 aVertexNormal;//x y z
+	attribute vec3 aVertexPosition;//x y z
 	attribute vec4 aVertexColor;//R G B Alpha
 	attribute vec2 aTextureCoord;//x y
 
 //○	uniform highp mat4 uNormalMatrix;//●		//mainly matrices receipter from js
-	uniform mat4 uNormalMatrix;//●
+	uniform mat4 uModelViewMatrixInversedTransposed;//●
 	uniform mat4 uModelViewMatrix;//homography matrix
+	uniform mat4 uManipulatedRotationMatrix;
 	uniform mat4 uProjectionMatrix;
 
 	uniform float uPointSizeFloat;//a float value
@@ -67,20 +70,32 @@
 //○			highp vec3 ambientLight = vec3(0.3,0.3,0.3);//en
 
 //		highp vec3 ambientLight = vec3(0.5,0.5,0.5);//●color and darkness of light
-		highp vec3 ambientLight = vec3(0.3,0.3,0.3);//●color and darkness of light
+		highp vec3 ambientLight = vec3(0.1,0.1,0.1);//●color and darkness of light
 
 //○			highp vec3 directionalLightColor = vec3(0.5,0.5,0.75);//ja
-//○			highp vec3 directionalLightColor = vec3(1,1,1);//en
+//○			highp vec3 directionalLightColor = vec3(1.0,1.0,1.0);//en
 		highp vec3 directionalLightColor = vec3(1,1,1);//myself
-//○			highp vec3 directionalVector = vec3(0.85,0.8,0.75);//ja
-//○			highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));//en
+//○			highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));
 		highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));//myself
 
-		highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal,1.0);
+		highp vec4 transformedNormal = uModelViewMatrixInversedTransposed * vec4(aVertexNormal,1.0);
+//●		highp vec4 transformedNormal = vec4(aVertexNormal,1.0);
 	
+//test		mat4 a = uModelViewMatrixInversedTransposed;//The light position must be rotate with objects.
+//		mat4 a = mat4(0.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,0.0);
+//		mat4 a = mat4(1.0,0.0,0.0,0.0 , 0.0,1.0,0.0,0.0  ,  0.0,0.0,1.0,0.0 , 0.0,0.0,0.0,1.0);
+//		vec4 b = vec4(aVertexNormal,1.0);
+		directionalVector = normalize((uManipulatedRotation * -vec4(directionalVector,1.0))).xyz;
+//		transformedNormal = a * b;
 		highp float directional = max(dot(transformedNormal.xyz,directionalVector),0.0);
 		vLighting = ambientLight + (directionalLightColor * directional);
 		//●above
+
+
+
+//		vec3 lightPos = vec3(1.0,1.0,1.0);
+//		vec4 newPos = uModelViewMatrix * normalize(vec4(aVertexPosition,0.0));
+//		vLighting = lightPos-newPos.xyz;
 	}
 
 </script>
@@ -178,15 +193,17 @@ function getUniformLocations(gl,prog){
 	var locPerspective = gl.getUniformLocation(prog,"uProjectionMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is "+locPerspective+"<br>";return null;}
 	var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is "+locModelView+"<br>";return null;}
 	var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is "+locPointSize+"<br>";return null;}
-	var locNormal = gl.getUniformLocation(prog,     "uNormalMatrix");	if(!locNormal){PRINT_CAUTION.innerHTML+="locNormal is "+locNormal+"<br>";return null;}
 	var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is "+locSampler+"<br>";return null;}
+	var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is "+locModelViewMatrixInversedTansposed+"<br>";return null;}
+	var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is "+locManipulatedRotationMatrix+"<br>";return null;}
 
 	return {
 		perspective:locPerspective,
 		modelView:locModelView,
 		pointSize:locPointSize,
-		normal:locNormal,
-		sampler:locSampler
+		sampler:locSampler,
+		mvMIT:locModelViewMatrixInversedTansposed,
+		manipulatedRM:locManipulatedRotationMatrix
 	};
 };
 
@@ -304,12 +321,12 @@ function sendPerspectiveMatrix(gl,oLocations){
 	var fieldOfView = 70 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	var zNear = 0.1;
-	var zFar = 100000.0;
+	var zFar = 10000000.0;
 
 	//create a projectionMatrix array as the perspective matrix
 	var projectionMatrix=new Array(16);
 	myMat4.loadPerspective(fieldOfView,aspect,zNear,zFar);
-	myMat4.storeTo(projectionMatrix);
+	projectionMatrix = myMat4.arr;
 
 	//uniform mat4 uProjectionMatrixへ値を転送
 //	var pUniform = gl.getUniformLocation(shaderProgram,"uProjectionMatrix");//""内は特殊言語の実装参照してる
@@ -346,22 +363,17 @@ function sendPointSize(gl,oLocations,nSize){
 	gl.uniform1f(oLocations.uniform.pointSize,nSize);
 };
 
-function sendNormalMatrix(gl,oLocations,mvMatrix){//●
-
-	var normMatrix = new Array(16);
+function sendModelViewMatrixInversedTransposed(gl,oLocations,mvMatrix){//●
 
 	//compute matrix
 	myMat4.load(mvMatrix);
 	myMat4.inverse();
 	myMat4.transpose();
-	myMat4.storeTo(normMatrix);
-//https://msdn.microsoft.com/ja-jp/library/ms810476.aspx
-//	says the reason 'inverse & transpose' above
+			//https://msdn.microsoft.com/ja-jp/library/ms810476.aspx
+			//	says the reason 'inverse & transpose' above
 
-	//uniform highp mat4 uNormalMatrixに値を転送
-//	var normUniform = gl.getUniformLocation(shaderProgram,"uNormalMatrix");
-//	if(!normUniform){PRINT_CAUTION.innerHTML+="normUniform is "+normUniform+"<br>";return null;}
-	gl.uniformMatrix4fv(oLocations.uniform.normal,false,new Float32Array(normMatrix));
+	//uniform highp mat4 umvMatrixITに値を転送
+	gl.uniformMatrix4fv(oLocations.uniform.mvMIT,false,new Float32Array(myMat4.arr));
 };
 
 function sendSampler(gl,oLocations,number){
@@ -408,7 +420,9 @@ function start(){
 	var nameTextureAsteroid = "kaguya";
 	myTextures.create(gl,nameTextureAsteroid);
 
-	//** prepare shader **/
+
+
+	//** prepare shaders **/
 	var shaderProgram = initShaders(gl);
 	var oAttributeLocations	= getAttributeLocations(gl,shaderProgram);
 	var oUniformLocations	= getUniformLocations(gl,shaderProgram);
@@ -423,9 +437,9 @@ function start(){
 //	var p1 = new myClass.Point(1.0,0.5,0.4);
 //	var p2 = new myClass.Point(0.5,0.2,1.4);
 //	var p3 = new myClass.Point(0.7,1.5,0.8);
-//	Draw.triangle(gl,p1,p2,p3,myColorName.green(1),aAccumeUnits,nameTexture);old
+//	Unit.triangle(gl,p1,p2,p3,myColorName.green(1),aAccumeUnits,nameTexture);old
 
-//	Draw.tetra(gl,aAccumeUnits,nameTexture);old
+//	Unit.tetra(gl,aAccumeUnits,nameTexture);old
 
 
 
@@ -437,76 +451,87 @@ function start(){
 
 
 
-		//base
+		//plane
 	var m = 1000;
 	var r = Math.pow(0.23873241468*m,0.33333333333333333);
-	var memCenter = myXYZManipulation.createMember();
+	var xyzCenter = myXYZManipulation.createMember();
 	var aAccumeUnits = [];
-	aAccumeUnits.push(DoAccumeration.rotate(0,0,1,-.5,0))
-	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-//	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
-						//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,    1,-1,0));
-						//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));//center : sun
-						//	aAccumeUnits.push(DoAccumeration.none());
+//	aAccumeUnits.push(AccumeMotions.rotate(0,0,1,-.2,0))
+//	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+//	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeUnits.push(AccumeMotions.translate(0,0,30));
+						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
+						//	aAccumeUnits.push(AccumeMotions.none());
 
 	var labels = new myClass.Labels();
-	labels.addText(0,-5,0,"HOME BASE",myColorName.red(1));
-//	var shape = myGLShape.hexa(gl);
-//	Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
-	var shape = myGLShape.sphere(gl,10);
-	Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
+	labels.addText(0,-5,0,"ship",myColorName.red(1));
+	var shape = myGLShape.hexa(gl);
+//	var shape = myGLShape.sphere(gl,10);
+	Unit.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
 
 
 	//x,y,z axes
 	var aAccumeUnits = [];
-	aAccumeUnits.push(DoAccumerationXYZ.replaceViewNotTrans(memCenter));
-	aAccumeUnits.push(DoAccumeration.translate(-30,-15,-30));
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
+	aAccumeUnits.push(AccumeMotions.translate(-30,-15,-30));
 	var labels = new myClass.Labels();
 	labels.addText(0,0,5,"z",myColorName.red(1));
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1));
-		Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
+		Unit.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
 	var labels = new myClass.Labels();
 	labels.addText(0,5,0,"y",myColorName.red(1));
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1));
-		Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
+		Unit.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
 	var labels = new myClass.Labels();
 	labels.addText(5,0,0,"x",myColorName.red(1));
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1));
-		Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
+		Unit.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
 
 
 //kkkk
 
 
-/*
+
 
 		//center planet
 	var m = 1000;
 	var r = Math.pow(0.23873241468*m,0.33333333333333333);
-	var mem = myXYZTrigonometry.createMember();
+	var xyz = myXYZTrigonometry.createMember();
 	var aAccumeUnits = [];
-	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0));
-	aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-//	aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
-						//	aAccumeUnits.push(DoAccumeration.rotate(0,1,0,    1,-1,0));
-						//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));//center : sun
-						//	aAccumeUnits.push(DoAccumeration.none());
-	Draw.sphere(gl,r,aAccumeUnits,[]);
-*/
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+//	aAccumeUnits.push(AccumeMotions.translate(0,0,-30));
+						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,-5,0,"HOME BASE",myColorName.red(1));
+//	var shape = myGLShape.hexa(gl);
+	var shape = myGLShape.sphere(gl,10);
+	var shape = myGLShape.sphere(gl,r);
+	Unit.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
+
 
 
 
 	//stars far from planet
 	var spread=100;
+	var p1,r1,t1;
 	for(var hh=0;hh<100;hh++){
 		var aAccumeUnits=[];
-		aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-//		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));
+		aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+//		aAccumeUnits.push(AccumeMotions.translate(0,0,-30));
 		var labels = new myClass.Labels();
 		//labels.addText(0,0,-10,"hexa",myColorName.red(1));
-		var p1 = new myClass.Point(spread*(1-Math.random()*2),spread*(1-Math.random()*2),spread*(1-Math.random()*2));
-		var shape = myGLShape.point(gl,p1,myColorName.purple(1));
-		Draw.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
+		r1 = 1000*Math.random()+1000;
+		t1 = 3.141592653*2*Math.random();
+		t2 = 3.141592653*Math.random()-1.5707963265;
+		r2 = r1*Math.cos(t2);
+		p1 = new myClass.Point(r2*Math.cos(t1),r2*Math.sin(t1),r1*Math.sin(t2));
+		var shape = myGLShape.pointEmit(gl,p1,myColorName.purple(1));
+		Unit.create(gl,shape,aAccumeUnits,labels,nameTextureBase);
 	}
 
 
@@ -514,19 +539,19 @@ function start(){
 	for(var hh=0;hh<10;hh++){
 		var m = Math.random()*100;
 		var r = Math.pow(m*0.23873241,0.33333333);
-		var mem = myXYZTrigonometry.createMember();
+		var xyz = myXYZTrigonometry.createMember();
 		var aAccumeUnits = [];
-		aAccumeUnits.push(DoAccumeration.rotate(0,1,0,1,0));//rotation
-			aAccumeUnits.push(DoAccumerationXYZ.trans(mem));//revolution
-			aAccumeUnits.push(DoAccumerationXYZ.replaceView(memCenter));
-//		aAccumeUnits.push(DoAccumeration.translate(0,0,-30));//seen from the distance
-							//	aAccumeUnits.push(DoAccumeration.axisY(1));
-							//	aAccumeUnits.push(DoAccumeration.translate(0,0,-50));
-							//	aAccumeUnits.push(DoAccumeration.none());
+		aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+			aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+			aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+//		aAccumeUnits.push(AccumeMotions.translate(0,0,-30));//seen from the distance
+							//	aAccumeUnits.push(AccumeMotions.axisY(1));
+							//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
+							//	aAccumeUnits.push(AccumeMotions.none());
 		var labels = new myClass.Labels();
 		//labels.addText(0,0,-10,"hexa",myColorName.red(1));//kkk
 		var shape = myGLShape.sphere(gl,r);
-		Draw.create(gl,shape,aAccumeUnits,labels,nameTextureAsteroid);
+		Unit.create(gl,shape,aAccumeUnits,labels,nameTextureAsteroid);
 	};
 
 //********************************************** animation ****************************************************	
@@ -565,12 +590,12 @@ function drawScene(gl,oShaderInfo,angle){
 
 	var member,mvmat,pmat;
 //	var aMatrices;//5 matrices now
-	for(var ii=0;ii<Draw.length;ii++){
-		member = Draw.memberByIndex(ii);
+	for(var ii=0;ii<Unit.length;ii++){
+		member = Unit.getMemberByIndex(ii);
 		asignBufferMapping(gl,oShaderInfo.locations,member.buffers);//attribute variables are allocated before,change the buffers
 		pmat = sendPerspectiveMatrix(gl,oShaderInfo.locations);
 		mvmat = sendModelViewMatrix(gl,oShaderInfo.locations,member.aAccumeUnits,angle);
-		sendNormalMatrix(gl,oShaderInfo.locations,mvmat);
+		sendModelViewMatrixInversedTransposed(gl,oShaderInfo.locations,mvmat);
 		sendPointSize(gl,oShaderInfo.locations,nPointSize);
 		sendSampler(gl,oShaderInfo.locations,0);//kkk Is last argument unit number?
 		myTextures.member[member.nameTexture].activate();
@@ -613,14 +638,14 @@ function drawScene(gl,oShaderInfo,angle){
 
 	var aModels = [];
 
-	Draw = { };
-	Object.defineProperty(Draw,'create',{value:create,writable:false,enumerable:true,configurable:false});	
+	Unit = { };
+	Object.defineProperty(Unit,'create',{value:create,writable:false,enumerable:true,configurable:false});	
 	function create(gl,shape,aMotions,aLabels,sNameTexture){
 		aModels.push(new ToolBox(gl,shape,aMotions,aLabels,sNameTexture));
 	}
-	Object.defineProperty(Draw,'memberByIndex',{value:function(num){return aModels[num];},writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(Draw,'length',{get:function(){return aModels.length;},enumerable:true,configurable:false});
-})();//Draw
+	Object.defineProperty(Unit,'getMemberByIndex',{value:function(num){return aModels[num];},writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(Unit,'length',{get:function(){return aModels.length;},enumerable:true,configurable:false});
+})();//Unit
 
 </script>
 
