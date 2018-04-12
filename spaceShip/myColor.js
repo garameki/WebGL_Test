@@ -6,7 +6,7 @@
 		this.a=alpha;
 	};
 	ColorRGBA.prototype.reverse = function(){
-		//to do
+		//to do to make reverse color
 	};
 
 	(function(){
