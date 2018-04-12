@@ -1,7 +1,6 @@
 ﻿(function(){
 	myGLShape = { };
 	Object.defineProperty(myGLShape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'pointEmit'	,{value:pointEmit,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'triangle'	,{value:triangle,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'axisX'		,{value:axisX,writable:false,enumerable:true,configurable:false});
@@ -32,30 +31,10 @@
 			}
 		}
 	};
-	function pointEmit(gl,p,c){
-		var positions = [];
-		positions.push(p.x,p.y,p.z);
-		var normals = [-p.x,-p.y,-p.z];
-		var colors = [c.r,c.g,c.b,c.a];
-		var textureCoordinates = [0,0];
-		var indices = [0];
-		return {
-			name:'point',
-			n:1,
-			pos:positions,
-			nor:normals,
-			col:colors,
-			tex:textureCoordinates,
-			ind:indices,
-			draw:function(){
-				gl.drawElements(gl.POINTS,1,gl.UNSIGNED_SHORT,0);//to do
-			}
-		}
-	};
 	function line(gl,pointStart,pointEnd,color){
 		var positions = [];
 		positions.push(pointStart.x,pointStart.y,pointStart.z,pointEnd.x,pointEnd.y,pointEnd.z);
-		var normals = [1,1,1,1,1,1];
+		var normals = [1.0,1.0,1.0,1.0,1.0,1.0];
 		var colors = [];
 		colors.push(color.r,color.g,color.b,color.a);
 		colors.push(color.r,color.g,color.b,color.a);
@@ -608,7 +587,7 @@
 		var l2=vN.calcLength();//Math.pow(vN.x*vN.x+vN.y*vN.y+vN.z*vN.z,0.5);//.calcLength();
 		if(l1==0 || l2==0){
 			vN = new myClass.Vector(0,0,0);
-				PRINT_CAUTION.innerHTML+="Can't product Normal Vector vN=(0,0,0)<br>";
+				PRINT_CAUTION.innerHTML+="Can't product Normal Vector vN=(0,0,0) in GLShape.js<br>";
 			return vN;
 		}else{
 			var theta = Math.acos((vio.x*vN.x+vio.y*vN.y+vio.z*vN.z)/(l1*l2));

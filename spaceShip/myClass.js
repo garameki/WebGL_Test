@@ -71,7 +71,7 @@
 			// myMat4.multi(mvmat);	muse be done outside until before arriving here
 			var newP = myMat4.get2D(this.x,this.y,this.z);
 			if(newP[2]>1){
-				this.elementText.nodeValue='z='+newP[2].toString();
+				this.elementText.nodeValue=this.str+' behind';
 			}else{
 				this.elementText.nodeValue=this.str;
 			}
