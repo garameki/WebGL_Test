@@ -204,8 +204,8 @@
 		var len=1/Math.pow(vx*vx+vy*vy+vz*vz,.5);
 		var vx=vx*len,vy=vy*len,vz=vz*len;
 
-		var cos = Math.cos(-theta);
-		var sin = Math.sin(-theta);
+		var cos = Math.cos(-theta*0.5);
+		var sin = Math.sin(-theta*0.5);
 
 		var q0=cos;
 		var q1=vx*sin;
