@@ -60,15 +60,25 @@
 		var gl = this.gl;
 		var level = 0;
 		var internalFormat = gl.RGBA;
-		var width = 1;
-		var height = 1;
+		var width = 2;
+		var height = 2;
 		var border = 0;
 		var srcFormat = gl.RGBA;
 		var srcType = gl.UNSIGNED_BYTE;
-		var pixel = new Uint8Array([oColor.r,oColor.g,oColor.b,oColor.a]);
+		var pixel = new Uint8Array([
+			oColor.r,oColor.g,oColor.b,oColor.a,
+			oColor.r,oColor.g,oColor.b,oColor.a,
+			oColor.r,oColor.g,oColor.b,oColor.a,
+			oColor.r,oColor.g,oColor.b,oColor.a
+		]);
+//		var pixel = new Uint8Array([1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]);
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D,this.texture);
 		gl.texImage2D(gl.TEXTURE_2D,level,internalFormat,width,height,border,srcFormat,srcType,pixel);
+//		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,pixel);
+		gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+		gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
+		gl.generateMipmap(gl.TEXTURE_2D);//gl.TEXTURE_2Dをmipmapに適用
 	};
 
 	
@@ -94,7 +104,7 @@
 	Object.defineProperty(myTextures,'member',{get:function(){return oTextures;}});//reference to use myTextures.member['nameOfTexture']
 
 	Object.defineProperty(myTextures,'create',{value:makeColorTexture,writable:false,enumerable:true,configurable:false});
-	function makeColorTexture(gl,oColor){
+	function makeColorTexture(gl,name,oColor){
 		var instance = new Texture(gl,name,Object.keys(oTextures).length);
 		Object.defineProperty(oTextures,name,{value:instance,writable:false,enumerable:true,configurable:false});
 		instance.make(oColor);

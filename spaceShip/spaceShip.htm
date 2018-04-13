@@ -22,6 +22,11 @@
 	varying highp vec2 vTextureCoord;//as same as vertex shader
 	varying highp vec3 vLighting;//●//as same as vertex shader
 
+
+
+	uniform mediump float uBrightness;
+	uniform mediump float uAlpha;
+
 	uniform sampler2D uSampler;//common variable between shader and js
 
 	void main(void) {
@@ -29,12 +34,22 @@
 //		gl_FragColor = texture2D(uSampler,vTextureCoord);//mediump型
 //		gl_FragColor = vColor;
 
-//		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
-		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
-		gl_FragColor = vec4(texelColor.rgb * vLighting,texelColor.a);//●
+		//uSamplerの数字とgl.TEXT0の数字は共通？
+
+		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
+//?		highp   vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
+//		gl_FragColor = vec4(texelColor.rgb * vLighting,texelColor.a);//●
+//		gl_FragColor = vec4(5.0)*vec4(texelColor.rgb * vLighting,0.1);//●
+		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vLighting,uAlpha);//●
+//		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vLighting,0.5);//●
 
 	}
 </script>
+
+
+
+
+
 <!--Vertex shader-->
 <script id="shader-vs" type="x-shader/x-vertex">
 
@@ -69,6 +84,7 @@
 			//○highp vec3 ambientLight = vec3(0.6,0.6,0.6);//ja
 			//○highp vec3 ambientLight = vec3(0.3,0.3,0.3);//en
 
+//		highp vec3 ambientLight = vec3(1.0,1.0,1.0);//●color and darkness of light
 //		highp vec3 ambientLight = vec3(0.5,0.5,0.5);//●color and darkness of light
 		highp vec3 ambientLight = vec3(0.1,0.1,0.1);//●color and darkness of light
 
@@ -190,6 +206,8 @@ function getUniformLocations(gl,prog){
 	var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used"+locSampler+"<br>";}
 	var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is notused"+locModelViewMatrixInversedTansposed+"<br>";}
 	var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not used"+locManipulatedRotationMatrix+"<br>";}
+	var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not used"+locBrightness+"<br>";}
+	var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not used"+locAlpha+"<br>";}
 
 	return {
 		perspective:locPerspective,
@@ -197,7 +215,9 @@ function getUniformLocations(gl,prog){
 		pointSize:locPointSize,
 		sampler:locSampler,
 		mvMIT:locModelViewMatrixInversedTansposed,
-		manipulatedRM:locManipulatedRotationMatrix
+		manipulatedRM:locManipulatedRotationMatrix,
+		brightness:locBrightness,
+		alpha:locAlpha
 	};
 };
 
@@ -379,6 +399,14 @@ function sendManipulatedRotationMatrix(gl,oLocations,arrAccume,angle){
 	gl.uniformMatrix4fv(oLocations.uniform.manipulatedRM,false,new Float32Array(myMat4.arr));
 };
 
+function sendBrightness(gl,oLocations,nValue){
+	//uniform float uPointSizeFloatへ値を転送
+	gl.uniform1f(oLocations.uniform.brightness,nValue);
+};
+function sendAlpha(gl,oLocations,nValue){
+	//uniform float uPointSizeFloatへ値を転送
+	gl.uniform1f(oLocations.uniform.alpha,nValue);
+};
 
 
 //************************************** DRAW SCENE *************************************************
@@ -405,6 +433,8 @@ function drawScene(gl,oShaderInfo,angle){
 		sendPointSize(gl,oShaderInfo.locations,nPointSize);
 		sendSampler(gl,oShaderInfo.locations,0);//kkk Is last argument unit number?
 		sendManipulatedRotationMatrix(gl,oShaderInfo.locations,member.aAccumeUnitsLight,angle);
+sendBrightness(gl,oShaderInfo.locations,member.brightness);
+sendAlpha(gl,oShaderInfo.locations,member.alpha);
 		myTextures.member[member.nameTexture].activate();
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
@@ -441,7 +471,12 @@ function start(){
 	gl.clearDepth(1.0);			//Clear everything
 	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
 	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
-
+{
+	//https://stackoverflow.com/questions/47216022/webgl-gl-fragcolor-alpha-behave-differently-in-chrome-with-firefox
+	//i've been thanking David Guan
+	gl.enable(gl.BLEND);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+};
 	//** rectangle test **
 	//{
 	//	gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
@@ -450,15 +485,6 @@ function start(){
 	//    gl.clearColor(1.0, 1.0, 0.0, 1.0);
 	//    gl.clear(gl.COLOR_BUFFER_BIT);
 	//};
-
-
-
-	//** prepare textures **
-	var nameTextureBase = "geo";
-	myTextures.create(gl,nameTextureBase);
-	var nameTextureAsteroid = "kaguya";
-	myTextures.create(gl,nameTextureAsteroid);
-
 
 
 	//** prepare shaders **/
@@ -473,27 +499,62 @@ function start(){
 		}
 	};
 
-//	var p1 = new myClass.Point(1.0,0.5,0.4);
-//	var p2 = new myClass.Point(0.5,0.2,1.4);
-//	var p3 = new myClass.Point(0.7,1.5,0.8);
-//	UnitsToDraw.triangle(gl,p1,p2,p3,myColorName.green(1),aAccumeUnits,nameTexture);old
 
-//	UnitsToDraw.tetra(gl,aAccumeUnits,nameTexture);old
+	//** prepare textures **
+	var nameTextureSun = "sun";
+	myTextures.join(gl,nameTextureSun);
+	var nameTextureBase = "earth";
+	myTextures.join(gl,nameTextureBase);
+	var nameTextureAsteroid = "moon";
+	myTextures.join(gl,nameTextureAsteroid);
+	var nameTextureJupiter = "jupiter";
+	myTextures.join(gl,nameTextureJupiter);
+	var nameTextureAtomosphere = "white";
+//issue	myTextures.create(gl,nameTextureAtomosphere,myColorName.white(0.5));//preserve alpha here
+	myTextures.join(gl,nameTextureAtomosphere);
 
 
 
 
-//最後にtopを画面の上に直す
 
 
-	var _front_=false;
+
+	var _front_=true;
+
+
+
+
+	/** common variables **/
+	var brightnessCommon = 1.0;
+	var alphaCommon = 1.0;
+	var brightnessAtomosphere = 1.0;
+	var alphaAtomosphere = 0.3;
+
+	/* class */
+	(function(){
+		var mag = 0.001;
+		Ball = function(radius){
+			this.radiusSurface = radius;
+		};
+		Object.defineProperty(Ball.prototype,'radius',{get:function(){return mag*this.radiusSurface;},enumerable:true,configurable:false});
+	})();
+	var sun		= new Ball(695508);
+	var jupiter	= new Ball(71492);
+	var saturn	= new Ball(60268);
+	var uranus	= new Ball(25559);
+	var neptune	= new Ball(24764);
+	var earth	= new Ball(6378);
+	var venus	= new Ball(6051);
+	var mars	= new Ball(3396);
+	var mercury	= new Ball(2439);
+	var moon	= new Ball(1738);
+	var pluto	= new Ball(1195);
+
 
 
 
 
 		//plane
-	var m = 1000;
-	var r = Math.pow(0.23873241468*m,0.33333333333333333);
 	var xyzCenter = myXYZManipulation.createMember();
 	var aAccumeUnits = [];
 //	aAccumeUnits.push(AccumeMotions.rotate(0,0,1,-.2,0))
@@ -509,7 +570,7 @@ function start(){
 	labels.addText(0,-5,0,"ship",myColorName.red(1));
 	var shape = myGLShape.hexa(gl);
 //	var shape = myGLShape.sphere(gl,10);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,[]);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,[],brightnessCommon,alphaCommon);
 
 
 
@@ -519,34 +580,98 @@ function start(){
 	aAccumeLighting.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
 
 
-
-
-		//center planet
-	var m = 1000;
-	var r = Math.pow(0.23873241468*m,0.33333333333333333);
-	var xyz = myXYZTrigonometry.createMember();
+		//Sun
+	var r = sun.radius;
+	var xyzEarth = myXYZTrigonometry.createMember();
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0.1,0));
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
+
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzEarth));//revolution公転
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+
 	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-30));
 						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(AccumeMotions.none());
 	var labels = new myClass.Labels();
-	labels.addText(0,-5,0,"HOME BASE",myColorName.red(1));
+	labels.addText(0,-5,0,"Earth",myColorName.red(1));
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureSun,aAccumeLighting,brightnessCommon,alphaCommon);
 
+
+
+
+		//Earth
+	var r = earth.radius;
+	var xyzEarth = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
+
+//	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzEarth));//revolution公転
+//	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-30));
+						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,-5,0,"Earth",myColorName.red(1));
+//	var shape = myGLShape.hexa(gl);
+	var shape = myGLShape.sphere(gl,r);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon);
+
+
+
+
+	/** Atomosphere **/
+	//not texture but color
+	var r = earth.radius*1.05;
+	var xyz = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
+//	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzEarth));//revolution公転
+//	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-30));
+						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,-5,0,"Atomosphere",myColorName.red(1));
+//	var shape = myGLShape.hexa(gl);
+	var shape = myGLShape.sphere(gl,r);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAtomosphere,aAccumeLighting,brightnessAtomosphere,alphaAtomosphere);
+
+
+
+
+
+	/** Jupiter **/
+	var r = jupiter.radius;
+	var xyz = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-30));//seen from the distance
+						//	aAccumeUnits.push(AccumeMotions.axisY(1));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,"Jupitor",myColorName.red(1));//kkk
+	var shape = myGLShape.sphere(gl,r);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureJupiter,aAccumeLighting,brightnessCommon,alphaCommon);
 
 
 
 
 	/** satellite thrown in various random directions **/
 	for(var hh=0;hh<10;hh++){
-		var m = Math.random()*100;
-		var r = Math.pow(m*0.23873241,0.33333333);
+		var r = moon.radius;
 		var xyz = myXYZTrigonometry.createMember();
 		var aAccumeUnits = [];
 		aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
@@ -559,13 +684,13 @@ function start(){
 		var labels = new myClass.Labels();
 		labels.addText(0,0,0,hh.toString(),myColorName.red(1));//kkk
 		var shape = myGLShape.sphere(gl,r);
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAsteroid,aAccumeLighting);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAsteroid,aAccumeLighting,brightnessCommon,alphaCommon);
 	};
 
 
 	/* These two kinds of objects below must always be lighten from right angle ,so that they are lighten most brightly*/
 
-	/** common **/
+	/** common variables**/
 	var aAccumeLighting = [];
 	aAccumeLighting.push(AccumeMotions.translate(1.0,1.0,1.0));//Light is put at (1 1 1)
 	aAccumeLighting.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));//always (1 1 1) as same relationship of positionning
@@ -585,7 +710,7 @@ function start(){
 		r2 = r1*Math.cos(t2);
 		p1 = new myClass.Point(r2*Math.cos(t1),r2*Math.sin(t1),r1*Math.sin(t2));
 		var shape = myGLShape.point(gl,p1,myColorName.purple(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon);
 	}
 
 	/** x,y,z axes **/
@@ -595,15 +720,15 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,5,"back",myColorName.red(1));
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon);
 	var labels = new myClass.Labels();
 	labels.addText(0,5,0,"up",myColorName.red(1));
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon);
 	var labels = new myClass.Labels();
 	labels.addText(5,0,0,"right",myColorName.red(1));
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon);
 
 
 
@@ -629,7 +754,7 @@ function start(){
 };//start
 
 
-//**************************** 3D SHAPE DRAW MOVE LIGHT *************************************************
+//**************************** 3D DRAW with MOVING, LIGHTING, TEXTURING, COLORING and so on *************************************************
 
 
 /* all the things to be wanted to draw must be thrown into 'oModel',e.g. shape or text with its position x,y,z*/
@@ -639,7 +764,7 @@ function start(){
 	//
 	//@param {myGLShape.obj} shape in which there are points,color,normal vector,indeces and so on
 	//
-	var ToolBox = function(gl,shape,aMotions,aLabels,sNameTexture,aLights){
+	var ToolBox = function(gl,shape,aMotions,aLabels,sNameTexture,aLights,brightness,alpha){
 		this.draw = shape.draw;
 		this.buffers = createBuffers(gl,shape);
 		this.aAccumeUnits = aMotions;
@@ -647,14 +772,16 @@ function start(){
 		this.nameTexture = sNameTexture;
 
 		this.aAccumeUnitsLight = aLights;
+		this.brightness = brightness;
+		this.alpha = alpha;
 	};
 
 	var aModels = [];
 
 	UnitsToDraw = { };
 	Object.defineProperty(UnitsToDraw,'join',{value:create,writable:false,enumerable:true,configurable:false});	
-	function create(gl,shape,aMotions,aLabels,sNameTexture,aLightMotions){
-		aModels.push(new ToolBox(gl,shape,aMotions,aLabels,sNameTexture,aLightMotions));
+	function create(gl,shape,aMotions,aLabels,sNameTexture,aLightMotions,brightness,alpha){
+		aModels.push(new ToolBox(gl,shape,aMotions,aLabels,sNameTexture,aLightMotions,brightness,alpha));
 	}
 	Object.defineProperty(UnitsToDraw,'getMemberByIndex',{value:function(num){return aModels[num];},writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(UnitsToDraw,'length',{get:function(){return aModels.length;},enumerable:true,configurable:false});
