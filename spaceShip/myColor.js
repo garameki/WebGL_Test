@@ -5,8 +5,10 @@
 		this.b=blue;
 		this.a=alpha;
 	};
-	ColorRGBA.prototype.reverse = function(){
-		//to do to make reverse color
+	Object.defineProperty(ColorRGBA.prototype,"rgba",{get:function(){return "rgba("+s8(this.r)+","+s8(this.g)+","+s8(this.b)+","+s8(this.a)+")";},enumerable:true,configurable:false});
+
+	function s8(fN){
+		return Math.floor(fN*255).toString();
 	};
 
 	(function(){
