@@ -502,10 +502,25 @@ function start(){
 	myTextures.join(gl,nameTextureSun);
 	var nameTextureBase = "earth";
 	myTextures.join(gl,nameTextureBase);
-	var nameTextureAsteroid = "moon";
-	myTextures.join(gl,nameTextureAsteroid);
+	var nameTextureMoon = "moon";
+	myTextures.join(gl,nameTextureMoon);
 	var nameTextureJupiter = "jupiter";
 	myTextures.join(gl,nameTextureJupiter);
+	var nameTextureUranus = "uranus";
+	myTextures.join(gl,nameTextureUranus);
+	var nameTextureVenus = "venus";
+	myTextures.join(gl,nameTextureVenus);
+	var nameTextureMars = "mars";
+	myTextures.join(gl,nameTextureMars);
+	var nameTextureNeptune = "neptune";
+	myTextures.join(gl,nameTextureNeptune);
+	var nameTextureMercury = "mercury";
+	myTextures.join(gl,nameTextureMercury);
+
+
+
+
+
 	var nameTextureAtomosphere = "white";
 //issue	myTextures.create(gl,nameTextureAtomosphere,myColorName.white(0.5));//preserve alpha here
 	myTextures.join(gl,nameTextureAtomosphere);
@@ -517,6 +532,7 @@ function start(){
 
 
 	var _front_=true;
+	var _frontLength_ = 60;
 
 
 
@@ -554,19 +570,19 @@ function start(){
 	var baseLightSun = 1.0;
 //-●
 
-
+	var colorNameText = myColorName.blue(0.5);
 
 		//plane
 	var xyzCenter = myXYZManipulation.createMember();
 	var aAccumeUnits = [];
 	if(_front_){
-		aAccumeUnits.push(AccumeMotions.translate(0,0,-30));
+		aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
 		var labels = new myClass.Labels();
-		labels.addText(0,-1,0,"ship",myColorName.red(1));
+		labels.addText(0,-1,0,"ship",colorNameText);
 	} else {
 		aAccumeUnits.push(AccumeMotions.translate(0,0,10));
 		var labels = new myClass.Labels();
-		labels.addText(0,-5,0,"",myColorName.red(1));
+		labels.addText(0,-5,0,"",colorNameText);
 	};
 	var shape = myGLShape.hexa(gl);
 	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,[],brightnessCommon,alphaCommon,baseLight);
@@ -576,8 +592,6 @@ function start(){
 
 	/** for Sun **/
 	var aAccumeLightingSun = [];
-//	aAccumeLightingSun.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
-//●kkk
 	aAccumeLightingSun.push(AccumeMotions.gotoOrigin());
 
 
@@ -586,17 +600,17 @@ function start(){
 	var xyzSun = myXYZTrigonometry.createMember();
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
+////●	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
 
 	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSun));//revolution公転
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-30));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
 						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(AccumeMotions.none());
 	var labels = new myClass.Labels();
-	labels.addText(0,-5,0,"Sun",myColorName.red(1));
+	labels.addText(0,-5,0,"Sun",colorNameText);
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
 	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureSun,aAccumeLightingSun,brightnessCommon,alphaCommon,baseLightSun);
@@ -617,12 +631,12 @@ function start(){
 //	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzEarth));//revolution公転
 //	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-30));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
 						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(AccumeMotions.none());
 	var labels = new myClass.Labels();
-	labels.addText(0,-5,0,"Earth",myColorName.red(1));
+	labels.addText(0,-5,0,"Earth",colorNameText);
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
 	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
@@ -630,7 +644,7 @@ function start(){
 
 
 
-	/** Atomosphere **/
+	/** Atomosphere of Earth **/
 	//not texture but color
 	var r = earth.radius*1.05;
 	var xyz = myXYZTrigonometry.createMember();
@@ -639,12 +653,12 @@ function start(){
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
 //	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzEarth));//revolution公転
 //	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-30));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
 						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(AccumeMotions.none());
 	var labels = new myClass.Labels();
-	labels.addText(0,-5,0,"Atomosphere",myColorName.red(1));
+	labels.addText(0,-5,0,"",colorNameText);
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
 	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAtomosphere,aAccumeLighting,brightnessAtomosphere,alphaAtomosphere);
@@ -661,19 +675,129 @@ function start(){
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
 	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-30));//seen from the distance
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
 						//	aAccumeUnits.push(AccumeMotions.axisY(1));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 						//	aAccumeUnits.push(AccumeMotions.none());
 	var labels = new myClass.Labels();
-	labels.addText(0,0,0,"Jupitor",myColorName.red(1));//kkk
+	labels.addText(0,0,0,"Jupitor",colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
 	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureJupiter,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
 
 
 
+	/** Moon **/
+	var r = moon.radius;
+	var xyz = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(AccumeMotions.axisY(1));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,nameTextureMoon,colorNameText);//kkk
+	var shape = myGLShape.sphere(gl,r);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMoon,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+
+
+	/** Uranus **/
+	var r = uranus.radius;
+	var xyz = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(AccumeMotions.axisY(1));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,nameTextureUranus,colorNameText);//kkk
+	var shape = myGLShape.sphere(gl,r);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureUranus,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+
+
+	/** Venus **/
+	var r = venus.radius;
+	var xyz = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(AccumeMotions.axisY(1));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,nameTextureVenus,colorNameText);//kkk
+	var shape = myGLShape.sphere(gl,r);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureVenus,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+
+
+	/** Mars **/
+	var r = mars.radius;
+	var xyz = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(AccumeMotions.axisY(1));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,nameTextureMars,colorNameText);//kkk
+	var shape = myGLShape.sphere(gl,r);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMars,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+
+
+	/** Neptune **/
+	var r = neptune.radius;
+	var xyz = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(AccumeMotions.axisY(1));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,nameTextureNeptune,colorNameText);//kkk
+	var shape = myGLShape.sphere(gl,r);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureNeptune,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+
+
+	/** Mercury **/
+	var r = mercury.radius;
+	var xyz = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(AccumeMotions.axisY(1));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,nameTextureMercury,colorNameText);//kkk
+	var shape = myGLShape.sphere(gl,r);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMercury,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+
+
+
 
 	/** satellite thrown in various random directions **/
+/*
 	for(var hh=0;hh<10;hh++){
 		var r = moon.radius;
 		var xyz = myXYZTrigonometry.createMember();
@@ -681,15 +805,17 @@ function start(){
 		aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
 			aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
 			aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-			if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-30));//seen from the distance
+			if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
 							//	aAccumeUnits.push(AccumeMotions.axisY(1));
 							//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 							//	aAccumeUnits.push(AccumeMotions.none());
 		var labels = new myClass.Labels();
-		labels.addText(0,0,0,hh.toString(),myColorName.red(1));//kkk
+		labels.addText(0,0,0,hh.toString(),colorNameText);//kkk
 		var shape = myGLShape.sphere(gl,r);
 		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAsteroid,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
 	};
+
+*/
 
 
 	/* These two kinds of objects below must always be lighten from right angle ,so that they are lighten most brightly*/
@@ -699,16 +825,16 @@ function start(){
 	aAccumeLighting.push(AccumeMotions.translate(1.0,1.0,1.0));//Light is put at (1 1 1)
 	aAccumeLighting.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));//always (1 1 1) as same relationship of positionning
 
-/*
+
 	//stars far from planet
 	var spread=100;
 	var p1,r1,t1;
 	for(var hh=0;hh<100;hh++){
 		var aAccumeUnits=[];
 		aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-		if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-30));
+		if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
 		var labels = new myClass.Labels();
-		//labels.addText(0,0,-10,"hexa",myColorName.red(1));
+		//labels.addText(0,0,-10,"hexa",colorNameText);
 		r1 = 1000*Math.random()+1000;
 		t1 = 3.141592653*2*Math.random();
 		t2 = 3.141592653*Math.random()-1.5707963265;
@@ -717,22 +843,22 @@ function start(){
 		var shape = myGLShape.point(gl,p1,myColorName.purple(1));
 		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
 	}
-*/
+
 
 	/** x,y,z axes **/
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
 	aAccumeUnits.push(AccumeMotions.translate(-30,-15,-30));
 	var labels = new myClass.Labels();
-	labels.addText(0,0,5,"back",myColorName.red(1));
+	labels.addText(0,0,5,"back",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1));
 		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
 	var labels = new myClass.Labels();
-	labels.addText(0,5,0,"up",myColorName.red(1));
+	labels.addText(0,5,0,"up",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1));
 		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
 	var labels = new myClass.Labels();
-	labels.addText(5,0,0,"right",myColorName.red(1));
+	labels.addText(5,0,0,"right",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1));
 		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
 
