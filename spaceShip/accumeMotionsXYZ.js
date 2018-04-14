@@ -93,10 +93,12 @@
 //			this.thetaRoll=gDRoll  *this.ratioR;
 //		};
 		Member.prototype.goForward = function(){
-//console.log(this.speed*10000);
-			if(gDSpeed>0)this.speed+=gDSpeed*0.0001;
-			else if(gDSpeed<0)this.speed+=gDSpeed*0.0005;
-			
+//accelarate		if(gDSpeed>0)this.speed+=gDSpeed*0.0001;
+//accelarate		else if(gDSpeed<0)this.speed+=gDSpeed*0.0005;
+
+//move
+			this.speed=gDSpeed*0.0001;
+//move			
 			if(this.speed>0.001)this.speed=0.001;
 			else if(this.speed<-0.001)this.speed=-0.001;
 //			else if(Math.abs(this.speed)<0.0002)this.speed=0;
