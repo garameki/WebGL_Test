@@ -367,10 +367,10 @@
 		var gamma;//longitude
 //		var rr=2.0;//radius
 
-		var dal=10;//diffential of alpha
-		var dgam=10;//differential of gamma
-//		var dal=3;//diffential of alpha
-//		var dgam=3;//differential of gamma
+//		var dal=10;//diffential of alpha
+//		var dgam=10;//differential of gamma
+		var dal=3;//diffential of alpha
+		var dgam=3;//differential of gamma
 
 		var nLongitude = 0,nLatitude = 0;
 //○		var px=[],py=[],pz=[];
@@ -559,8 +559,74 @@
 		}
 	};//sphere2
 
+
 	/**
-	 *Get Normal Vector from 3 points and an inner point
+	 *saturn ring
+	*/
+	function ringPlane(rI,rO)
+
+		var rad = Math.PI/180;
+		var dr = (rO - rI)*0.1
+		var pitch = dr / (rO - rI);
+		var da = 10*rad;//degree
+
+		var px1,py1,pz1,px2,py2,pz2,px3,py3,pz3,px4,py4,pz4;
+
+		var vertex = [];;
+		for(var ii=r0;ii<rO;ii+=dr){
+			for(var jj=0,len=360*rad;jj<len;jj+=da){
+				px1=ii*Math.cos(jj);
+				py1=ii*Math.sin(jj);
+				pz1=0;
+				px2=ii*Math.cos(jj+da);
+				py2=ii*Math.sin(jj+da);
+				pz2=0;
+				px3=(ii+dr)*Math.cos(jj);
+				py3=(ii+dr)*Math.sin(jj);
+				pz3=0;
+				px4=(ii+dr)*Math.cos(ii+da);
+				py4=(ii+dr)*Math.sin(ii+da);
+				pz4=0;
+				vertex.push(px1,py1,pz1,px2,py2,pz2,px3,py3,pz3,px4,py4,pz4);
+				normal.push(1,0,0,1,0,0,1,0,0,1,0,0);
+				colors.push(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
+				textureCoordinate.push(pitch*ii,0,pitch*ii+pitch,1);
+		}
+		var countTriangle=0;
+		var index = [];//2 triangles by indices make a rectangle
+		for(var kk=0,len=Math.floor((rO-rI)/dr-1)*(360*rad/da-1));kk<len;kk++){
+			countTriangle++;
+			//triangle
+			indices.push(kk * 4 );
+			indices.push(kk * 4  + 1);
+			indices.push(kk * 4  + 2);
+
+
+			countTriangle++;
+			//triangle
+			indices.push(kk * 4  + 1);
+			indices.push(kk * 4  + 2);
+			indices.push(kk * 4  + 3);
+		}
+		return {
+			n:countTriangle*3,//countTriangle*3,//全ての三角形の頂点の総数
+			pos:vertex,
+			nor:normal,
+			col:color,
+			tex:textureCoordinate,
+			ind:index,
+			draw:function(){
+				gl.drawElements(gl.TRIANGLES,countTriangle*3,gl.UNSIGNED_SHORT,0);
+			}
+
+		}
+	};//ring
+
+
+
+
+	/**
+	 *Get Normal Vector from 3 points and get an inner point
 	 *
 	 *@param {Vector} out  x,y,z
 	 *@param {Vector} p1 x,y,z
