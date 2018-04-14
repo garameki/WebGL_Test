@@ -4,7 +4,6 @@
  * This is specifid for 4x4 Matrix computation.
  *	The answer is re-restored to _a[1-4][1-4]. 
  *@variable {number} _nStacked    a number of being stacked
- *@variable {number} _MAX_STACK
  *@variable {number} _det determinant
  *@variable {number} _x[1-4][1-4] a element of temporary result matrix
  *@variable {number} _s[1-4][1-4] a element of stack matrix to push and/or pull
@@ -12,6 +11,14 @@
  *
 */
 (function(){
+	//result
+	var _x11=void 0,_x12=void 0,_x13=void 0,_x14=void 0,_x21=void 0,_x22=void 0,_x23=void 0,_x24=void 0,_x31=void 0,_x32=void 0,_x33=void 0,_x34=void 0,_x41=void 0,_x42=void 0,_x43=void 0,_x44=void 0;//target matrix
+	//stack
+	var _s11=void 0,_s12=void 0,_s13=void 0,_s14=void 0,_s21=void 0,_s22=void 0,_s23=void 0,_s24=void 0,_s31=void 0,_s32=void 0,_s33=void 0,_s34=void 0,_s41=void 0,_s42=void 0,_s43=void 0,_s44=void 0;//stack matrix
+	//accumeration
+	var _a11=void 0,_a12=void 0,_a13=void 0,_a14=void 0,_a21=void 0,_a22=void 0,_a23=void 0,_a24=void 0,_a31=void 0,_a32=void 0,_a33=void 0,_a34=void 0,_a41=void 0,_a42=void 0,_a43=void 0,_a44=void 0;//answer matrix
+
+
 	//mymat4
 	myMat4 = { };
 	Object.defineProperty(myMat4,'loadIdentity'	,{value:prepareAM,writable:false,enumerable:true,configurable:false});
@@ -58,11 +65,6 @@
 //	Object.defineProperty(myMat4,'push'		,{value:pushAM,writable:false,enumerable:false,configurable:false});//for local scope of here
 //	Object.defineProperty(myMat4,'pop'		,{value:popAM,writable:false,enumerable:false,configurable:false});//for local scope of here
 
-	var _nStacked=0;
-	var _MAX_STACK=1;
-	var _x11=void 0,_x12=void 0,_x13=void 0,_x14=void 0,_x21=void 0,_x22=void 0,_x23=void 0,_x24=void 0,_x31=void 0,_x32=void 0,_x33=void 0,_x34=void 0,_x41=void 0,_x42=void 0,_x43=void 0,_x44=void 0;//target matrix
-	var _s11=void 0,_s12=void 0,_s13=void 0,_s14=void 0,_s21=void 0,_s22=void 0,_s23=void 0,_s24=void 0,_s31=void 0,_s32=void 0,_s33=void 0,_s34=void 0,_s41=void 0,_s42=void 0,_s43=void 0,_s44=void 0;//stack matrix
-	var _a11=void 0,_a12=void 0,_a13=void 0,_a14=void 0,_a21=void 0,_a22=void 0,_a23=void 0,_a24=void 0,_a31=void 0,_a32=void 0,_a33=void 0,_a34=void 0,_a41=void 0,_a42=void 0,_a43=void 0,_a44=void 0;//answer matrix
 	/**
 	 *
 	 *make accumeration matrix Zero matrix
@@ -98,8 +100,6 @@
 		_s21=_a21;_s22=_a22;_s23=_a23;_s24=_a24;
 		_s31=_a31;_s32=_a32;_s33=_a33;_s34=_a34;
 		_s41=_a41;_s42=_a42;_s43=_a43;_s44=_a44;
-		_nStacked++;
-		//if(_nStacked>_MAX_STACK)PRINT_CAUTION.innerHTML+="Matrix stack was broken._nStacked="+_nStacked.toString()+" <br>";
 	};
 	/**
 	 *NOT TO PROPERTY USE ONLY IN THIS FUNCTION
@@ -111,7 +111,6 @@
 		_a21=_s21;_a22=_s22;_a23=_s23;_a24=_s24;
 		_a31=_s31;_a32=_s32;_a33=_s33;_a34=_s34;
 		_a41=_s41;_a42=_s42;_a43=_s43;_a44=_s44;
-		_nStacked--;
 	};
 		//IO
 	/**

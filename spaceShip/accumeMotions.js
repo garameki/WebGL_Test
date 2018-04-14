@@ -61,7 +61,7 @@
 		}
 	};
 	Object.defineProperty(AccumeMotions,'gotoOrigin',{value:gotoOrigin,writable:false,enumerable:true});
-	function rotate(rx,ry,rz,ratio,deg0){
+	function gotoOrigin(){
 		return function(time){
 			myMat4.loadZero();
 		};
