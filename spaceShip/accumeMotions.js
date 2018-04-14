@@ -60,5 +60,12 @@
 			myMat4.rot(rx,ry,rz,ratio*time+rad0);
 		}
 	};
+	Object.defineProperty(AccumeMotions,'gotoOrigin',{value:gotoOrigin,writable:false,enumerable:true});
+	function rotate(rx,ry,rz,ratio,deg0){
+		return function(time){
+			myMat4.loadZero();
+		};
+	};
+
 })();
 
