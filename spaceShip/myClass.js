@@ -53,7 +53,7 @@
 			this.str=str;
 			this.elementDiv=document.createElement("div");
 			this.elementDiv.className='divGLText';
-			this.elementDiv.style.color="red";//color;
+			this.elementDiv.style.color=color.rgba;
 			document.getElementById("canvasContainer").appendChild(this.elementDiv);//kkk #canvasContainer only
 
 			this.elementText = document.createTextNode("");
