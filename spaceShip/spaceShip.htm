@@ -35,8 +35,11 @@
 		//uSamplerの数字とgl.TEXT0の数字は共通？
 
 		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
+
+		mediump float gg = 1.0/pow(max(dot(texelColor,texelColor),0.0),4.0);
+
 //?		highp   vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
-		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,uAlpha*texelColor.a);
+		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg)*uAlpha*texelColor.a);
 
 	}
 </script>
