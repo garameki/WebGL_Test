@@ -24,6 +24,7 @@
 
 	uniform mediump float uBrightness;
 	uniform mediump float uAlpha;
+	uniform mediump float uCassiniFactor;//if zero , not avairable,,if 1 , avairable
 
 	uniform sampler2D uSampler;//common variable between shader and js
 
@@ -36,10 +37,10 @@
 
 		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
 
-		mediump float gg = 1.0/pow(max(dot(texelColor,texelColor),0.0),4.0);
+		mediump float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);
 
 //?		highp   vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
-		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg)*uAlpha*texelColor.a);
+		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
 
 	}
 </script>
@@ -200,13 +201,13 @@ function getUniformLocations(gl,prog){
 	var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not used"+locPointSize+"<br>";}
 	var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used"+locSampler+"<br>";}
 	var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is notused"+locModelViewMatrixInversedTansposed+"<br>";}
-//●
 	var locBaseLight = gl.getUniformLocation(prog,"uBaseLight");vv="locBaseLight";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
-
-
 	var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not used"+locManipulatedRotationMatrix+"<br>";}
 	var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not used"+locBrightness+"<br>";}
 	var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not used"+locAlpha+"<br>";}
+//●
+	var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
+
 
 	return {
 		perspective:locPerspective,
@@ -214,11 +215,12 @@ function getUniformLocations(gl,prog){
 		pointSize:locPointSize,
 		sampler:locSampler,
 		mvMIT:locModelViewMatrixInversedTansposed,
-//●
 		baseLight:locBaseLight,
 		manipulatedRM:locManipulatedRotationMatrix,
 		brightness:locBrightness,
-		alpha:locAlpha
+		alpha:locAlpha,
+//●
+		cassiniFactor:locCassiniFactor
 	};
 };
 
@@ -414,6 +416,9 @@ function sendAlpha(gl,oLocations,nValue){
 	//uniform float uPointSizeFloatへ値を転送
 	gl.uniform1f(oLocations.uniform.alpha,nValue);
 };
+function sendCassiniFactor(gl,oLocations,fValue){
+	gl.uniform1f(oLocations.uniform.cassiniFactor,fValue);
+};
 
 
 //************************************** DRAW SCENE *************************************************
@@ -446,6 +451,7 @@ function drawScene(gl,oShaderInfo,angle){
 		sendManipulatedRotationOnly(gl,oShaderInfo.locations,member.aAccumeUnitsLight,angle);
 		sendBrightness(gl,oShaderInfo.locations,member.brightness);
 		sendAlpha(gl,oShaderInfo.locations,member.alpha);
+		sendCassiniFactor(gl,oShaderInfo.locations,member.cassiniFactor);
 		myTextures.member[member.nameTexture].activate();
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
@@ -570,9 +576,15 @@ function start(){
 	/** common **/
 	var brightnessCommon = 1.0;
 	var brightnessAtomosphere = 1.0;
+	var brightnessSun = 1.1;
 	var alphaCommon = 1.0;
 	var alphaAtomosphere = 0.3;
 	var alphaRing = 0.6;
+
+	var cassiniFactorCommon = 0.0;
+	var cassiniFactorRing = 1.0;
+
+
 //●-
 	var baseLight = 0.0;
 	var baseLightSun = 1.0;
@@ -593,7 +605,7 @@ function start(){
 		labels.addText(0,-5,0,"",colorNameText);
 	};
 	var shape = myGLShape.hexa(gl);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,[],brightnessCommon,alphaCommon,baseLight);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,[],brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 
@@ -621,7 +633,7 @@ function start(){
 	labels.addText(0,-5,0,"Sun",colorNameText);
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureSun,aAccumeLightingSun,brightnessCommon,alphaCommon,baseLightSun);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureSun,aAccumeLightingSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon);
 
 
 	/** common **/
@@ -647,7 +659,7 @@ function start(){
 	labels.addText(0,-5,0,"Earth",colorNameText);
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 
@@ -690,7 +702,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,"Jupitor",colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureJupiter,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureJupiter,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 
@@ -709,7 +721,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureMoon,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMoon,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMoon,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Uranus **/
@@ -727,7 +739,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureUranus,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureUranus,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureUranus,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Venus **/
@@ -745,7 +757,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureVenus,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureVenus,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureVenus,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Mars **/
@@ -763,7 +775,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureMars,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMars,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMars,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Neptune **/
@@ -781,7 +793,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureNeptune,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureNeptune,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureNeptune,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Mercury **/
@@ -799,7 +811,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureMercury,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMercury,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMercury,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Saturn **/
@@ -817,7 +829,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureSaturn,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureSaturn,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureSaturn,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 
@@ -835,9 +847,9 @@ function start(){
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 						//	aAccumeUnits.push(AccumeMotions.none());
 	var labels = new myClass.Labels();
-	labels.addText(0,0,0,"Ring",colorNameText);//kkk
+	labels.addText(0,0,0,"",colorNameText);//kkk
 	var shape = myGLShape.ring(gl,rIn,rOut);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureRing,aAccumeLighting,brightnessCommon,alphaRing,baseLightSun);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureRing,aAccumeLighting,brightnessCommon,alphaRing,baseLightSun,cassiniFactorRing);
 
 
 
@@ -857,7 +869,7 @@ function start(){
 		var labels = new myClass.Labels();
 		labels.addText(0,0,0,hh.toString(),colorNameText);//kkk
 		var shape = myGLShape.sphere(gl,r);
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAsteroid,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAsteroid,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 	};
 
 */
@@ -886,7 +898,7 @@ function start(){
 		r2 = r1*Math.cos(t2);
 		p1 = new myClass.Point(r2*Math.cos(t1),r2*Math.sin(t1),r1*Math.sin(t2));
 		var shape = myGLShape.point(gl,p1,myColorName.purple(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 	}
 
 
@@ -897,15 +909,15 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,5,"back",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 	var labels = new myClass.Labels();
 	labels.addText(0,5,0,"up",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 	var labels = new myClass.Labels();
 	labels.addText(5,0,0,"right",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 
@@ -941,7 +953,7 @@ function start(){
 	//
 	//@param {myGLShape.obj} shape in which there are points,color,normal vector,indeces and so on
 	//
-	var ToolBox = function(gl,shape,aMotions,aLabels,sNameTexture,aLights,brightness,alpha,fBaseLight){//f means float
+	var ToolBox = function(gl,shape,aMotions,aLabels,sNameTexture,aLights,brightness,alpha,fBaseLight,fCassiniFactor){//f means float
 		this.draw = shape.draw;
 		this.buffers = createBuffers(gl,shape);
 		this.aAccumeUnits = aMotions;
@@ -951,16 +963,17 @@ function start(){
 		this.aAccumeUnitsLight = aLights;
 		this.brightness = brightness;
 		this.alpha = alpha;
-
 		this.baseLight = fBaseLight;
+
+		this.cassiniFactor = fCassiniFactor;
 	};
 
 	var aModels = [];
 
 	UnitsToDraw = { };
 	Object.defineProperty(UnitsToDraw,'join',{value:create,writable:false,enumerable:true,configurable:false});	
-	function create(gl,shape,aMotions,aLabels,sNameTexture,aLightMotions,brightness,alpha,fBaseLight){
-		aModels.push(new ToolBox(gl,shape,aMotions,aLabels,sNameTexture,aLightMotions,brightness,alpha,fBaseLight));
+	function create(gl,shape,aMotions,aLabels,sNameTexture,aLightMotions,brightness,alpha,fBaseLight,fCassiniFactor){
+		aModels.push(new ToolBox(gl,shape,aMotions,aLabels,sNameTexture,aLightMotions,brightness,alpha,fBaseLight,fCassiniFactor));
 	}
 	Object.defineProperty(UnitsToDraw,'getMemberByIndex',{value:function(num){return aModels[num];},writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(UnitsToDraw,'length',{get:function(){return aModels.length;},enumerable:true,configurable:false});
