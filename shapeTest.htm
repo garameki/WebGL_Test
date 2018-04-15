@@ -1,5 +1,8 @@
 ﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
 <link rel="sylesheet" href="">
+<script type='text/javascript' src="./spaceShip/myColor.js"></script>
+<script type='text/javascript' src="./spaceShip/myClass.js"></script>
+<script type='text/javascript' src="./spaceShip/myGLShape.js"></script>
 <!--Fragment shader program-->
 <script id="shader-fs" type="x-shader/x-fragment">
 	varying lowp vec4 vColor;
@@ -63,13 +66,30 @@ function start(){
 	var oShader = initShaders(gl);
 
 	var aModels = [];
-	var oModel;
+	var oModel = { };
 
-	oModel = { };
+	var shape =myGLShape.ring(gl,5,30);
+	console.log("shape=",shape);
+
+	oModel.base = {
+		n:shape.n/3/2*4,
+		pos:shape.pos,
+		col:shape.col
+	};
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();
+	aModels.push(oModel);
+
+
+/*default
 	oModel.base = sphere();
 	oModel.buffers = setModelToBuffer(gl,oModel);
 	oModel.mvMat = new mvMat_random();
 	aModels.push(oModel);
+*/
+
+
+console.log("oModel=",oModel);
 
 /*
 	oModel = { };
