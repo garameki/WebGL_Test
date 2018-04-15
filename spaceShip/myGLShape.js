@@ -8,7 +8,8 @@
 	Object.defineProperty(myGLShape,'axisZ'		,{value:new axisZ,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'tetra'		,{value:tetrahedron,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'hexa'		,{value:hexahedron,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'sphere'		,{value:sphere2,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'sphere'	,{value:sphere2,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myGLShape,'ring'		,{value:ringPlane,writable:false,enumerable:true,configurable:false});
 
 	//entities
 	function point(gl,p,c){
@@ -367,10 +368,10 @@
 		var gamma;//longitude
 //		var rr=2.0;//radius
 
-//		var dal=10;//diffential of alpha
-//		var dgam=10;//differential of gamma
-		var dal=3;//diffential of alpha
-		var dgam=3;//differential of gamma
+		var dal=10;//diffential of alpha
+		var dgam=10;//differential of gamma
+//		var dal=3;//diffential of alpha
+//		var dgam=3;//differential of gamma
 
 		var nLongitude = 0,nLatitude = 0;
 //○		var px=[],py=[],pz=[];
@@ -563,64 +564,80 @@
 	/**
 	 *saturn ring
 	*/
-	function ringPlane(rI,rO)
-
+	function ringPlane(gl,rI,rO){
+console.log("rI=",rI,"rO=",rO);
 		var rad = Math.PI/180;
-		var dr = (rO - rI)*0.1
+		var dr = (rO - rI)*0.05;
 		var pitch = dr / (rO - rI);
-		var da = 10*rad;//degree
+		var da = 5*rad;//degree
+
+
+var nn=0;		
 
 		var px1,py1,pz1,px2,py2,pz2,px3,py3,pz3,px4,py4,pz4;
-
-		var vertex = [];;
-		for(var ii=r0;ii<rO;ii+=dr){
-			for(var jj=0,len=360*rad;jj<len;jj+=da){
+		var sumPitch=0;
+		var vertex = [];
+		var normal = [];
+		var textureCoordinate = [];
+		var colors = [];
+		for(var ii=rI;ii<rO;ii+=dr){
+			for(var jj=da,len=360*rad;jj<len;jj+=da){
+nn++;
 				px1=ii*Math.cos(jj);
 				py1=ii*Math.sin(jj);
 				pz1=0;
 				px2=ii*Math.cos(jj+da);
 				py2=ii*Math.sin(jj+da);
 				pz2=0;
-				px3=(ii+dr)*Math.cos(jj);
-				py3=(ii+dr)*Math.sin(jj);
+				px3=(ii+dr)*Math.cos(jj+da);
+				py3=(ii+dr)*Math.sin(jj+da);
 				pz3=0;
-				px4=(ii+dr)*Math.cos(ii+da);
-				py4=(ii+dr)*Math.sin(ii+da);
+				px4=(ii+dr)*Math.cos(jj);
+				py4=(ii+dr)*Math.sin(jj);
 				pz4=0;
-				vertex.push(px1,py1,pz1,px2,py2,pz2,px3,py3,pz3,px4,py4,pz4);
-				normal.push(1,0,0,1,0,0,1,0,0,1,0,0);
+				vertex.push(px1,py1,pz1,px2,py2,pz2,px3,py3,pz3,px4,py4,pz4);//texture2Dの向きに合わせる
+				normal.push(0,0,1,0,0,1,0,0,1,0,0,1);
 				colors.push(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
-				textureCoordinate.push(pitch*ii,0,pitch*ii+pitch,1);
+				textureCoordinate.push(sumPitch,0.0,sumPitch,1.0,sumPitch+pitch,1.0,sumPitch+pitch,0.0);
+//				textureCoordinate.push(	0.0,0.0,0.0,1.0,1.0,1.0,1.0,0.0);
+			}
+console.log("sumPitch=",sumPitch);
+			sumPitch+=pitch;
 		}
+
 		var countTriangle=0;
 		var index = [];//2 triangles by indices make a rectangle
-		for(var kk=0,len=Math.floor((rO-rI)/dr-1)*(360*rad/da-1));kk<len;kk++){
-			countTriangle++;
+//		for(var kk=0,len=(Math.floor((rO-rI)/dr)-1)*(Math.floor(360*rad/da)-1);kk<len;kk++){
+//		for(var kk=0,len=(nr-1)*(nd-1);kk<len;kk++){
+		for(var kk=0;kk<nn;kk++){
 			//triangle
-			indices.push(kk * 4 );
-			indices.push(kk * 4  + 1);
-			indices.push(kk * 4  + 2);
+			index.push(kk * 4 );		//No.1
+			index.push(kk * 4  + 1);	//No.2
+			index.push(kk * 4  + 2);	//No.3
+			countTriangle++;
 
 
-			countTriangle++;
 			//triangle
-			indices.push(kk * 4  + 1);
-			indices.push(kk * 4  + 2);
-			indices.push(kk * 4  + 3);
+			index.push(kk * 4  + 0);	//No.4
+			index.push(kk * 4  + 2);	//No.5
+			index.push(kk * 4  + 3);	//No.6
+			countTriangle++;
 		}
+console.log("nn=",nn);
+console.log("countTriangle=",countTriangle);
 		return {
-			n:countTriangle*3,//countTriangle*3,//全ての三角形の頂点の総数
+			n:countTriangle*3,//全ての三角形の頂点の総数
 			pos:vertex,
 			nor:normal,
-			col:color,
+			col:colors,
 			tex:textureCoordinate,
 			ind:index,
 			draw:function(){
 				gl.drawElements(gl.TRIANGLES,countTriangle*3,gl.UNSIGNED_SHORT,0);
 			}
 
-		}
-	};//ring
+		};
+	};//ringPlane
 
 
 

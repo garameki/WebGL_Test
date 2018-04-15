@@ -2,7 +2,7 @@
 
 	/** global scope **/
 	myClass = { };
-
+console.log("myClass.js");
 	Object.defineProperty(myClass,'Point',{value:Point,writable:false,enumerable:true});
 	function Point(x,y,z){
 		this.x=x;
