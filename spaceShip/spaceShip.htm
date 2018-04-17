@@ -25,6 +25,9 @@
 	varying highp vec2 vTextureCoord;//as same as vertex shader
 	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
 
+
+	varying highp vec3 vXYZ;
+
 	uniform mediump float uBrightness;
 	uniform mediump float uAlpha;
 	uniform mediump float uCassiniFactor;//if zero , not avairable,,if 1 , avairable
@@ -47,8 +50,25 @@
 
 		mediump float shadowFlag =1.0;
 
+		/* 0.99 < gl_FragCoord.z < 1.0 */
+		if(gl_FragCoord.z > 0.997){
+			shadowFlag = 1.0;
+		}else{
+			shadowFlag = 0.0;
+		};
+
+		/* vXYZ.z is real z */
+		if(vXYZ.z > 100.0){
+			shadowFlag = 1.0;
+		}else{
+			shadowFlag = 0.0;
+		};
+
+
+
+
 //?		highp   vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
-		gl_FragColor += vec4(shadowFlag) * vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
+		gl_FragColor = vec4(shadowFlag) * vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
 
 	}
 </script>
@@ -72,7 +92,6 @@
 	uniform mat4 uProjectionMatrix;
 	uniform mat4 uManipulatedRotationMatrix;
 
-//●
 	uniform float uBaseLight;// 0.0-1.0 ?
 
 
@@ -84,12 +103,18 @@
 	varying highp vec2 vTextureCoord;
 	varying highp vec3 vNTimesEachRGB;
 
+	varying highp vec3 vXYZ;
+
 
 	void main(void) {
 		gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
 		gl_PointSize = uPointSizeFloat;
 		vColor = aVertexColor;
 		vTextureCoord = aTextureCoord;
+
+		vXYZ = gl_Position.xyz;
+
+
 
 		//ambient light
 		highp vec3 ambientLight = vec3(0.1,0.1,0.1);//This is not the direction but the intensity of color.It does not have relationship with Normal Vector in vertex data.It relates with only 'gl_Color'.
@@ -109,6 +134,8 @@
 
 		vNTimesEachRGB = ambientLight + (directionalLightColor * quantity);
 
+
+		
 	}
 
 </script>
