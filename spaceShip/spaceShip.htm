@@ -26,7 +26,7 @@
 	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
 
 
-	varying highp vec3 vXYZ;
+	varying highp vec3 vXYZ;//test
 
 	uniform mediump float uBrightness;
 	uniform mediump float uAlpha;
@@ -45,24 +45,21 @@
 
 		mediump float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);
 
-//○test
-//		mediump float aaa = gl_FragCoord.z/1.2;
-
 		mediump float shadowFlag =1.0;
 
 		/* 0.99 < gl_FragCoord.z < 1.0 */
-		if(gl_FragCoord.z > 0.997){
-			shadowFlag = 1.0;
-		}else{
-			shadowFlag = 0.0;
-		};
+//		if(gl_FragCoord.z > 0.997){
+//			shadowFlag = 1.0;
+//		}else{
+//			shadowFlag = 0.0;
+//		};
 
-		/* vXYZ.z is real z */
-		if(vXYZ.z > 100.0){
-			shadowFlag = 1.0;
-		}else{
-			shadowFlag = 0.0;
-		};
+		/* gl_Position.z is real z */
+//		if(vXYZ.z < 10.0){
+//			shadowFlag = 1.0;
+//		}else{
+//			shadowFlag = 1.0;
+//		};
 
 
 
@@ -89,12 +86,11 @@
 	//The type of 'uniform' mainly matrices receipter from js
 	uniform mat4 uModelViewMatrixInversedTransposed;
 	uniform mat4 uModelViewMatrix;
-	uniform mat4 uProjectionMatrix;
+	uniform mat4 uPerspectiveMatrix;
+//●
+	uniform mat4 uOrthographicMatrix;
 	uniform mat4 uManipulatedRotationMatrix;
-
 	uniform float uBaseLight;// 0.0-1.0 ?
-
-
 	uniform float uPointSizeFloat;//a float value
 
 //○	varying lowp vec4 vColor;
@@ -103,16 +99,17 @@
 	varying highp vec2 vTextureCoord;
 	varying highp vec3 vNTimesEachRGB;
 
-	varying highp vec3 vXYZ;
+	varying highp vec3 vXYZ;//test
 
 
 	void main(void) {
-		gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
+//		gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
+		gl_Position = uOrthographicMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
 		gl_PointSize = uPointSizeFloat;
 		vColor = aVertexColor;
 		vTextureCoord = aTextureCoord;
 
-		vXYZ = gl_Position.xyz;
+		vXYZ = gl_Position.xyz;//test
 
 
 
@@ -231,7 +228,7 @@ function getAttributeLocations(gl,prog){
 function getUniformLocations(gl,prog){
 
 	var vv;
-	var locPerspective = gl.getUniformLocation(prog,"uProjectionMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used"+locPerspective+"<br>";}
+	var locPerspective = gl.getUniformLocation(prog,"uPerspectiveMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used"+locPerspective+"<br>";}
 	var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is not used"+locModelView+"<br>";}
 	var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not used"+locPointSize+"<br>";}
 	var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used"+locSampler+"<br>";}
@@ -240,9 +237,9 @@ function getUniformLocations(gl,prog){
 	var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not used"+locManipulatedRotationMatrix+"<br>";}
 	var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not used"+locBrightness+"<br>";}
 	var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not used"+locAlpha+"<br>";}
-//●
 	var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
-
+//●
+	var locOrthography = gl.getUniformLocation(prog,"uOrthographicMatrix");vv="locOrthography";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
 
 	return {
 		perspective:locPerspective,
@@ -254,8 +251,9 @@ function getUniformLocations(gl,prog){
 		manipulatedRM:locManipulatedRotationMatrix,
 		brightness:locBrightness,
 		alpha:locAlpha,
+		cassiniFactor:locCassiniFactor,
 //●
-		cassiniFactor:locCassiniFactor
+		orthography:locOrthography
 	};
 };
 
@@ -353,7 +351,27 @@ function asignBufferMapping(gl,oLocations,oBuffers){
 
 };
 
-//********************************** DATA FOR SHADER ****************************************
+//********************************** VALUES FOR SHADER ****************************************
+
+function sendOrthographicMatrix(gl,oLocations){
+
+	/*
+		https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix		from cite site:
+		orthographic matrix...myMat4 already has a property defined
+	*/
+	var right = 1000.0;
+	var left = -1000.0;
+	var top = 1000.0;
+	var bottom = -1000.0;
+	var far = 1000000.0;
+	var near = 30.0;
+
+	myMat4.loadOrthography(left,right,top,bottom,near,far);
+
+	//uniform mat4 uOrthographicMatrixへ値を転送
+	gl.uniformMatrix4fv(oLocations.uniform.orthography,false,new Float32Array(myMat4.arr));
+
+};
 
 
 
@@ -368,7 +386,7 @@ function sendPerspectiveMatrix(gl,oLocations){
 		and we only want ot see objects between 0.1 units
 		and 100 units away from the camera.
 	*/
-		//perspective matrix...myMat4 was already defined at global scope
+		//perspective matrix...myMat4 already has a property defined about this
 //	var fieldOfView = 70 * Math.PI / 180;	//in radian;
 	var fieldOfView = 70 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
@@ -380,7 +398,7 @@ function sendPerspectiveMatrix(gl,oLocations){
 	myMat4.loadPerspective(fieldOfView,aspect,zNear,zFar);
 	projectionMatrix = myMat4.arr;
 
-	//uniform mat4 uProjectionMatrixへ値を転送
+	//uniform mat4 uPerspectiveMatrixへ値を転送
 	gl.uniformMatrix4fv(oLocations.uniform.perspective,false,new Float32Array(projectionMatrix));
 
 	return projectionMatrix;
@@ -475,12 +493,10 @@ function drawScene(gl,oShaderInfo,angle){
 		asignBufferMapping(gl,oShaderInfo.locations,member.buffers);//attribute variables are allocated before,change the buffers
 		pmat = sendPerspectiveMatrix(gl,oShaderInfo.locations);
 		mvmat = sendModelViewMatrix(gl,oShaderInfo.locations,member.aAccumeUnits,angle);
-		sendModelViewMatrixInversedTransposed(gl,oShaderInfo.locations,mvmat);
-
 //●
+		sendOrthographicMatrix(gl,oShaderInfo.locations);
+		sendModelViewMatrixInversedTransposed(gl,oShaderInfo.locations,mvmat);
 		sendBaseLight(gl,oShaderInfo.locations,member.baseLight);
-
-
 		sendPointSize(gl,oShaderInfo.locations,nPointSize);
 		sendSampler(gl,oShaderInfo.locations,0);//kkk Is last argument unit number?
 		sendManipulatedRotationOnly(gl,oShaderInfo.locations,member.aAccumeUnitsLight,angle);
@@ -1025,6 +1041,6 @@ function start(){
 <canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
 </div>
 <p id="PRINT_INFO" style="position:relative;top:0px;left:0px:offset:0px"></p>
-<p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:blue;font-size:8px;line-height:8px;offset:0px;background-color:transparent;"></p>
+<p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;font-size:8px;line-height:8px;offset:0px;background-color:transparent;"></p>
 </div></body></html>
 

@@ -24,6 +24,8 @@
 	Object.defineProperty(myMat4,'loadIdentity'	,{value:prepareAM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'loadZero'		,{value:clearToZeroAM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'loadPerspective'	,{value:preparePM,writable:false,enumerable:true,configurable:false});
+//●
+	Object.defineProperty(myMat4,'loadOrthography'	,{value:prepareOM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'trans'		,{value:translateAM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'rot'		,{value:rotateAM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'storeTo'		,{value:storeA44ToArray,writable:false,enumerable:true,configurable:false});
@@ -91,7 +93,7 @@
 	};
 		//Stack
 	/**
-	 *NOT TO PROPERTY USE ONLY IN THIS FUNCTION
+	 *DO NOT ADD THIS FUNCTION TO myMat4'S PROPERTY! ONLY USE IN THIS (FUNCTION)();.
 	 *Push accumerate matrix to a stack
 	 *
 	*/
@@ -102,7 +104,7 @@
 		_s41=_a41;_s42=_a42;_s43=_a43;_s44=_a44;
 	};
 	/**
-	 *NOT TO PROPERTY USE ONLY IN THIS FUNCTION
+	 *ONLY USE IN THIS FUNCTION
 	 *Pop a stack matrix to accumerate matrix
 	 *
 	*/
@@ -115,7 +117,7 @@
 		//IO
 	/**
 	 *Restore Accumeration matrix elements to Type Array value
-	 *
+	 *	this function is simmilar to the myMat4's property .arr to get elements of _a
 	*/
 	function storeA44ToArray(arr){// = function storeAccumeMatrixToArray(arr){
 		arr[0]=_a11;	arr[1]=_a12;	arr[2]=_a13;	arr[3]=_a14;
@@ -253,13 +255,13 @@
 	 *@arg {number} near ?nearest distance to be able to take 
 	 *@arg {number} far ?farthest distance to be able to take
 	*/
-	function preparePM(fov,aspectRatio,near,far){// = function makePerspectiveMatrix(fov,aspectRatio,near,far){
+	function preparePM(fovy,aspectRatio,near,far){// = function makePerspectiveMatrix(fov,aspectRatio,near,far){
 
 		if(near == far){
 			PRINT_CAUTION.innerHTML += "far equals to near in makePMatrix().<br>";
 			return null;
 		}
-		var s = 1.0 / Math.tan(fov / 2);
+		var s = 1.0 / Math.tan(fovy / 2);
 		var nf = 1 / (near - far);
 
 		_a11 = s/aspectRatio;	_a12 = 0;	_a13 = 0;			_a14 = 0;
@@ -270,8 +272,46 @@
 		//PRINT2.innerHTML = near.toString() + "&nbsp;&nbsp;&nbsp;" + far.toString() + "&nbsp&nbsp&nbsp" + (far*near*nf).toString();
 		//https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
 	};
+	/**
+	 *Make orthographic matrix
+	 *
+	 *@arg {number} fov radian
+	 *@arg {number} aspect width/height of screen
+	 *@arg {number} near ?nearest distance to be able to take 
+	 *@arg {number} far ?farthest distance to be able to take
+	 *
+	 *cite
+	 *https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix
+	*/
+	function prepareOM(left,right,top,bottom,near,far){
 
+		if(near >= far){
+			PRINT_CAUTION.innerHTML += "far is equal or smaller compared with near in myMat4 prepareOM.<br>";
+		}
+		if(left >= right){
+			PRINT_CAUTION.innerHTML += "right is equal or smaller compared with left in myMat4 prepareOM.<br>";
+		}
+		if(bottom >= top){
+			PRINT_CAUTION.innerHTML += "top is equal or smaller compared with bottom in myMat4 prepareOM.<br>";
+		}
+		var rml = 1/(right - left);
+		var tmb = 1/(top - bottom);
+		var fmn = 1/(far - near);
 
+		_a11 = 2*rml;			_a12 = 0;			_a13 = 0;			_a14 = 0;
+		_a21 = 0;			_a22 = 2*tmb;			_a23 = 0;			_a24 = 0;
+		_a31 = 0;			_a32 = 0;			_a33 = -2*fmn;			_a34 = 0;
+		_a41 = -(right + left) * rml;	_a42 = -(top + bottom) * tmb;	_a43 = -(far + near) * fmn;	_a44 = 1;
+
+/*
+		_a11 = 2*rml;			_a12 = 0;			_a13 = 0;			_a41 = 0;
+		_a21 = 0;			_a22 = 2*tmb;			_a23 = 0;			_a42 = 0;
+		_a31 = 0;			_a32 = 0;			_a33 = -2*fmn;			_a43 = 0;
+		_a14 = -(right + left) * rml;	_a24 = -(top + bottom) * tmb;	_a34 = -(far + near) * fmn;	_a44 = 1;
+*/
+		//PRINT2.innerHTML = near.toString() + "&nbsp;&nbsp;&nbsp;" + far.toString() + "&nbsp&nbsp&nbsp" + (far*near*nf).toString();
+		//https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
+	};
 	function multiply(){
 		multiplyStack44Accume44();
 //		multiplyAccume44Stack44();
