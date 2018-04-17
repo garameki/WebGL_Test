@@ -17,6 +17,9 @@
 <!--******************************* SHADER PROGMRAMS *****************************************************-->
 <!--Fragment shader-->
 <script id="shader-fs" type="x-shader/x-fragment">
+
+
+
 //○	varying lowp vec4 vColor;	//as same as vertex shader
 	varying highp vec4 vColor;//●	//as same as vertex shader
 	varying highp vec2 vTextureCoord;//as same as vertex shader
@@ -39,8 +42,13 @@
 
 		mediump float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);
 
+//○test
+//		mediump float aaa = gl_FragCoord.z/1.2;
+
+		mediump float shadowFlag =1.0;
+
 //?		highp   vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
-		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
+		gl_FragColor += vec4(shadowFlag) * vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
 
 	}
 </script>
