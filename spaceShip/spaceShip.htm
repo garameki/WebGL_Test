@@ -334,6 +334,91 @@ return comp;
 </script>
 
 <script type='text/javascript'>
+/**
+ * make shader
+*/
+(function(){
+	myPrograms = { };
+
+	/** inner class **/
+	var Program = function(sNameProgram,sIdVertex,sIdFragment,gl){
+		this.gl = gl;
+
+		//read & compile
+		var fragmentShader = getShader(gl,sIdFragment);
+		var vertexShader = getShader(gl,sIdVertex);
+
+		//make shader program
+		var shaderProgram = gl.createProgram();
+		gl.attachShader(shaderProgram,vertexShader);
+		gl.attachShader(shaderProgram,fragmentShader);
+		gl.linkProgram(shaderProgram);
+
+		//alert in case of falure
+		if(!gl.getProgramParameter(shaderProgram,gl.LINK_STATUS)){
+			alert("can't initialize the shader program");
+			this.program = null;
+		}else{
+			this.program = shaderProgram;
+		}
+
+	};
+	Program.prototype.activate = function(){
+		if(this.program==null){
+			alert("can't activate program");
+		}else{
+			this.gl.useProgram(this.program);
+		}
+	};
+
+	/** inner function **/
+	function getShader(gl,id){
+		var shaderScript,theSource,currentChild,shader;
+
+		shaderScript = document.getElementById(id);
+
+		if(!shaderScript) {
+			return null;
+		}
+
+		theSource = "";
+		currentChild = shaderScript.firstChild;
+
+		while(currentChild) {
+			if(currentChild.nodeType == currentChild.TEXT_NODE){
+				theSource += currentChild.textContent;
+			}
+			currentChild = currentChild.nextSibling;
+		}
+
+		if (shaderScript.type == "x-shader/x-fragment"){
+			shader = gl.createShader(gl.FRAGMENT_SHADER);
+		} else if (shaderScript.type == "x-shader/x-vertex"){
+			shader = gl.createShader(gl.VERTEX_SHADER);
+		} else {
+			// unknown shader type
+			PRINT_CAUTION.innerHTML+="Unknown shader type.The element type of shader program must be 'x-shader/x-vertex' or 'x-shader/x-fragment' now."+"<br>";
+			return null;
+		}
+
+		gl.shaderSource(shader,theSource);
+
+		gl.compileShader(shader);
+
+		//recognize whether success to compile or not
+		if (!gl.getShaderParameter(shader,gl.COMPILE_STATUS)) {
+			alert("Shader compile error occured : " + id + " : " + gl.getShaderInfoLog(shader));
+			return null;
+		}
+		return shader;
+	};
+
+	/** Property **/
+	Object.defineProperty(myPrograms,'create',{value:create,writable:false,enumerable:true,configurable:false});
+	function create(sName,sIdVertex,sIdFragment,gl){
+		Object.defineProperty(myPrograms,sName,{value:new Program(sName,sIdVertex,sIdFragment,gl),writable:false,enumerable:true,configrable:false});
+	};
+})();
 
 function initShaders(gl) {
 	var fragmentShader = getShader(gl,"shader-fs");//プログラムをロードしてコンパイルして返す
@@ -754,11 +839,16 @@ function start(){
 
 
 	//** prepare shaders **/
-	var shaderProgram = initShaders(gl);
+	myPrograms.create("camera","shader-vs","shader-fs",gl);
+	myPrograms.create("light","lightVertexShader","lightFragmentShader",gl);
+	myPrograms.camera.activate();
+
+//	var shaderProgram = initShaders(gl);
 	var oAttributeLocations	= getAttributeLocations(gl,shaderProgram);
 	var oUniformLocations	= getUniformLocations(gl,shaderProgram);
 	var oShader = {
-		program	: shaderProgram,
+//		program	: shaderProgram,
+		program	: myPrograms.camera.program,
 		locations:{
 			attribute : oAttributeLocations,
 			uniform	: oUniformLocations
