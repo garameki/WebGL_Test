@@ -338,11 +338,12 @@ return comp;
  * make shader
 */
 (function(){
-	myPrograms = { };
+	myShaders = { };
 
 	/** inner class **/
-	var Program = function(sNameProgram,sIdVertex,sIdFragment,gl){
+	var Shader = function(sNameShader,sIdVertex,sIdFragment,gl){
 		this.gl = gl;
+		this.programName = sNameShader;
 
 		//read & compile
 		var fragmentShader = getShader(gl,sIdFragment);
@@ -361,9 +362,8 @@ return comp;
 		}else{
 			this.program = shaderProgram;
 		}
-
 	};
-	Program.prototype.activate = function(){
+	Shader.prototype.activate = function(){
 		if(this.program==null){
 			alert("can't activate program");
 		}else{
@@ -414,9 +414,9 @@ return comp;
 	};
 
 	/** Property **/
-	Object.defineProperty(myPrograms,'create',{value:create,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShaders,'create',{value:create,writable:false,enumerable:false,configurable:false});
 	function create(sName,sIdVertex,sIdFragment,gl){
-		Object.defineProperty(myPrograms,sName,{value:new Program(sName,sIdVertex,sIdFragment,gl),writable:false,enumerable:true,configrable:false});
+		Object.defineProperty(myShaders,sName,{value:new Shader(sName,sIdVertex,sIdFragment,gl),writable:false,enumerable:true,configrable:false});
 	};
 })();
 
@@ -489,52 +489,99 @@ function getShader(gl,id){
 };
 
 
-function getAttributeLocations(gl,prog){
+function getAttributeLocations(sName,gl,prog){
 	//get shader variable pointer
 
-	//For example "aVertexPosition" is a variable in vertex shader.
-	var locPosition = gl.getAttribLocation(prog,"aVertexPosition");gl.enableVertexAttribArray(locPosition);//githubではdrawScene()内で実行
-	var locNormal = gl.getAttribLocation(prog,  "aVertexNormal");gl.enableVertexAttribArray(locNormal);
-	var locColor = gl.getAttribLocation(prog,   "aVertexColor");gl.enableVertexAttribArray(locColor);
-	var locTextcoord = gl.getAttribLocation(prog,"aTextureCoord");gl.enableVertexAttribArray(locTextcoord);
+	switch(sName){
+		case "light":
+			var locPosition = gl.getAttribLocation(prog,"aVertexPosition");gl.enableVertexAttribArray(locPosition);//githubではdrawScene()内で実行
+			var locNormal = gl.getAttribLocation(prog,  "aVertexNormal");gl.enableVertexAttribArray(locNormal);
+			var locColor = gl.getAttribLocation(prog,   "aVertexColor");gl.enableVertexAttribArray(locColor);
+			var locTextcoord = gl.getAttribLocation(prog,"aTextureCoord");gl.enableVertexAttribArray(locTextcoord);
 
-	return {
-		position:locPosition,
-		normal:locNormal,
-		color:locColor,
-		textcoord:locTextcoord
+			return {
+				position:locPosition,
+				normal:locNormal,
+				color:locColor,
+				textcoord:locTextcoord
+			}
+		case "camera":
+			var locPosition = gl.getAttribLocation(prog,"aVertexPosition");gl.enableVertexAttribArray(locPosition);//githubではdrawScene()内で実行
+			var locNormal = gl.getAttribLocation(prog,  "aVertexNormal");gl.enableVertexAttribArray(locNormal);
+			var locColor = gl.getAttribLocation(prog,   "aVertexColor");gl.enableVertexAttribArray(locColor);
+			var locTextcoord = gl.getAttribLocation(prog,"aTextureCoord");gl.enableVertexAttribArray(locTextcoord);
+
+			return {
+				position:locPosition,
+				normal:locNormal,
+				color:locColor,
+				textcoord:locTextcoord
+			}
+		default:
+			PRINT_CAUTION.innerHTML+="'"+sName+"' haven't been defined yet.<br>"
 	};
+
 };
 
-function getUniformLocations(gl,prog){
+function getUniformLocations(sName,gl,prog){
 
 	var vv;
-	var locPerspective = gl.getUniformLocation(prog,"uPerspectiveMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used"+locPerspective+"<br>";}
-	var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is not used"+locModelView+"<br>";}
-	var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not used"+locPointSize+"<br>";}
-	var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used"+locSampler+"<br>";}
-	var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is notused"+locModelViewMatrixInversedTansposed+"<br>";}
-	var locBaseLight = gl.getUniformLocation(prog,"uBaseLight");vv="locBaseLight";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
-	var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not used"+locManipulatedRotationMatrix+"<br>";}
-	var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not used"+locBrightness+"<br>";}
-	var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not used"+locAlpha+"<br>";}
-	var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
-//●
-	var locOrthography = gl.getUniformLocation(prog,"uOrthographicMatrix");vv="locOrthography";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
+	switch(sName){
+		case "light":
 
-	return {
-		perspective:locPerspective,
-		modelView:locModelView,
-		pointSize:locPointSize,
-		sampler:locSampler,
-		mvMIT:locModelViewMatrixInversedTansposed,
-		baseLight:locBaseLight,
-		manipulatedRM:locManipulatedRotationMatrix,
-		brightness:locBrightness,
-		alpha:locAlpha,
-		cassiniFactor:locCassiniFactor,
+			var locPerspective = gl.getUniformLocation(prog,"uPerspectiveMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used"+locPerspective+"<br>";}
+			var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is not used"+locModelView+"<br>";}
+			var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not used"+locPointSize+"<br>";}
+			var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used"+locSampler+"<br>";}
+			var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is notused"+locModelViewMatrixInversedTansposed+"<br>";}
+			var locBaseLight = gl.getUniformLocation(prog,"uBaseLight");vv="locBaseLight";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
+			var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not used"+locManipulatedRotationMatrix+"<br>";}
+			var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not used"+locBrightness+"<br>";}
+			var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not used"+locAlpha+"<br>";}
+			var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
+
+			return {
+				perspective:locPerspective,	
+				modelView:locModelView,
+				pointSize:locPointSize,
+				sampler:locSampler,
+				mvMIT:locModelViewMatrixInversedTansposed,
+				baseLight:locBaseLight,
+				manipulatedRM:locManipulatedRotationMatrix,
+				brightness:locBrightness,
+				alpha:locAlpha,
+				cassiniFactor:locCassiniFactor,
+			};
+		case "camera":
+			var locPerspective = gl.getUniformLocation(prog,"uPerspectiveMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used"+locPerspective+"<br>";}
+			var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is not used"+locModelView+"<br>";}
+			var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not used"+locPointSize+"<br>";}
+			var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used"+locSampler+"<br>";}
+			var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is notused"+locModelViewMatrixInversedTansposed+"<br>";}
+			var locBaseLight = gl.getUniformLocation(prog,"uBaseLight");vv="locBaseLight";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
+			var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not used"+locManipulatedRotationMatrix+"<br>";}
+			var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not used"+locBrightness+"<br>";}
+			var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not used"+locAlpha+"<br>";}
+			var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
+	//●
+			var locOrthography = gl.getUniformLocation(prog,"uOrthographicMatrix");vv="locOrthography";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
+
+			return {
+				perspective:locPerspective,	
+				modelView:locModelView,
+				pointSize:locPointSize,
+				sampler:locSampler,
+				mvMIT:locModelViewMatrixInversedTansposed,
+				baseLight:locBaseLight,
+				manipulatedRM:locManipulatedRotationMatrix,
+				brightness:locBrightness,
+				alpha:locAlpha,
+				cassiniFactor:locCassiniFactor,
 //●
-		orthography:locOrthography
+				orthography:locOrthography
+			};
+		default:
+			PRINT_CAUTION.innerHTML+="'"+sName+"' haven't been defined yet.<br>"
 	};
 };
 
@@ -550,44 +597,6 @@ function getUniformLocations(gl,prog){
 
 
 
-function createBuffers(gl,shape){
-	//生成したバッファをWebGLBufferにバインドしたら、
-	//あとはそれにvertexのattributionをbufferDataを使って
-	//頂点の座標、頂点の色、テキストデータなどをバッファに放り込むだけ
-
-	//position to buffer
-	var bufPositions = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER,bufPositions);
-	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.pos),gl.STATIC_DRAW);
-
-	//normal vectors to buffer//●
-	var buffNormal = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER,buffNormal);
-	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.nor),gl.STATIC_DRAW);
-
-	//color to buffer
-	var buffColors = gl.createBuffer();//正方形のvertices
-	gl.bindBuffer(gl.ARRAY_BUFFER,buffColors);
-	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.col),gl.STATIC_DRAW);
-
-	//texture position to buffer
-	var buffTextureCoordinate = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER,buffTextureCoordinate);
-	gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.tex),gl.STATIC_DRAW);
-
-	//indices to ELEMENT buffer
-	var buffIndex = gl.createBuffer();
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,buffIndex);
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(shape.ind),gl.STATIC_DRAW);
-
-	return {
-		position : bufPositions,
-		texture : buffTextureCoordinate,
-		normal : buffNormal,
-		color : buffColors,
-		index : buffIndex
-	};
-};
 
 function assignBufferMapping(gl,oLocations,oBuffers){
 
@@ -759,7 +768,7 @@ function sendCassiniFactor(gl,oLocations,fValue){
 //************************************** DRAW SCENE *************************************************
 
 
-function drawScene(gl,oShaderInfo,angle){
+function drawScene(gl,oShader,angle){
 
 	// カラーバッファや深度バッファをクリアする
 	//Clear the canvas before we start drawing on it
@@ -772,19 +781,19 @@ function drawScene(gl,oShaderInfo,angle){
 	var member,mvmat,pmat;
 	for(var ii=0;ii<UnitsToDraw.length;ii++){
 		member = UnitsToDraw.getMemberByIndex(ii);
-		assignBufferMapping(gl,oShaderInfo.locations,member.buffers);//attribute variables are allocated before,change the buffers
-		pmat = sendPerspectiveMatrix(gl,oShaderInfo.locations);
-		mvmat = sendModelViewMatrix(gl,oShaderInfo.locations,member.aAccumeUnits,angle);
+		assignBufferMapping(gl,oShader.camera.locations,member.buffers);//attribute variables are allocated before,change the buffers
+		pmat = sendPerspectiveMatrix(gl,oShader.camera.locations);
+		mvmat = sendModelViewMatrix(gl,oShader.camera.locations,member.aAccumeUnits,angle);
 //●
-		sendOrthographicMatrix(gl,oShaderInfo.locations);
-		sendModelViewMatrixInversedTransposed(gl,oShaderInfo.locations,mvmat);
-		sendBaseLight(gl,oShaderInfo.locations,member.baseLight);
-		sendPointSize(gl,oShaderInfo.locations,nPointSize);
-		sendSampler(gl,oShaderInfo.locations,0);//kkk Is last argument unit number?
-		sendManipulatedRotationOnly(gl,oShaderInfo.locations,member.aAccumeUnitsLight,angle);
-		sendBrightness(gl,oShaderInfo.locations,member.brightness);
-		sendAlpha(gl,oShaderInfo.locations,member.alpha);
-		sendCassiniFactor(gl,oShaderInfo.locations,member.cassiniFactor);
+		sendOrthographicMatrix(gl,oShader.camera.locations);
+		sendModelViewMatrixInversedTransposed(gl,oShader.camera.locations,mvmat);
+		sendBaseLight(gl,oShader.camera.locations,member.baseLight);
+		sendPointSize(gl,oShader.camera.locations,nPointSize);
+		sendSampler(gl,oShader.camera.locations,0);//kkk Is last argument unit number?
+		sendManipulatedRotationOnly(gl,oShader.camera.locations,member.aAccumeUnitsLight,angle);
+		sendBrightness(gl,oShader.camera.locations,member.brightness);
+		sendAlpha(gl,oShader.camera.locations,member.alpha);
+		sendCassiniFactor(gl,oShader.camera.locations,member.cassiniFactor);
 		myTextures.member[member.nameTexture].activate();
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
@@ -839,22 +848,36 @@ function start(){
 
 
 	//** prepare shaders **/
-	myPrograms.create("camera","shader-vs","shader-fs",gl);
-	myPrograms.create("light","lightVertexShader","lightFragmentShader",gl);
-	myPrograms.camera.activate();
+	myShaders.create("camera","shader-vs","shader-fs",gl);
+	myShaders.create("light","lightVertexShader","lightFragmentShader",gl);
+	myShaders.camera.activate();
+//kkk
 
-//	var shaderProgram = initShaders(gl);
-	var oAttributeLocations	= getAttributeLocations(gl,shaderProgram);
-	var oUniformLocations	= getUniformLocations(gl,shaderProgram);
+
+	var oAttributeLocations	= {
+			light:getAttributeLocations("light",gl,myShaders.light.program),
+			camera:getAttributeLocations("camera",gl,myShaders.camera.program)
+	};
+	var oUniformLocations	= {
+		light :getUniformLocations("light",gl,myShaders.light.program),
+		camera:getUniformLocations("camera",gl,myShaders.camera.program)
+	};		
 	var oShader = {
-//		program	: shaderProgram,
-		program	: myPrograms.camera.program,
-		locations:{
-			attribute : oAttributeLocations,
-			uniform	: oUniformLocations
+		light:{
+			program	: myShaders.light.program,
+			locations:{
+				attribute : oAttributeLocations.light,
+				uniform	: oUniformLocations.light
+			}
+		},
+		camera:{
+			program	: myShaders.camera.program,
+			locations:{
+				attribute : oAttributeLocations.camera,
+				uniform	: oUniformLocations.camera
+			}
 		}
 	};
-
 
 
 //test
@@ -1292,7 +1315,7 @@ function start(){
 			PRINT_INFO.innerText=angle.toString();
 			myXYZTrigonometry.reposAll(dt);
 			myXYZManipulation.move(dt);
-//			drawScene(gl,oShader,aModels,angle);
+//			drawScene(gl,oShader.camera,angle);
 			drawScene(gl,oShader,angle);
 			timeBefore = timeStamp;
 		}
@@ -1326,6 +1349,48 @@ function start(){
 
 		this.cassiniFactor = fCassiniFactor;
 	};
+
+	/** inner function**/
+	function createBuffers(gl,shape){
+		//生成したバッファをWebGLBufferにバインドしたら、
+		//あとはそれにvertexのattributionをbufferDataを使って
+		//頂点の座標、頂点の色、テキストデータなどをバッファに放り込むだけ
+
+		//position to buffer
+		var bufPositions = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER,bufPositions);
+		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.pos),gl.STATIC_DRAW);
+
+		//normal vectors to buffer//●
+		var buffNormal = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER,buffNormal);
+		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.nor),gl.STATIC_DRAW);
+
+		//color to buffer
+		var buffColors = gl.createBuffer();//正方形のvertices
+		gl.bindBuffer(gl.ARRAY_BUFFER,buffColors);
+		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.col),gl.STATIC_DRAW);
+
+		//texture position to buffer
+		var buffTextureCoordinate = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER,buffTextureCoordinate);
+		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.tex),gl.STATIC_DRAW);
+
+		//indices to ELEMENT buffer
+		var buffIndex = gl.createBuffer();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,buffIndex);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(shape.ind),gl.STATIC_DRAW);
+
+		return {
+			position : bufPositions,
+			texture : buffTextureCoordinate,
+			normal : buffNormal,
+			color : buffColors,
+			index : buffIndex
+		};
+	};
+
+
 
 	var aModels = [];
 
