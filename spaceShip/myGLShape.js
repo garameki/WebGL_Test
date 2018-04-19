@@ -28,9 +28,10 @@
 		var indices = [0,1,2,0,2,3];
 		return {
 			name:'rectangle',
-			n:6,
+			n:4,
 			pos:positions,
 			nor:normals,
+			col:colors,
 			tex:textureCoordinates,
 			ind:indices,
 			draw:function(){
