@@ -527,18 +527,18 @@ function getUniformLocations(sName,gl,prog){
 
 	var vv;
 	switch(sName){
-		case "light":
+		case "camera":
 
-			var locPerspective = gl.getUniformLocation(prog,"uPerspectiveMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used"+locPerspective+"<br>";}
-			var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is not used"+locModelView+"<br>";}
-			var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not used"+locPointSize+"<br>";}
+			var locPerspective = gl.getUniformLocation(prog,"uPerspectiveMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used in "+sName+" shader "+locPerspective+"<br>";}
+			var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is not usedin "+sName+" shader "+locModelView+"<br>";}
+			var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not usedin "+sName+" shader "+locPointSize+"<br>";}
 			var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used"+locSampler+"<br>";}
-			var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is notused"+locModelViewMatrixInversedTansposed+"<br>";}
-			var locBaseLight = gl.getUniformLocation(prog,"uBaseLight");vv="locBaseLight";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
-			var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not used"+locManipulatedRotationMatrix+"<br>";}
-			var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not used"+locBrightness+"<br>";}
-			var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not used"+locAlpha+"<br>";}
-			var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
+			var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is not usedin "+sName+" shader "+locModelViewMatrixInversedTansposed+"<br>";}
+			var locBaseLight = gl.getUniformLocation(prog,"uBaseLight");vv="locBaseLight";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+			var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not usedin "+sName+" shader "+locManipulatedRotationMatrix+"<br>";}
+			var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not usedin "+sName+" shader "+locBrightness+"<br>";}
+			var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not usedin "+sName+" shader "+locAlpha+"<br>";}
+			var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
 
 			return {
 				perspective:locPerspective,	
@@ -552,19 +552,19 @@ function getUniformLocations(sName,gl,prog){
 				alpha:locAlpha,
 				cassiniFactor:locCassiniFactor,
 			};
-		case "camera":
-			var locPerspective = gl.getUniformLocation(prog,"uPerspectiveMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used"+locPerspective+"<br>";}
-			var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is not used"+locModelView+"<br>";}
-			var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not used"+locPointSize+"<br>";}
-			var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used"+locSampler+"<br>";}
-			var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is notused"+locModelViewMatrixInversedTansposed+"<br>";}
-			var locBaseLight = gl.getUniformLocation(prog,"uBaseLight");vv="locBaseLight";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
-			var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not used"+locManipulatedRotationMatrix+"<br>";}
-			var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not used"+locBrightness+"<br>";}
-			var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not used"+locAlpha+"<br>";}
-			var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
+		case "light":
+			var locPerspective = gl.getUniformLocation(prog,"uPerspectiveMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used in "+sName+" shader "+locPerspective+"<br>";}
+			var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is not used in "+sName+" shader "+locModelView+"<br>";}
+			var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not used in "+sName+" shader "+locPointSize+"<br>";}
+			var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used in "+sName+" shader "+locSampler+"<br>";}
+			var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is not used in "+sName+" shader "+locModelViewMatrixInversedTansposed+"<br>";}
+			var locBaseLight = gl.getUniformLocation(prog,"uBaseLight");vv="locBaseLight";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+			var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not used in "+sName+" shader "+locManipulatedRotationMatrix+"<br>";}
+			var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not used in "+sName+" shader "+locBrightness+"<br>";}
+			var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not used in "+sName+" shader "+locAlpha+"<br>";}
+			var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
 	//●
-			var locOrthography = gl.getUniformLocation(prog,"uOrthographicMatrix");vv="locOrthography";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used"+eval(vv)+"<br>";}
+			var locOrthography = gl.getUniformLocation(prog,"uOrthographicMatrix");vv="locOrthography";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
 
 			return {
 				perspective:locPerspective,	
@@ -778,14 +778,45 @@ function drawScene(gl,oShader,angle){
 	var vertexOffset = 0;//このoffsetは頂点のx,y,zごとに進むので、データ的にはoffset*3(4?)ごとに進む
 	var nPointSize = 3.0;
 
+/*		var texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D,texture);//-->gl.TEXTURE[?]
+		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,512,512,0,gl.RGBA,gl.UNSIGNED_BYTE,null);//pass no image into gl.TEXT[\d+]
+		var framebuffer = gl.createFramebuffer();
+//		gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);
+		gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture,0);
+*/
+
 	var member,mvmat,pmat;
+
+	myFRBuffers.shadow.activate();
 	for(var ii=0;ii<UnitsToDraw.length;ii++){
 		member = UnitsToDraw.getMemberByIndex(ii);
+		myShaders.light.activate();
+		assignBufferMapping(gl,oShader.light.locations,member.buffers);//attribute variables are allocated before,change the buffers
+		pmat = sendPerspectiveMatrix(gl,oShader.light.locations);
+		mvmat = sendModelViewMatrix(gl,oShader.light.locations,member.aAccumeUnits,angle);
+//●
+		sendOrthographicMatrix(gl,oShader.light.locations);
+		sendModelViewMatrixInversedTransposed(gl,oShader.light.locations,mvmat);
+		sendBaseLight(gl,oShader.light.locations,member.baseLight);
+		sendPointSize(gl,oShader.light.locations,nPointSize);
+		sendSampler(gl,oShader.light.locations,0);//kkk Is last argument unit number?
+		sendManipulatedRotationOnly(gl,oShader.light.locations,member.aAccumeUnitsLight,angle);
+//		sendBrightness(gl,oShader.light.locations,member.brightness);
+//		sendAlpha(gl,oShader.light.locations,member.alpha);
+//		sendCassiniFactor(gl,oShader.light.locations,member.cassiniFactor);
+		myTextures.member[member.nameTexture].activate();
+
+		member.draw();//in which texture activated is for use
+	}
+	
+	myFRBuffers.shadow.inactivate();
+	for(var ii=0;ii<UnitsToDraw.length;ii++){
+		member = UnitsToDraw.getMemberByIndex(ii);
+		myShaders.camera.activate();
 		assignBufferMapping(gl,oShader.camera.locations,member.buffers);//attribute variables are allocated before,change the buffers
 		pmat = sendPerspectiveMatrix(gl,oShader.camera.locations);
 		mvmat = sendModelViewMatrix(gl,oShader.camera.locations,member.aAccumeUnits,angle);
-//●
-		sendOrthographicMatrix(gl,oShader.camera.locations);
 		sendModelViewMatrixInversedTransposed(gl,oShader.camera.locations,mvmat);
 		sendBaseLight(gl,oShader.camera.locations,member.baseLight);
 		sendPointSize(gl,oShader.camera.locations,nPointSize);
@@ -880,10 +911,8 @@ function start(){
 	};
 
 
-//test
-	//myFRBuffers.create("shadow",gl,1024,1024);
-	//myFRBuffers.shadow.activate();
-	//myFRBuffers.shadow.inactivate();
+
+	myFRBuffers.create("shadow",gl,1024,1024);
 
 
 
@@ -1411,6 +1440,9 @@ function start(){
 	//myFRBuffers object
 	myFRBuffers = { };
 
+	//reference
+	//http://www.chinedufn.com/webgl-shadow-mapping-tutorial/
+	//https://stackoverflow.com/questions/41824631/how-to-work-with-framebuffers-in-webgl/41832778#41832778
 	/** inner class **/
 	  //Texture, Framebuffer and Renderbuffer are necessary at once.
 	  //http://www.chinedufn.com/webgl-shadow-mapping-tutorial/
@@ -1419,28 +1451,48 @@ function start(){
 		this.width = width;
 		this.height = height;
 
+/** the way to use more than one objects **//
+/*
+//pass image into gl.TEXTURE[\d+] 
+activeTexture(gl.TEXTURE0);
+bindTexture(gl.TEXTURE_2D,image0);
+activeTexture(gl.TEXTURE0 + 1);
+bindTexture(gl.TEXTURE_2D,image1);
+//pass into uSampler
+locSampler1 = gl.getUniformLocation(prog,"uSampler1");
+locSampler2 = gl.getUniformLocation(prog,"uSampler2");
+gl.uniform1i(locSampler1,0);
+gl.uniform1i(locSampler2,1);
+//definition in shader
+uniform sampler2D uSampler1;<--image0
+uniform sampler2D uSampler2;<--image1
+*/
 		this.texture = gl.createTexture();//into which frame buffer store
-		gl.bindTexture(gl.TEXTURE_2D,this.texture);
+		gl.bindTexture(gl.TEXTURE_2D,this.texture);//-->gl.TEXTURE[?]
 		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
-		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,width,height,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
-
+		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,width,height,0,gl.RGBA,gl.UNSIGNED_BYTE,null);//pass no image into gl.TEXT[\d+]
 		this.renderbuffer = gl.createRenderbuffer();
-		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
-		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,width,height);
+//		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
 
 		this.framebuffer = gl.createFramebuffer();
-		gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.texture,0);
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);
 	};
 	FRBuffer.prototype.activate = function(){
-		this.gl.viewport(0,0,this.width,this.height);
-		this.gl.bindTexture(this.gl.TEXTURE_2D,null);
-		this.gl.bindRenderbuffer(this.gl.RENDERBUFFER,null);
+		var gl=this.gl;
+		gl.viewport(0,0,this.width,this.height);
+//		gl.bindTexture(gl.TEXTURE_2D,this.texture);
+		gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
+		gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.texture,0);
+
+//		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
+//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.width,this.height);
+//		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
 	};
 	FRBuffer.prototype.inactivate = function(){
-		this.gl.viewport(0,0,this.gl.canvas.width,this.gl.canvas.height);
-		this.gl.bindFramebuffer(this.gl.FRAMEBUFFER,null);
+		var gl=this.gl;
+		gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+		gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+		gl.bindRenderbuffer(gl.RENDERBUFFER,null);
 	};
 
 
