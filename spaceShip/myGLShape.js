@@ -3,6 +3,8 @@
 	Object.defineProperty(myGLShape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'triangle'	,{value:triangle,writable:false,enumerable:true,configurable:false});
+//●
+	Object.defineProperty(myGLShape,'rectangle'	,{value:rectangle,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'axisX'		,{value:axisX,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'axisY'		,{value:new axisY,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myGLShape,'axisZ'		,{value:new axisZ,writable:false,enumerable:true,configurable:false});
@@ -12,6 +14,30 @@
 	Object.defineProperty(myGLShape,'ring'		,{value:ringPlane,writable:false,enumerable:true,configurable:false});
 
 	//entities
+//●
+	function rectangle(gl,width,height){
+		var positions = [
+			-width/2,height/2,0,
+			width/2,height/2,0,
+			width/2,-height/2,0,
+			-width/2,-height/2,0
+		];
+		var normals = [0,0,1,0,0,1,0,0,1,0,0,1];
+		var colors = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+		var textureCoordinates = [0,0,1,0,1,1,0,1];
+		var indices = [0,1,2,0,2,3];
+		return {
+			name:'rectangle',
+			n:6,
+			pos:positions,
+			nor:normals,
+			tex:textureCoordinates,
+			ind:indices,
+			draw:function(){
+				gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0);//to do
+			}
+		};
+	};
 	function point(gl,p,c){
 		var positions = [];
 		positions.push(p.x,p.y,p.z);
