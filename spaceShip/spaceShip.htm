@@ -159,6 +159,9 @@ return comp;
 
 		//compute a new position of the directional light
 		highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));//the direction of directional light at the first time
+
+
+//		highp vec3 directionalVectorNew = directionalVector;
 //あとで考慮	highp vec3 vec3(2.0) * directionalVectorNew = normalize(uManipulatedRotationMatrix * vec4(directionalVector,1.0)).xyz;//brightness*2//a new position of the light
 		highp vec3 directionalVectorNew = normalize(uManipulatedRotationMatrix * vec4(directionalVector,1.0)).xyz;//brightness*2//a new position of the light
 
@@ -770,26 +773,22 @@ function sendCassiniFactor(gl,oLocations,fValue){
 
 function drawScene(gl,oShader,angle){
 
-	// カラーバッファや深度バッファをクリアする
-	//Clear the canvas before we start drawing on it
+	//https://stackoverflow.com/questions/7324208/opengl-framebuffer-can-clear-it-but-cant-draw-to-it
+
+
+	//Clear the depth-buffer and color-buffer and so on before we start drawing on it
 
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	var vertexOffset = 0;//このoffsetは頂点のx,y,zごとに進むので、データ的にはoffset*3(4?)ごとに進む
 	var nPointSize = 3.0;
 
-/*		var texture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D,texture);//-->gl.TEXTURE[?]
-		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,512,512,0,gl.RGBA,gl.UNSIGNED_BYTE,null);//pass no image into gl.TEXT[\d+]
-		var framebuffer = gl.createFramebuffer();
-//		gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);
-		gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture,0);
-*/
-
 	var member,mvmat,pmat;
 
+	myFRBuffers.shadow.reset();
 	myFRBuffers.shadow.activate();
-	for(var ii=0;ii<UnitsToDraw.length;ii++){
+//●	for(var ii=0;ii<UnitsToDraw.length;ii++){
+	for(var ii=0;ii<UnitsToDraw.length-1;ii++){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw.getMemberByIndex(ii);
 		myShaders.light.activate();
 		assignBufferMapping(gl,oShader.light.locations,member.buffers);//attribute variables are allocated before,change the buffers
@@ -805,13 +804,19 @@ function drawScene(gl,oShader,angle){
 //		sendBrightness(gl,oShader.light.locations,member.brightness);
 //		sendAlpha(gl,oShader.light.locations,member.alpha);
 //		sendCassiniFactor(gl,oShader.light.locations,member.cassiniFactor);
+
 		myTextures.member[member.nameTexture].activate();
 
 		member.draw();//in which texture activated is for use
 	}
 	
 	myFRBuffers.shadow.inactivate();
+
+	myTextures.member["screen"].import(myFRBuffers.shadow.texture);
+
+//	myFRBuffers.shadow.activate();
 	for(var ii=0;ii<UnitsToDraw.length;ii++){
+//	for(var ii=UnitsToDraw.length-2;ii<UnitsToDraw.length;ii++){
 		member = UnitsToDraw.getMemberByIndex(ii);
 		myShaders.camera.activate();
 		assignBufferMapping(gl,oShader.camera.locations,member.buffers);//attribute variables are allocated before,change the buffers
@@ -829,6 +834,24 @@ function drawScene(gl,oShader,angle){
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
 	}
+
+
+/** the way to use more than one objects **/
+/*
+//pass image into gl.TEXTURE[\d+] 
+activeTexture(gl.TEXTURE0);
+bindTexture(gl.TEXTURE_2D,image0);
+activeTexture(gl.TEXTURE0 + 1);
+bindTexture(gl.TEXTURE_2D,image1);
+//pass into uSampler
+locSampler1 = gl.getUniformLocation(prog,"uSampler1");
+locSampler2 = gl.getUniformLocation(prog,"uSampler2");
+gl.uniform1i(locSampler1,0);
+gl.uniform1i(locSampler2,1);
+//definition in shader
+uniform sampler2D uSampler1;<--image0
+uniform sampler2D uSampler2;<--image1
+*/
 };
 
 
@@ -943,6 +966,8 @@ function start(){
 	myTextures.join(gl,nameTextureRing);
 	var nameTextureSaturn = "saturn";
 	myTextures.join(gl,nameTextureSaturn);
+	var nameTextureScreen = "screen";
+	myTextures.join(gl,nameTextureScreen);
 
 
 
@@ -1332,6 +1357,18 @@ function start(){
 
 
 
+	/** screen to draw shadow **/
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(0,0,1,0,90));
+//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+//	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeUnits.push(AccumeMotions.translate(-20,0,-30));//seen from the distance
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,"screen",colorNameText);//kkk
+	var shape = myGLShape.rectangle(gl,20,20);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureScreen,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+
+
 //********************************************** animation ****************************************************	
 	var timeBefore=0;
 	var angle=0;
@@ -1451,42 +1488,31 @@ function start(){
 		this.width = width;
 		this.height = height;
 
-/** the way to use more than one objects **//
-/*
-//pass image into gl.TEXTURE[\d+] 
-activeTexture(gl.TEXTURE0);
-bindTexture(gl.TEXTURE_2D,image0);
-activeTexture(gl.TEXTURE0 + 1);
-bindTexture(gl.TEXTURE_2D,image1);
-//pass into uSampler
-locSampler1 = gl.getUniformLocation(prog,"uSampler1");
-locSampler2 = gl.getUniformLocation(prog,"uSampler2");
-gl.uniform1i(locSampler1,0);
-gl.uniform1i(locSampler2,1);
-//definition in shader
-uniform sampler2D uSampler1;<--image0
-uniform sampler2D uSampler2;<--image1
-*/
-		this.texture = gl.createTexture();//into which frame buffer store
+		this.texture = gl.createTexture();//which frame buffer stores image accumeration into
+		this.framebuffer = gl.createFramebuffer();
+		this.renderbuffer = gl.createRenderbuffer();
+
+		this.initialize();
+	};
+	FRBuffer.prototype.initialize = function(){
+		var gl = this.gl;
+		this.texture = gl.createTexture();//which frame buffer stores image accumeration into
 		gl.bindTexture(gl.TEXTURE_2D,this.texture);//-->gl.TEXTURE[?]
 		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
-		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,width,height,0,gl.RGBA,gl.UNSIGNED_BYTE,null);//pass no image into gl.TEXT[\d+]
-		this.renderbuffer = gl.createRenderbuffer();
-//		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
-
-		this.framebuffer = gl.createFramebuffer();
+		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.width,this.height,0,gl.RGBA,gl.UNSIGNED_BYTE,null);//pass no image into gl.TEXT[\d+]
 	};
 	FRBuffer.prototype.activate = function(){
-		var gl=this.gl;
+		var gl = this.gl;
 		gl.viewport(0,0,this.width,this.height);
+//		gl.activeTexture(gl.TEXTURE0);
 //		gl.bindTexture(gl.TEXTURE_2D,this.texture);
 		gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.texture,0);
 
-//		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
-//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.width,this.height);
-//		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
+		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.width,this.height);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
 	};
 	FRBuffer.prototype.inactivate = function(){
 		var gl=this.gl;
@@ -1494,7 +1520,11 @@ uniform sampler2D uSampler2;<--image1
 		gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER,null);
 	};
-
+	FRBuffer.prototype.reset = function(){
+		//https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/rendering/framebuffer-texture-clear.html
+		this.gl.deleteTexture(this.texture);
+		this.initialize();
+	};
 
 	Object.defineProperty(myFRBuffers,'create',{value:create,writable:false,enumerable:true,configurable:false});
 	function create(sName,gl,width,height){
@@ -1513,6 +1543,6 @@ uniform sampler2D uSampler2;<--image1
 <canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
 </div>
 <p id="PRINT_INFO" style="position:relative;top:0px;left:0px:offset:0px"></p>
-<p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;font-size:8px;line-height:8px;offset:0px;background-color:transparent;"></p>
+<p id="PRINT_CAUTION" style="position:relative;top:0px;left:0px;color:red;font-size:8px;line-height:8px;offset:0px;background-color:transparent;"></p>
 </div></body></html>
 

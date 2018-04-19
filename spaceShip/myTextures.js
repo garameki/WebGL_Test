@@ -28,7 +28,7 @@
 				//gl.TEXT[\d]* must be connected in fragment shader,so when i use only one texture in the shader,it is not necessary for js-script to use gl.TEXTURE0 above.
 				//https://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
 //●consider-able	gl.activeTexture(gl.TEXTURE0+myself.number);//https://stackoverflow.com/questions/11292599/how-to-use-multiple-textures-in-webgl toji answered
-			gl.activeTexture(gl.TEXTURE0);//kkk
+//無くても出来るぞ	gl.activeTexture(gl.TEXTURE0);//kkk
 			gl.bindTexture   (gl.TEXTURE_2D,myself.texture);//kkk this.textureとしてアドレスを補完するべきなのか？それともTEXTURE0に保存さててしまうのか？
 			gl.texImage2D    (gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
 			gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
@@ -59,7 +59,11 @@
 				//gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
 				//gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
 */
-				image.src = "../niku_stand2.png";//default
+
+			image.src = "../niku_stand2.png";//default
+
+
+
  			}else{
 				reader.readAsDataURL(h.response);
 			}
@@ -74,6 +78,8 @@
 	};
 	Texture.prototype.make = function(oColor){
 		//for webGL2
+
+//Does this code work?
 		var gl = this.gl;
 		var level = 0;
 		var internalFormat = gl.RGBA;
