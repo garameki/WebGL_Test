@@ -68,6 +68,21 @@ function start(){
 	var aModels = [];
 	var oModel = { };
 
+	//rectangle
+	var shape =myGLShape.rectangle(gl,5,5);
+	console.log("shape=",shape);
+
+	oModel.base = {
+		n:shape.n,
+		pos:shape.pos,
+		col:shape.col
+	};
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();
+	aModels.push(oModel);
+
+/*
+	//ring
 	var shape =myGLShape.ring(gl,5,30);
 	console.log("shape=",shape);
 
@@ -79,6 +94,7 @@ function start(){
 	oModel.buffers = setModelToBuffer(gl,oModel);
 	oModel.mvMat = new mvMat_random();
 	aModels.push(oModel);
+*/
 
 
 /*default
