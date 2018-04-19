@@ -6,8 +6,9 @@
 */
 (function(){
 
-		//cite
+		//reference
 		//https://stackoverflow.com/questions/11292599/how-to-use-multiple-textures-in-webgl
+		//https://stackoverflow.com/questions/8688600/context-getimagedata-on-localhost
 	/** inner class **/
 	var Texture = function(gl,name,number){
 		this.gl = gl;
@@ -27,7 +28,7 @@
 				//gl.TEXT[\d]* must be connected in fragment shader,so when i use only one texture in the shader,it is not necessary for js-script to use gl.TEXTURE0 above.
 				//https://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
 //●consider-able	gl.activeTexture(gl.TEXTURE0+myself.number);//https://stackoverflow.com/questions/11292599/how-to-use-multiple-textures-in-webgl toji answered
-			gl.activeTexture(gl.TEXTURE0);
+			gl.activeTexture(gl.TEXTURE0);//kkk
 			gl.bindTexture   (gl.TEXTURE_2D,myself.texture);//kkk this.textureとしてアドレスを補完するべきなのか？それともTEXTURE0に保存さててしまうのか？
 			gl.texImage2D    (gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
 			gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
@@ -42,18 +43,34 @@
 
 		var h = new XMLHttpRequest();//You need local http server if you execute javascript in local host.
 		h.responseType = "blob";
-		h.onload = function(){
-			reader.readAsDataURL(h.response);
+		h.onloadend = function(){
+			//https://stackoverflow.com/questions/30426277/catch-a-404-error-for-xhr
+			if(h.status == 404){
+				PRINT_CAUTION.innerHTML+="404 error occured in myTextures.js at '"+this.name+"'.<br>"
+/*maze
+				//https://webglfundamentals.org/webgl/lessons/webgl-data-textures.html
+				//https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL				const texture = gl.createTexture();
+				//https://github.com/mrdoob/three.js/issues/386
+				var pixel = new Uint8Array([255,255,255,255]);
+				//gl.activeTexture(gl.TEXTURE0);//kkk
+				//gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
+				gl.bindTexture(gl.TEXTURE_2D,this.texture);
+				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,pixel);
+				//gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+				//gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
+*/
+				image.src = "../niku_stand2.png";//default
+ 			}else{
+				reader.readAsDataURL(h.response);
+			}
 		};
-//kkk		handleTextureDefault(gl);//●issue occured
-//○		h.open('GET',"http://localhost:8000/documents/games/3d/geo.png");
 		h.open('GET',"http://localhost:8000/"+rootHTTPImages+this.name+".png");
 		h.send();
 		//To get url data, it's necessary to have been executing two applications listed below
 		// ・chrome.exe --disable-web-security --user-data-dir//
 		// ・ruby -run -e httpd . -p 8000//The dot '.' means current folda in which exeute ruby command.
 		//		And set the variable rootHTTPImages with it
-		//Ruby line is changable to python,php or other language to work as simple http local server.
+		//the line of Ruby is able to be replaced with other language as python,php or more in order to work as simple http local server.
 	};
 	Texture.prototype.make = function(oColor){
 		//for webGL2
@@ -80,6 +97,9 @@
 		gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
 		gl.generateMipmap(gl.TEXTURE_2D);//gl.TEXTURE_2Dをmipmapに適用
 	};
+	Texture.prototype.import = function(texture){
+		this.texture = texture;
+	};
 
 	
 	//textures
@@ -99,6 +119,7 @@
 		var instance = new Texture(gl,name,Object.keys(oTextures).length);
 		Object.defineProperty(oTextures,name,{value:instance,writable:false,enumerable:true,configurable:false});
 		instance.read();
+
 	};
 
 	Object.defineProperty(myTextures,'member',{get:function(){return oTextures;}});//reference to use myTextures.member['nameOfTexture']
