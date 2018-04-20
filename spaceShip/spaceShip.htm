@@ -309,27 +309,63 @@ return comp;
 
 		vXYZ = gl_Position.xyz;//test
 
+		//分ける　位置ベクトル　と　方向ベクトル
+		//位置ベクトル....移動できる　回転できる
+		//方向ベクトル....回転できる
 
+/*
+/ * How to simulate 1 directional and ambient light
+/ * //		//prepare Normal
+/ * /		vec4 transformedNormal = uModelViewMatrixInversedTransposed * vec4(aVertexNormal,1.0);
+/ * /		//prepare Light 1
+/ * /		vec3 directional = normalize(vec3(0.0,0.0,1.0));
+/ * /		vec3 directionalNew = vec3(2.0) * normalize(uManipulatedRotationMatrix * vec4(directional,1.0)).xyz;//(intension of light)*2//a new position of the light
+/ * /		//calculation intensity of lit surface
+/ * /		float quantity = max(dot(transformedNormal.xyz,directionalNew),uBaseLight);//scalar quantity as the light intensity
+/ * /		//set color of light
+/ * /		vec3 directionalLightColor = vec3(1,1,1);
+/ * /		//set color of ambient light
+/ * /		vec3 ambientLight = vec3(0.1,0.1,0.1);//This is not the direction but the intensity of color.It does not have relationship with Normal Vector in vertex data.It relates with only 'gl_Color'.
+/ * /		//calc total
+/ * /		vNTimesEachRGB = ambientLight + (directionalLightColor * quantity);
+****/
 
+/*****
+/ * /	// a effect    please go inside of planets
+/ * /		vec4 transformedNormal = uModelViewMatrixInversedTransposed * vec4(aVertexNormal,1.0);
+/ * /		vec4 directional = uModelViewMatrixInversedTransposed * vec4(aVertexPosition,1.0);
+/ * /		directional = directional / directional.w;
+/ * /		float quantity = max(dot(normalize(transformedNormal.xyz),directional.xyz),uBaseLight);//scalar quantity as the light intensity
+/ * /		vec3 directionalLightColor = vec3(1,1,1);//RGB intensity
+/ * /		vec3 ambientLight = vec3(0.1,0.1,0.1);//This is not the direction but the intensity of color.It does not have relationship with Normal Vector in vertex data.It relates with only 'gl_Color'.
+/ * /		vNTimesEachRGB = ambientLight + (directionalLightColor * quantity);
+*****/
 
-		//compute a new position of a normal and slightly modify its direction which have been magnified to unequivalent directions.
-		highp vec4 transformedNormal = uModelViewMatrixInversedTransposed * vec4(aVertexNormal,1.0);
+	//point lighting
+		//prepare Normal
+		vec4 transformedNormal = uModelViewMatrixInversedTransposed * vec4(aVertexNormal,1.0);
+//		transformedNormal = uManipulatedRotationMatrix * vec4(aVertexNormal,1.0);
+//		vec4 transformedNormal = vec4(aVertexNormal,1.0);
+//		transformedNormal = uModelViewMatrixInversedTransposed * transformedNormal;
+		
 
+		//prepare light vectorg
+		vec4 directional = uModelViewMatrixInversedTransposed * vec4(aVertexPosition,1.0);
+		directional = directional / directional.w;
+//		vec directional = normalize(gl_Position.xyz);//the direction of directional light at the first time
+//		vec directional = normalize(vec3(0.0,0.0,1.0));
+//		vec directional = vec3(2.0) * normalize(uManipulatedRotationMatrix * vec4(directional,1.0)).xyz;//(intension of light)*2//a new position of the light
+//		vec directional = vec3(2.0) * normalize(uModelViewMatrix * vec4(directional,1.0)).xyz;//(intension of light)*2//a new position of the light
+//		vec directional = normalize(uManipulatedRotationMatrix * vec4(directional,1.0)).xyz;//brightness*2//a new position of the light
+		
 
+		//intensity of surface
+		float quantity = max(dot(normalize(transformedNormal.xyz),directional.xyz),uBaseLight);//scalar quantity as the light intensity
 
-
-
-		//compute a new position of the directional light
-		highp vec3 directionalVector = normalize(vec3(0.85,0.8,0.75));//the direction of directional light at the first time
-		highp vec3 directionalVectorNew = vec3(2.0) * normalize(uManipulatedRotationMatrix * vec4(directionalVector,1.0)).xyz;//brightness*2//a new position of the light
-
-		//compute the brightness of the face using a new normal vector and using a new light direction
-		highp float quantity = max(dot(transformedNormal.xyz,directionalVectorNew),uBaseLight);//scalar quantity as the light intensity
-
-		highp vec3 directionalLightColor = vec3(1,1,1);//RGB intensity
+		vec3 directionalLightColor = vec3(1,1,1);//RGB intensity
 
 		//ambient light
-		highp vec3 ambientLight = vec3(0.1,0.1,0.1);//This is not the direction but the intensity of color.It does not have relationship with Normal Vector in vertex data.It relates with only 'gl_Color'.
+		vec3 ambientLight = vec3(0.1,0.1,0.1);//This is not the direction but the intensity of color.It does not have relationship with Normal Vector in vertex data.It relates with only 'gl_Color'.
 
 		vNTimesEachRGB = ambientLight + (directionalLightColor * quantity);
 	}
@@ -983,7 +1019,7 @@ function start(){
 
 
 
-	var _front_=true;
+	var _front_=false;
 	var _frontLength_ = 60;
 
 
@@ -1076,7 +1112,7 @@ function start(){
 	var aAccumeLighting = [];
 	aAccumeLighting.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
 
-
+/*
 		//Earth
 	var r = earth.radius;
 	var xyzEarth = myXYZTrigonometry.createMember();
@@ -1097,10 +1133,11 @@ function start(){
 	var shape = myGLShape.sphere(gl,r);
 	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
-
+*/
 
 
 	/** Atomosphere of Earth **/
+/*
 	//not texture but color
 	var r = earth.radius*1.05;
 	var xyz = myXYZTrigonometry.createMember();
@@ -1120,7 +1157,7 @@ function start(){
 	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAtomosphere,aAccumeLighting,brightnessAtomosphere,alphaAtomosphere);
 
 
-
+*/
 
 
 	/** Jupiter **/
