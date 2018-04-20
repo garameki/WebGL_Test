@@ -82,6 +82,7 @@
 
 			this.matAccume=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 			this.matAccumeNotTranslated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
+			this.matAccumeNotRotated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 		};
 		inherits(Member,SuperMember);
 		Object.defineProperty(Member.prototype,'thetaLR',{get:function(){return gDTurnLR*this.ratioR;}});
@@ -165,20 +166,22 @@
 				sumRemainder+=dt;
 				var n = Math.floor(sumRemainder/drawStep);
 				sumRemainder=sumRemainder%drawStep;
+
+				//accumerate all motions
 				myMat4.load(member.matAccume);
-//var test=new Array(16);
 				for(var ii=0;ii<n;ii++){
-					member.goForward();
+					member.goForward();//_a is not used
 					myMat4.trans(-member.x,-member.y,-member.z);//これがなければいつも前に表示される
+					member.turnUD();//_a is not used
 					myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
-					member.turnUD();
+					member.turnLR();//_a is not used
 					myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
-					member.turnLR();
+					member.roll();// _a is not used
 					myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
-					member.roll();
 				}
 				myMat4.storeTo(member.matAccume);
 
+				//accumerate rotation only
 				myMat4.load(member.matAccumeNotTranslated);
 				for(var ii=0;ii<n;ii++){
 					//member.goForward();
@@ -191,6 +194,22 @@
 					//member.roll();
 				}
 				myMat4.storeTo(member.matAccumeNotTranslated);
+
+				//accumerate translation only
+				myMat4.load(member.matAccumeNotRotated);
+				for(var ii=0;ii<n;ii++){
+					//member.goForward();
+					myMat4.trans(-member.x,-member.y,-member.z);//これがなければいつも前に表示される
+					//member.turnUD();
+					//myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
+					//member.turnLR();
+					//myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
+					//member.roll();
+					//myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
+				}
+				myMat4.storeTo(member.matAccumeNotRotated);
+
+
 			};
 		};
 
@@ -332,8 +351,8 @@
 		var aMember = [];
 		var Member = function(){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
 			SuperMember.call(this);
-			this.rxy = 1000*(Math.random()-0.5);
-			this.rz  = 1000*(Math.random()-0.5);
+			this.rxy = 700;//*(Math.random()-0.5);
+			this.rz  = 700;//*(Math.random()-0.5);
 			this.alpha = Math.random()*2*3.14;
 			this.gamma = Math.random()*2*3.14;
 		};
@@ -461,6 +480,12 @@
 		function replaceCenterAndDirectionNotTranslated(member){
 			return function(time){
 				myMat4.multiArray(member.matAccumeNotTranslated);
+			};
+		};
+		Object.defineProperty(AccumeMotionsXYZ,'replaceViewNotRotate',{value:replaceCenterAndDirectionNotRotated});
+		function replaceCenterAndDirectionNotRotated(member){
+			return function(time){
+				myMat4.multiArray(member.matAccumeNotRotated);
 			};
 		};
 		Object.defineProperty(AccumeMotionsXYZ,'trans',{value:translateXYZ});

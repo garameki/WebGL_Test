@@ -287,8 +287,13 @@ return comp;
 	uniform mat4 uModelViewMatrixInversedTransposed;
 	uniform mat4 uModelViewMatrix;
 	uniform mat4 uPerspectiveMatrix;
-//●
 	uniform mat4 uManipulatedRotationMatrix;
+
+
+//●
+	uniform mat4 uManipulatedMatrix;
+
+
 	uniform float uBaseLight;// 0.0-1.0 ?
 	uniform float uPointSizeFloat;//a float value
 
@@ -348,12 +353,15 @@ return comp;
 //		vec4 transformedNormal = vec4(aVertexNormal,1.0);
 //		transformedNormal = uModelViewMatrixInversedTransposed * transformedNormal;
 		
-
+//原点の移動後の位置を引く必要がある
 		//prepare light vectorg
-		vec4 directional = uModelViewMatrixInversedTransposed * vec4(aVertexPosition,1.0);
-		directional = directional / directional.w;
-//		vec directional = normalize(gl_Position.xyz);//the direction of directional light at the first time
-//		vec directional = normalize(vec3(0.0,0.0,1.0));
+//		vec4 directional = uModelViewMatrixInversedTransposed * vec4(aVertexPosition,1.0);
+//		directional = directional / directional.w;
+		vec4 directional = -vec4(1.5) * normalize(uModelViewMatrix * vec4(aVertexPosition,1.0) - uManipulatedMatrix * vec4(0.0,0.0,0.0,1.0));//自分の中を照らしてるだけ
+//		vec4 directional = normalize(uModelViewMatrix * vec4(aVertexPosition,1.0) - uModelViewMatrix * vec4(0.0,0.0,0.0,1.0));//中も外も明るい
+//対象点の移動行列 * 対象点の元の位置ベクトル - 原点の移動にかかった行列 * 原点の元の位置ベクトル
+//		vec4 directional = normalize(uModelViewMatrix * vec4(aVertexPosition,0.0));//平行移動の効果を無くす// = normalize(uModelViewMatrix * vec4(aVertexPosition,1.0) - uModelViewMatrix * vec4(0.0,0.0,0.0,1.0));
+//		vec4 directional = normalize(vec4(0.0,0.0,1.0,1.0));
 //		vec directional = vec3(2.0) * normalize(uManipulatedRotationMatrix * vec4(directional,1.0)).xyz;//(intension of light)*2//a new position of the light
 //		vec directional = vec3(2.0) * normalize(uModelViewMatrix * vec4(directional,1.0)).xyz;//(intension of light)*2//a new position of the light
 //		vec directional = normalize(uManipulatedRotationMatrix * vec4(directional,1.0)).xyz;//brightness*2//a new position of the light
@@ -578,6 +586,9 @@ function getUniformLocations(sName,gl,prog){
 			var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not usedin "+sName+" shader "+locBrightness+"<br>";}
 			var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not usedin "+sName+" shader "+locAlpha+"<br>";}
 			var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+//●
+			var locManipulatedMatrix = gl.getUniformLocation(prog,"uManipulatedMatrix");vv="locManipulatedMatrix";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+
 
 			return {
 				perspective:locPerspective,	
@@ -587,6 +598,8 @@ function getUniformLocations(sName,gl,prog){
 				mvMIT:locModelViewMatrixInversedTansposed,
 				baseLight:locBaseLight,
 				manipulatedRM:locManipulatedRotationMatrix,
+//●
+				manipulatedM:locManipulatedMatrix,
 				brightness:locBrightness,
 				alpha:locAlpha,
 				cassiniFactor:locCassiniFactor,
@@ -735,20 +748,18 @@ function sendPerspectiveMatrix(gl,oLocations){
 };
 
 
-function sendModelViewMatrix(gl,oLocations,arrAccumelationToMyMat4,angle){
+function sendModelViewMatrix(gl,oLocations,arrAccumelationToMyMat4,timeStamp){
 	//@param {Array} aMVMatrices model view matrix in Array
 		//Set the shader uniforms culclated above and something
 
 	myMat4.loadIdentity();//initialize accumelator of matrix to compute
-
 	for(var ii=0,len=arrAccumelationToMyMat4.length;ii<len;ii++){
-		arrAccumelationToMyMat4[ii](angle);
+		arrAccumelationToMyMat4[ii](timeStamp);
 	}
 	var mvMat = myMat4.arr;
 
 	//uniform mat4 uModelViewMatrixへ値を転送
 	gl.uniformMatrix4fv(oLocations.uniform.modelView,false,new Float32Array(mvMat));
-
 	return mvMat;//for inversing and transposing in another 'send' function
 };
 
@@ -768,11 +779,9 @@ function sendModelViewMatrixInversedTransposed(gl,oLocations,mvMatrix){
 	//uniform highp mat4 umvMatrixITに値を転送
 	gl.uniformMatrix4fv(oLocations.uniform.mvMIT,false,new Float32Array(myMat4.arr));
 };
-//●-
 function sendBaseLight(gl,oLocations,fNumber){//移動修正したあとのnormalに影響を与えるためのマトリックスをsendする send a matrix to affect each normals after having been multiplied by inversingTransposing matrix
 	gl.uniform1f(oLocations.uniform.baseLight,fNumber);
 };
-//-●
 function sendSampler(gl,oLocations,number){
 	//uniform float uPointSizeFloatへ値を転送
 	gl.uniform1i(oLocations.uniform.sampler,number);
@@ -790,7 +799,16 @@ function sendManipulatedRotationOnly(gl,oLocations,arrAccumelationToMyMat4,angle
 	}
 	gl.uniformMatrix4fv(oLocations.uniform.manipulatedRM,false,new Float32Array(myMat4.arr));
 };
+//●-
+function sendManipulatedMatrix(gl,oLocations,arrAccumelationToMyMat4,angle){//ライトの位置を視点の回転と共に移動させる
 
+	myMat4.loadIdentity();
+	for(var ii=0,len=arrAccumelationToMyMat4.length;ii<len;ii++){
+		arrAccumelationToMyMat4[ii](angle);
+	}
+	gl.uniformMatrix4fv(oLocations.uniform.manipulatedM,false,new Float32Array(myMat4.arr));
+};
+//-●
 function sendBrightness(gl,oLocations,nValue){
 	//uniform float uPointSizeFloatへ値を転送
 	gl.uniform1f(oLocations.uniform.brightness,nValue);
@@ -836,7 +854,7 @@ function drawScene(gl,oShader,angle){
 		sendBaseLight(gl,oShader.light.locations,member.baseLight);
 		sendPointSize(gl,oShader.light.locations,nPointSize);
 		sendSampler(gl,oShader.light.locations,0);//kkk Is last argument unit number?
-		sendManipulatedRotationOnly(gl,oShader.light.locations,member.aAccumeUnitsLight,angle);
+		sendManipulatedRotationOnly(gl,oShader.light.locations,member.aAccumeUnitsLightDirectional,angle);
 //		sendBrightness(gl,oShader.light.locations,member.brightness);
 //		sendAlpha(gl,oShader.light.locations,member.alpha);
 //		sendCassiniFactor(gl,oShader.light.locations,member.cassiniFactor);
@@ -862,7 +880,10 @@ function drawScene(gl,oShader,angle){
 		sendBaseLight(gl,oShader.camera.locations,member.baseLight);
 		sendPointSize(gl,oShader.camera.locations,nPointSize);
 		sendSampler(gl,oShader.camera.locations,0);//kkk Is last argument unit number?
-		sendManipulatedRotationOnly(gl,oShader.camera.locations,member.aAccumeUnitsLight,angle);
+		sendManipulatedRotationOnly(gl,oShader.camera.locations,member.aAccumeUnitsLightDirectional,angle);
+//●
+		sendManipulatedMatrix(gl,oShader.camera.locations,member.aAccumeUnitsLightPoint,angle);
+
 		sendBrightness(gl,oShader.camera.locations,member.brightness);
 		sendAlpha(gl,oShader.camera.locations,member.alpha);
 		sendCassiniFactor(gl,oShader.camera.locations,member.cassiniFactor);
@@ -1062,7 +1083,7 @@ function start(){
 	var baseLight = 0.0;
 	var baseLightSun = 1.0;
 
-	var colorNameText = myColorName.blue(0.5);
+	var colorNameText = myColorName.white(0.5);
 
 		//plane
 	var xyzCenter = myXYZManipulation.createMember();
@@ -1077,24 +1098,26 @@ function start(){
 		labels.addText(0,-5,0,"",colorNameText);
 	};
 	var shape = myGLShape.hexa(gl);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,[],brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,[],[],brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 
 
 	/** for Sun **/
-	var aAccumeLightingSun = [];
-	aAccumeLightingSun.push(AccumeMotions.gotoOrigin());
+	var aAccumeLightingDirectionalSun = [];
+	aAccumeLightingDirectionalSun.push(AccumeMotions.gotoOrigin());
+	var aAccumeLightingPointSun = [];
+	aAccumeLightingPointSun.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 
 
 		//Sun
 	var r = sun.radius;
-	var xyzSun = myXYZTrigonometry.createMember();
+//	var xyzSun = myXYZTrigonometry.createMember();
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
 ////●	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
 
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSun));//revolution公転
+//	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSun));//revolution公転
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 
 	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
@@ -1105,12 +1128,14 @@ function start(){
 	labels.addText(0,-5,0,"Sun",colorNameText);
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureSun,aAccumeLightingSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureSun,aAccumeLightingDirectionalSun,aAccumeLightingPointSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon);
 
 
 	/** common **/
-	var aAccumeLighting = [];
-	aAccumeLighting.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
+	var aAccumeLightingDirectional = [];
+	aAccumeLightingDirectional.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
+	var aAccumeLightingPoint = [];
+	aAccumeLightingPoint.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 
 /*
 		//Earth
@@ -1131,7 +1156,7 @@ function start(){
 	labels.addText(0,-5,0,"Earth",colorNameText);
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 */
 
@@ -1154,7 +1179,7 @@ function start(){
 	labels.addText(0,-5,0,"",colorNameText);
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAtomosphere,aAccumeLighting,brightnessAtomosphere,alphaAtomosphere);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAtomosphere,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessAtomosphere,alphaAtomosphere);
 
 
 */
@@ -1175,7 +1200,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,"Jupitor",colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureJupiter,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureJupiter,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 
@@ -1194,7 +1219,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureMoon,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMoon,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMoon,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Uranus **/
@@ -1212,7 +1237,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureUranus,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureUranus,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureUranus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Venus **/
@@ -1230,7 +1255,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureVenus,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureVenus,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureVenus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Mars **/
@@ -1248,7 +1273,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureMars,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMars,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMars,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Neptune **/
@@ -1266,7 +1291,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureNeptune,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureNeptune,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureNeptune,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Mercury **/
@@ -1284,7 +1309,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureMercury,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMercury,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureMercury,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 	/** Saturn **/
@@ -1302,7 +1327,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureSaturn,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureSaturn,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 
 
 
@@ -1322,7 +1347,7 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,"",colorNameText);//kkk
 	var shape = myGLShape.ring(gl,rIn,rOut);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureRing,aAccumeLighting,brightnessCommon,alphaRing,baseLightSun,cassiniFactorRing);
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureRing,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaRing,baseLightSun,cassiniFactorRing);
 
 
 
@@ -1342,21 +1367,22 @@ function start(){
 		var labels = new myClass.Labels();
 		labels.addText(0,0,0,hh.toString(),colorNameText);//kkk
 		var shape = myGLShape.sphere(gl,r);
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAsteroid,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureAsteroid,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 	};
 
 */
 
 
-	/* These two kinds of objects below must always be lighten from right angle ,so that they are lighten most brightly*/
-
-	/** common variables**/
-	var aAccumeLighting = [];
-	aAccumeLighting.push(AccumeMotions.translate(1.0,1.0,1.0));//Light is put at (1 1 1)
-	aAccumeLighting.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));//always (1 1 1) as same relationship of positionning
-
+	/* These two kinds of objects below must always be lit from right angle ,so that they are lighten most brightly*/
+	/* In other words,they must be always lit brightly.(e.g. indicater , axes and so on) */
+	/** common **/
+	var aAccumeLightingDirectional = [];
+	aAccumeLightingDirectional.push(AccumeMotions.translate(1.0,1.0,1.0));//Light is put at (1 1 1)
+	aAccumeLightingDirectional.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));//always (1 1 1) as same relationship of positionning
+	aAccumeLightingPoint = [];
 
 	//stars far from planet
+/*
 	var spread=100;
 	var p1,r1,t1;
 	for(var hh=0;hh<100;hh++){
@@ -1371,30 +1397,32 @@ function start(){
 		r2 = r1*Math.cos(t2);
 		p1 = new myClass.Point(r2*Math.cos(t1),r2*Math.sin(t1),r1*Math.sin(t2));
 		var shape = myGLShape.point(gl,p1,myColorName.purple(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 	}
-
+*/
 
 	/** x,y,z axes **/
+/*
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
 	aAccumeUnits.push(AccumeMotions.translate(-30,-15,-30));
 	var labels = new myClass.Labels();
 	labels.addText(0,0,5,"back",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 	var labels = new myClass.Labels();
 	labels.addText(0,5,0,"up",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
 	var labels = new myClass.Labels();
 	labels.addText(5,0,0,"right",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1));
-		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
-
+		UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+*/
 
 
 	/** screen to draw shadow **/
+/*
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(0,0,1,0,90));
 //	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
@@ -1403,8 +1431,8 @@ function start(){
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,"screen",colorNameText);//kkk
 	var shape = myGLShape.rectangle(gl,20,20);
-	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureScreen,aAccumeLighting,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
-
+	UnitsToDraw.join(gl,shape,aAccumeUnits,labels,nameTextureScreen,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon);
+*/
 
 //********************************************** animation ****************************************************	
 	var timeBefore=0;
@@ -1438,14 +1466,15 @@ function start(){
 	//
 	//@param {myGLShape.obj} shape in which there are points,color,normal vector,indeces and so on
 	//
-	var ToolBox = function(gl,shape,aMotions,aLabels,sNameTexture,aLights,brightness,alpha,fBaseLight,fCassiniFactor){//f means float
+	var ToolBox = function(gl,shape,aMotions,aLabels,sNameTexture,aLightsDirectional,aLightsPoint,brightness,alpha,fBaseLight,fCassiniFactor){//f means float
 		this.draw = shape.draw;
 		this.buffers = createBuffers(gl,shape);
 		this.aAccumeUnits = aMotions;
 		this.labels = aLabels;
 		this.nameTexture = sNameTexture;
 
-		this.aAccumeUnitsLight = aLights;
+		this.aAccumeUnitsLightDirectional = aLightsDirectional;
+		this.aAccumeUnitsLightPoint = aLightsPoint;
 		this.brightness = brightness;
 		this.alpha = alpha;
 		this.baseLight = fBaseLight;
@@ -1499,8 +1528,8 @@ function start(){
 
 	UnitsToDraw = { };
 	Object.defineProperty(UnitsToDraw,'join',{value:create,writable:false,enumerable:true,configurable:false});	
-	function create(gl,shape,aMotions,aLabels,sNameTexture,aLightMotions,brightness,alpha,fBaseLight,fCassiniFactor){
-		aModels.push(new ToolBox(gl,shape,aMotions,aLabels,sNameTexture,aLightMotions,brightness,alpha,fBaseLight,fCassiniFactor));
+	function create(gl,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor){
+		aModels.push(new ToolBox(gl,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor));
 	}
 	Object.defineProperty(UnitsToDraw,'getMemberByIndex',{value:function(num){return aModels[num];},writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(UnitsToDraw,'length',{get:function(){return aModels.length;},enumerable:true,configurable:false});

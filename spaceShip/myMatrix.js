@@ -349,7 +349,7 @@
 
 	};
 
-	Object.defineProperty(myMat4,'rotXYZ',{value:rotateXYZ});
+	Object.defineProperty(myMat4,'rotXYZ',{value:rotateXYZ});//no use of accumerator'_a'
 	function rotateXYZ(axisX,axisY,axisZ,theta,x,y,z){
 		var len=1/Math.pow(axisX*axisX+axisY*axisY+axisZ*axisZ,0.5);
 		var vx=axisX*len,vy=axisY*len,vz=axisZ*len;
