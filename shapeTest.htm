@@ -68,6 +68,23 @@ function start(){
 	var aModels = [];
 	var oModel = { };
 
+	_MOVE_=false;
+
+	//triangle
+	var shape =myGLShape.triangle(gl,{x:0,y:0,z:-0.01},{x:-10,y:0,z:-30},{x:10,y:0,z:-30},{r:1,g:1,b:1,a:1.0});
+	console.log("shape=",shape);
+
+	oModel.base = {
+		n:shape.n,
+		pos:shape.pos,
+		col:shape.col
+	};
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();
+	aModels.push(oModel);
+
+
+/*
 	//rectangle
 	var shape =myGLShape.rectangle(gl,5,5);
 	console.log("shape=",shape);
@@ -80,6 +97,7 @@ function start(){
 	oModel.buffers = setModelToBuffer(gl,oModel);
 	oModel.mvMat = new mvMat_random();
 	aModels.push(oModel);
+*/
 
 /*
 	//ring
@@ -521,9 +539,10 @@ function mvMat_random(){
 	return function(angle){
 		//model view matrix...MatA was already defined in global scope
 		MatA.init();
+if(_MOVE_){
 		MatA.trans(tx,ty,-6.0);
 		MatA.rot(rx,ry,rz,m*angle*Math.PI/180);
-
+}
 		var matrix = new Array(16);
 		MatA.store(matrix);
 
