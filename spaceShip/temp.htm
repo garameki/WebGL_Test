@@ -18,21 +18,32 @@
 
 
 
+//○	varying lowp vec4 vColor;	//as same as vertex shader
+//	varying highp vec4 vColor;//●	//as same as vertex shader
+//	varying highp vec2 vTextureCoord;//as same as vertex shader
+//	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
+
+
+//	uniform mediump float uBrightness;
+//	uniform mediump float uAlpha;
+//	uniform mediump float uCassiniFactor;//if zero , not avairable,,if 1 , avairable
+
+//	uniform sampler2D uSampler;//common variable between shader and js
 
 void hncodeFloat(float z){
 	mediump vec4 bitShift = vec4(16777216.0,6400.0,256.0,1.0);
 	mediump vec4 bitMask = vec4(0.0,1.0/256.0,1.0/256.0,1.0/256.0);
 
 	mediump vec4 zzz = fract(vec4(z)*bitShift);
-	zzz -=zzz.xxyz*bitMask;
+	zzz -=zzz.zxyz*bitMask;
 	gl_FragColor = zzz;
 }
 
 	void main(void) {
 
-		hncodeFloat(gl_FragCoord.z);
+		//hncodeFloat(gl_FragCoord.z);
 
-//	gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+	gl_FragColor = vec4(1.0);
 /*
 vec4 encodeFloat (float depth) {
   vec4 bitShift = vec4(
@@ -97,10 +108,29 @@ return comp;
 </script>
 <script id="lightVertexShader" type="x-shader/x-vertex">
 
+	//'attribute' this type is used in vertex shader only.This type is assigned on buffers defined in js
+//	attribute vec3 aVertexNormal;//x y z
 	attribute vec3 aVertexPosition;//x y z
+//	attribute vec4 aVertexColor;//R G B Alpha
+//	attribute vec2 aTextureCoord;//x y
 
+	//The type of 'uniform' mainly matrices receipter from js
+//	uniform mat4 uModelViewMatrixInversedTransposed;
+	uniform mat4 uModelViewMatrix;
+//	uniform mat4 uPerspectiveMatrix;
+//●-
 	uniform mat4 uOrthographicMatrix;
 	uniform mat4 uNotManipulatedMatrix;
+//-●
+//	uniform mat4 uManipulatedRotationMatrix;
+//	uniform float uBaseLight;// 0.0-1.0 ?
+//	uniform float uPointSizeFloat;//a float value
+
+//○	varying lowp vec4 vColor;
+//○	varying lowp vec2 vTextureCoord;
+//	varying highp vec4 vColor;
+//	varying highp vec2 vTextureCoord;
+//	varying highp vec3 vNTimesEachRGB;
 
 
 
@@ -115,6 +145,9 @@ return comp;
 		vec3 centerVector = normalize(cross(directional,vec3(0.0,0.0,-1.0)));//It direct observer's gaze in direction to the Saturn.
 		float theta = acos(dot(directional,vec3(0.0,0.0,1.0)));
 		//quaternion
+//		float ncos = cos(-theta*0.5);
+//		float nsin = sin(-theta*0.5);
+
 		float ncos = cos(-theta*0.5);
 		float nsin = sin(-theta*0.5);
 		float q0=ncos;
@@ -138,13 +171,9 @@ return comp;
 
 		mat4 rotateLightDirection= mat4(qq0+qq1-qq2-qq3,qq12-qq03,qq13+qq02,0,qq12+qq03,qq0-qq1+qq2-qq3,qq23-qq01,0,qq13-qq02,qq23+qq01,qq0-qq1-qq2+qq3,0,0,0,0,1);
 
-		//float a11=qq0+qq1-qq2-qq3;float a12=qq12-qq03;float a13=qq13+qq02;float a14=0.0;float a21=qq12+qq03;float a22=qq0-qq1+qq2-qq3;float a23=qq23-qq01;float a24=0.0;float a31=qq13-qq02;float a32=qq23+qq01;float a33=qq0-qq1-qq2+qq3;float a34=0.0;float a41=0.0;float a42=0.0;float a43=0.0;float a44=1.0;
-		//mat4 rotateLightDirection= mat4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44);//元と同じ
-		//mat4 rotateLightDirection= mat4(a11,a21,a31,a41,a12,a22,a32,a42,a13,a23,a33,a43,a14,a24,a34,a44);//元の転置
-
-
 		//第一のpositionにはライトのベクトルの向きと反対方向にrotateするためのmatが必要
-		gl_Position = uOrthographicMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
+//		gl_Position = uOrthographicMatrix * rotateLightDirection * uModelViewMatrix * vec4(aVertexPosition,1.0);
+		gl_Position = uOrthographicMatrix * rotateLightDirection * vec4(aVertexPosition,1.0);
 
 		
 	}
@@ -185,7 +214,7 @@ return comp;
 		//http://www.chinedufn.com/webgl-shadow-mapping-tutorial/
 //?		highp   vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
 		gl_FragColor = vec4(shadowFlag) * vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
-//		gl_FragColor=vec4(0.0,1.0,1.0,0.5);
+
 	}
 </script>
 
@@ -208,7 +237,6 @@ return comp;
 	uniform mat4 uPerspectiveMatrix;
 	uniform mat4 uManipulatedRotationMatrix;
 
-
 //●
 	uniform mat4 uManipulatedMatrix;
 
@@ -219,16 +247,17 @@ return comp;
 	varying lowp vec4 vColor;
 	varying lowp vec2 vTextureCoord;
 	varying lowp vec3 vNTimesEachRGB;
-//hint
 //○	varying highp vec4 vColor;
 //○	varying highp vec2 vTextureCoord;
 //○	varying highp vec3 vNTimesEachRGB;
 
 
 	void main(void) {
-		gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
+
+		gl_Position = uPerspectiveMatrix * uModelViewMatrix * mat4(1.0,0.0,0.0,1.0,0.0,1.0,0.0,1.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0,1.0) * vec4(aVertexPosition,1.0);
 
 		gl_PointSize = uPointSizeFloat;
+
 		vColor = aVertexColor;
 		vTextureCoord = aTextureCoord;
 
@@ -267,8 +296,11 @@ return comp;
 	//point lighting
 		//prepare Normal
 		vec4 transformedNormal = uModelViewMatrixInversedTransposed * vec4(aVertexNormal,1.0);
+//		transformedNormal = uManipulatedRotationMatrix * vec4(aVertexNormal,1.0);
+//		vec4 transformedNormal = vec4(aVertexNormal,1.0);
+//		transformedNormal = uModelViewMatrixInversedTransposed * transformedNormal;
 		
-//原点の移動後の位置を引く必要がある-->移動(by manipulation)する前の位置が、その位置
+//原点の移動後の位置を引く必要がある
 		//prepare light vectorg
 //		vec4 directional = uModelViewMatrixInversedTransposed * vec4(aVertexPosition,1.0);
 //		directional = directional / directional.w;
@@ -297,52 +329,11 @@ return comp;
 
 <script type='text/javascript'>
 /**
- * make html information element
-**/
-(function(){
-	myInfo = { };
-	var eled = null;
-	var elep = null;
-	Object.defineProperty(myInfo,'initialize',{value:initialize,writable:false,enumerable:true,configurable:false});
-	function initialize(){
-		var body = document.getElementsByTagName('body');
-		if(body.length==0){
-			console.error("DOM is not ready yet in myInfo.");
-			return null;
-		}
-		body = body[0];
-		eled = document.createElement('DIV');
-		elep = document.createElement('P');
-		body.appendChild(eled);
-		eled.appendChild(elep);
-		eled.style.position = 'absolute';
-		eled.style.top = "0px";
-		eled.style.left = "200px";
-		elep.style.backgroundColor = 'white';
-		elep.style.fontSize = '30px';
-		elep.style.fontHeight = '31px';
-		elep.style.color = "blue";
-		elep.innerHTML = "myInfo is ready.<br>";
-	};
-	Object.defineProperty(myInfo,'caution',{value:caution,writable:false,enumerable:true,configurable:false});
-	function caution(message){
-		elep.style.color = "blue";
-		elep.style.fontSize = "32px";
-		elep.style.fontHeight = "33px";
-		elep.innerHTML+=message+"<br>";
-	};
-})();
-/**
  * make shader
 */
 (function(){
 	myShaders = { };
 
-	/** Property **/
-	Object.defineProperty(myShaders,'create',{value:create,writable:false,enumerable:false,configurable:false});
-	function create(sName,sIdVertex,sIdFragment,gl){
-		Object.defineProperty(myShaders,sName,{value:new Shader(sName,sIdVertex,sIdFragment,gl),writable:false,enumerable:true,configrable:false});
-	};
 	/** inner class **/
 	var Shader = function(sNameShader,sIdVertex,sIdFragment,gl){
 		this.gl = gl;
@@ -365,9 +356,6 @@ return comp;
 		}else{
 			this.program = shaderProgram;
 		}
-
-		this.attrib = { };
-		this.uniform = { };
 	};
 	Shader.prototype.activate = function(){
 		if(this.program==null){
@@ -403,7 +391,7 @@ return comp;
 			shader = gl.createShader(gl.VERTEX_SHADER);
 		} else {
 			// unknown shader type
-			myInfo("Unknown shader type.The element type of shader program must be 'x-shader/x-vertex' or 'x-shader/x-fragment' now.");
+			PRINT_CAUTION.innerHTML+="Unknown shader type.The element type of shader program must be 'x-shader/x-vertex' or 'x-shader/x-fragment' now."+"<br>";
 			return null;
 		}
 
@@ -419,64 +407,245 @@ return comp;
 		return shader;
 	};
 
-	/** For attribute variable **/
-	Shader.prototype.getAttribLocation = function(sNameVariable){
-		Object.defineProperty(this.attrib,sNameVariable,{value:new AttribVariable(this.gl,this.program,sNameVariable),writable:false,enumerable:true,configurable:false});
-	};
-	/** inner class **/
-	const normalize = false;
-	const stride = 0;//shaderを呼び出すごとに進むバイト数//これは(buffer.slice((offset + i) * stride,size);)という意味
-	const offset = 0;
-	var AttribVariable = function(gl,prog,name,numComponents){
-		this.gl = gl;
-		this.loc = gl.getAttribLocation(prog,name);
-		if(this.loc == -1 || this.loc == null){
-			myInfo.caution("Attribute variable '"+name+"' is not used nor exist in shader.");
-		} else {
-			gl.enableVertexAttribArray(this.loc);
-		}
-		this.numComponents = numComponents;
-	};
-	AttribVariable.prototype.assignBuffer = function(buffer,numComponents){
-		this.gl.bindBuffer(this.gl.ARRAY_BUFFER,buffer);
-		this.gl.vertexAttribPointer(this.loc,numComponents,this.gl.FLOAT,normalize,stride,offset);
-	};
-
-
-
-	/** For uniform variable **/
-	Shader.prototype.getUniformLocation = function(sNameVariable){
-		Object.defineProperty(this.uniform,sNameVariable,{value:new UniformVariable(this.gl,this.program,sNameVariable),writable:false,enumerable:true,configurable:false});
-	};
-	/** inner class **/
-	var UniformVariable = function(gl,prog,name){
-		this.gl = gl;
-		this.loc = gl.getUniformLocation(prog,name);
-		if(this.loc == -1 || this.loc == null){
-			myInfo.caution("Attribute variable '"+name+"' is not used in shader.");
-		}
-	};
-	UniformVariable.prototype.sendFloat32Array = function(arr){
-		this.gl.uniformMatrix4fv(this.loc,false,new Float32Array(arr));
-	};
-	UniformVariable.prototype.sendInt = function(value){
-		this.gl.uniform1i(this.loc,value);
-	};
-	UniformVariable.prototype.sendFloat = function(value){
-		this.gl.uniform1f(this.loc,value);
+	/** Property **/
+	Object.defineProperty(myShaders,'create',{value:create,writable:false,enumerable:false,configurable:false});
+	function create(sName,sIdVertex,sIdFragment,gl){
+		Object.defineProperty(myShaders,sName,{value:new Shader(sName,sIdVertex,sIdFragment,gl),writable:false,enumerable:true,configrable:false});
 	};
 })();
 
+function initShaders(gl) {
+	var fragmentShader = getShader(gl,"shader-fs");//プログラムをロードしてコンパイルして返す
+	var vertexShader = getShader(gl,"shader-vs");//プログラムをロードしてコンパイルして返す
+
+
+
+
+		//シェーダープログラムを作成
+	var shaderProgram = gl.createProgram();
+	gl.attachShader(shaderProgram,vertexShader);
+	gl.attachShader(shaderProgram,fragmentShader);
+	gl.linkProgram(shaderProgram);
+
+	//シェーダープログラムを作成できない場合はアラートを表示
+	if(!gl.getProgramParameter(shaderProgram,gl.LINK_STATUS)){
+		alert("can't initialize the shader program");
+		return null;
+	}
+
+	gl.useProgram(shaderProgram);//githubではdrawScene()内で実行
+
+	return shaderProgram;
+};
+
+function getShader(gl,id){
+	var shaderScript,theSource,currentChild,shader;
+
+	shaderScript = document.getElementById(id);
+
+	if(!shaderScript) {
+		return null;
+	}
+
+	theSource = "";
+	currentChild = shaderScript.firstChild;
+
+	while(currentChild) {
+		if(currentChild.nodeType == currentChild.TEXT_NODE){
+			theSource += currentChild.textContent;
+		}
+
+		currentChild = currentChild.nextSibling;
+	}
+
+	if (shaderScript.type == "x-shader/x-fragment"){
+		shader = gl.createShader(gl.FRAGMENT_SHADER);
+	} else if (shaderScript.type == "x-shader/x-vertex"){
+		shader = gl.createShader(gl.VERTEX_SHADER);
+	} else {
+		// 未知のシェーダータイプ
+		PRINT_CAUTION.innerHTML+="Unknown shader type.The element type of shader program must be 'x-shader/x-vertex' or 'x-shader/x-fragment' now."+"<br>";
+		return null;
+	}
+
+	gl.shaderSource(shader,theSource);
+
+	//シェーダープログラムをコンパイル
+	gl.compileShader(shader);
+
+	//whether or not success to compileコンパイルが成功したかを確認
+	if (!gl.getShaderParameter(shader,gl.COMPILE_STATUS)) {
+		alert("Shader compile error occured : " + id + " : " + gl.getShaderInfoLog(shader));
+		return null;
+	}
+
+	return shader;
+};
+
+
+function getAttributeLocations(sName,gl,prog){
+	//get shader variable pointer
+
+	switch(sName){
+		case "light":
+			var locPosition = gl.getAttribLocation(prog,"aVertexPosition");gl.enableVertexAttribArray(locPosition);//githubではdrawScene()内で実行
+			var locNormal = gl.getAttribLocation(prog,  "aVertexNormal");gl.enableVertexAttribArray(locNormal);
+			var locColor = gl.getAttribLocation(prog,   "aVertexColor");gl.enableVertexAttribArray(locColor);
+			var locTextcoord = gl.getAttribLocation(prog,"aTextureCoord");gl.enableVertexAttribArray(locTextcoord);
+
+			return {
+				position:locPosition,
+				normal:locNormal,
+				color:locColor,
+				textcoord:locTextcoord
+			}
+		case "camera":
+			var locPosition = gl.getAttribLocation(prog,"aVertexPosition");gl.enableVertexAttribArray(locPosition);//githubではdrawScene()内で実行
+			var locNormal = gl.getAttribLocation(prog,  "aVertexNormal");gl.enableVertexAttribArray(locNormal);
+			var locColor = gl.getAttribLocation(prog,   "aVertexColor");gl.enableVertexAttribArray(locColor);
+			var locTextcoord = gl.getAttribLocation(prog,"aTextureCoord");gl.enableVertexAttribArray(locTextcoord);
+
+			return {
+				position:locPosition,
+				normal:locNormal,
+				color:locColor,
+				textcoord:locTextcoord
+			}
+		default:
+			PRINT_CAUTION.innerHTML+="'"+sName+"' haven't been defined yet.<br>"
+	};
+
+};
+
+function getUniformLocations(sName,gl,prog){
+
+	var vv;
+	switch(sName){
+		case "camera":
+
+			var locPerspective = gl.getUniformLocation(prog,"uPerspectiveMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used in "+sName+" shader "+locPerspective+"<br>";}
+			var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is not usedin "+sName+" shader "+locModelView+"<br>";}
+			var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not usedin "+sName+" shader "+locPointSize+"<br>";}
+			var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used"+locSampler+"<br>";}
+			var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is not usedin "+sName+" shader "+locModelViewMatrixInversedTansposed+"<br>";}
+			var locBaseLight = gl.getUniformLocation(prog,"uBaseLight");vv="locBaseLight";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+			var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not usedin "+sName+" shader "+locManipulatedRotationMatrix+"<br>";}
+			var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not usedin "+sName+" shader "+locBrightness+"<br>";}
+			var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not usedin "+sName+" shader "+locAlpha+"<br>";}
+			var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+//●
+			var locManipulatedMatrix = gl.getUniformLocation(prog,"uManipulatedMatrix");vv="locManipulatedMatrix";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+
+
+			return {
+				perspective:locPerspective,	
+				modelView:locModelView,
+				pointSize:locPointSize,
+				sampler:locSampler,
+				mvMIT:locModelViewMatrixInversedTansposed,
+				baseLight:locBaseLight,
+				manipulatedRM:locManipulatedRotationMatrix,
+//●
+				manipulatedM:locManipulatedMatrix,
+
+				brightness:locBrightness,
+				alpha:locAlpha,
+				cassiniFactor:locCassiniFactor
+			};
+		case "light":
+//			var locPerspective = gl.getUniformLocation(prog,"uPerspectiveMatrix");	if(!locPerspective){PRINT_CAUTION.innerHTML+="locPerspective is not used in "+sName+" shader "+locPerspective+"<br>";}
+			var locModelView = gl.getUniformLocation(prog, "uModelViewMatrix");	if(!locModelView){PRINT_CAUTION.innerHTML+="locModelView is not used in "+sName+" shader "+locModelView+"<br>";}
+//			var locPointSize = gl.getUniformLocation(prog,  "uPointSizeFloat");	if(!locPointSize){PRINT_CAUTION.innerHTML+="locPointSize is not used in "+sName+" shader "+locPointSize+"<br>";}
+//			var locSampler = gl.getUniformLocation(prog,    "uSampler");		if(!locSampler){PRINT_CAUTION.innerHTML+="locSampler is not used in "+sName+" shader "+locSampler+"<br>";}
+//			var locModelViewMatrixInversedTansposed = gl.getUniformLocation(prog,"uModelViewMatrixInversedTransposed");	if(!locModelViewMatrixInversedTansposed){PRINT_CAUTION.innerHTML+="locModelViewMatrixInversedTansposed is not used in "+sName+" shader "+locModelViewMatrixInversedTansposed+"<br>";}
+//			var locBaseLight = gl.getUniformLocation(prog,"uBaseLight");vv="locBaseLight";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+//			var locManipulatedRotationMatrix = gl.getUniformLocation(prog,"uManipulatedRotationMatrix");	if(!locManipulatedRotationMatrix){PRINT_CAUTION.innerHTML+="locManipulatedRotationMatrix is not used in "+sName+" shader "+locManipulatedRotationMatrix+"<br>";}
+//			var locBrightness = gl.getUniformLocation(prog,"uBrightness");	if(!locBrightness){PRINT_CAUTION.innerHTML+="locBrightness is not used in "+sName+" shader "+locBrightness+"<br>";}
+//			var locAlpha = gl.getUniformLocation(prog,"uAlpha");		if(!locAlpha){PRINT_CAUTION.innerHTML+="locAlpha is not used in "+sName+" shader "+locAlpha+"<br>";}
+//			var locCassiniFactor = gl.getUniformLocation(prog,"uCassiniFactor");vv="locCassiniFactor";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+//●
+			var locOrthography = gl.getUniformLocation(prog,"uOrthographicMatrix");vv="locOrthography";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+			var locNotManipulatedMatrix = gl.getUniformLocation(prog,"uNotManipulatedMatrix");vv="locNotManipulatedMatrix";if(!eval(vv)){PRINT_CAUTION.innerHTML+=vv+" is not used in "+sName+" shader "+eval(vv)+"<br>";}
+
+			return {
+		//		perspective:locPerspective,	
+				modelView:locModelView,
+		//		pointSize:locPointSize,
+		//		sampler:locSampler,
+		//		mvMIT:locModelViewMatrixInversedTansposed,
+		//		baseLight:locBaseLight,
+		//		manipulatedRM:locManipulatedRotationMatrix,
+		//		brightness:locBrightness,
+		//		alpha:locAlpha,
+		//		cassiniFactor:locCassiniFactor,
+//●
+				orthography:locOrthography,
+				notManipulatedM:locNotManipulatedMatrix
+			};
+		default:
+			PRINT_CAUTION.innerHTML+="'"+sName+"' haven't been defined yet.<br>"
+	};
+};
 
 
 
 
 
 
+
+
+
+//******************************** BUFFERS *******************************
+
+
+
+
+function assignBufferMapping(gl,oLocations,oBuffers){
+
+	//usage of kinds of buffers when vertex shader reads them
+
+	//** prepare common arguments **
+	var type = gl.FLOAT;
+	var normalize = false;
+	var stride = 0;//shaderを呼び出すごとに進むバイト数//これは(buffer.slice((offset + i) * stride,size);)という意味
+	var offset = 0;
+	var numComponents;//number of column
+
+	//positons
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffers.position);
+	numComponents = 3;
+	gl.vertexAttribPointer(oLocations.attribute.position,numComponents,type,normalize,stride,offset);
+
+	//normal vector
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffers.normal);
+	numComponents = 3;
+	gl.vertexAttribPointer(oLocations.attribute.normal,numComponents,type,normalize,stride,offset);
+
+	//color
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffers.color);
+	numComponents = 4;
+	gl.vertexAttribPointer(oLocations.attribute.color,numComponents,type,normalize,stride,offset);
+
+	//texture
+	gl.bindBuffer(gl.ARRAY_BUFFER,oBuffers.texture);
+	numComponents = 2;
+	gl.vertexAttribPointer(oLocations.attribute.textcoord,numComponents,type,normalize,stride,offset);
+
+	//index
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,oBuffers.index);//arrayのとおりにデータを使うのでPointerはいらない。
+
+//kkk why it is not necessary for index to gl.vertexAttribPointer?
+//Is the usage of array fixed?
+
+//this part below is not necessary for the elements of indices (It's already defined as array data structure.)
+//	numComponents = 3;//列の数
+//	gl.vertexAttribPointer(oLocations.index,numComponents,type,normalize,stride,offset);
+
+};
 
 //********************************** VALUES FOR SHADER ****************************************
 
-function sendOrthographicMatrix(gl,vari){
+function sendOrthographicMatrix(gl,oLocations){
 
 	/*
 		https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix		from cite site:
@@ -493,13 +662,13 @@ function sendOrthographicMatrix(gl,vari){
 	myMat4.loadOrthography(left,right,top,bottom,near,far,aspect);
 
 	//uniform mat4 uOrthographicMatrixへ値を転送
-	vari.sendFloat32Array(myMat4.arr);
+	gl.uniformMatrix4fv(oLocations.uniform.orthography,false,new Float32Array(myMat4.arr));
 
 };
 
 
 
-function sendPerspectiveMatrix(gl,vari){
+function sendPerspectiveMatrix(gl,oLocations){
 
 	/*
 		from cite site:
@@ -514,15 +683,66 @@ function sendPerspectiveMatrix(gl,vari){
 //	var fieldOfView = 70 * Math.PI / 180;	//in radian;
 	var fieldOfView = 70 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-	var zNear = 0.01;
+	var zNear = 0.1;
 	var zFar = 10000000.0;
 
+	//create a projectionMatrix array as the perspective matrix
+	var projectionMatrix=new Array(16);
 	myMat4.loadPerspective(fieldOfView,aspect,zNear,zFar);
-	vari.sendFloat32Array(myMat4.arr);
+	projectionMatrix = myMat4.arr;
+
+	//uniform mat4 uPerspectiveMatrixへ値を転送
+	gl.uniformMatrix4fv(oLocations.uniform.perspective,false,new Float32Array(projectionMatrix));
+
+	myMat4.loadIdentity();
+	myMat4.rot(0,0,1,-90*Math.PI/180);
+
+
+	var pos = myMat4.get2D(0,0,-1);
+
+for(var i=0;i<3;i++)console.log("pos=",pos);
+
+
+	
+//lll
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	return projectionMatrix;
 };
-function sendModelViewMatrixInversedTransposed(vari,mvMatrix){
- 	//各面の法線ベクトルの向きを更新＆拡大縮小にともなうずれを修正してくれる便利なベクトルをシェーダーに送る。
- 	//send a matrix which rotates and translate normal vector and which makes the direction of normal vectors correct,especially when magnifiring was done to its body
+
+
+function sendModelViewMatrix(gl,oLocations,arrAccumelationToMyMat4,timeStamp){
+	//@param {Array} aMVMatrices model view matrix in Array
+		//Set the shader uniforms culclated above and something
+
+	myMat4.loadIdentity();//initialize accumelator of matrix to compute
+	for(var ii=0,len=arrAccumelationToMyMat4.length;ii<len;ii++){
+		arrAccumelationToMyMat4[ii](timeStamp);
+	}
+	var mvMat = myMat4.arr;
+
+	//uniform mat4 uModelViewMatrixへ値を転送
+	gl.uniformMatrix4fv(oLocations.uniform.modelView,false,new Float32Array(mvMat));
+	return mvMat;//for inversing and transposing in another 'send' function
+};
+
+/**
+ *各面の法線ベクトルの向きを更新＆拡大縮小にともなうずれを修正してくれる便利なベクトルをシェーダーに送る。
+ *send a matrix which rotates and translate normal vector and which makes the direction of normal vectors correct,especially when magnifiring was done to its body
+*/
+function sendModelViewMatrixInversedTransposed(gl,oLocations,mvMatrix){
 
 	//compute matrix
 	myMat4.load(mvMatrix);
@@ -532,20 +752,61 @@ function sendModelViewMatrixInversedTransposed(vari,mvMatrix){
 			//	says the reason 'inverse & transpose' above
 
 	//uniform highp mat4 umvMatrixITに値を転送
-	vari.sendFloat32Array(myMat4.arr);
+	gl.uniformMatrix4fv(oLocations.uniform.mvMIT,false,new Float32Array(myMat4.arr));
 };
-function sendAccumeratedMatrix(vari,arrAccumelateToMyMat4,timeSpan){//to calculate the position before manipulation
+function sendBaseLight(gl,oLocations,fNumber){//移動修正したあとのnormalに影響を与えるためのマトリックスをsendする send a matrix to affect each normals after having been multiplied by inversingTransposing matrix
+	gl.uniform1f(oLocations.uniform.baseLight,fNumber);
+};
+function sendSampler(gl,oLocations,number){
+	//uniform float uPointSizeFloatへ値を転送
+	gl.uniform1i(oLocations.uniform.sampler,number);
+};
+function sendPointSize(gl,oLocations,nSize){
+	//uniform float uPointSizeFloatへ値を転送
+	gl.uniform1f(oLocations.uniform.pointSize,nSize);
+};
+
+function sendManipulatedRotationOnly(gl,oLocations,arrAccumelationToMyMat4,angle){//ライトの位置を視点の回転と共に移動させる
+
 	myMat4.loadIdentity();
-	for(var ii=0,len=arrAccumelateToMyMat4.length;ii<len;ii++){
-		arrAccumelateToMyMat4[ii](timeSpan);
+	for(var ii=0,len=arrAccumelationToMyMat4.length;ii<len;ii++){
+		arrAccumelationToMyMat4[ii](angle);
 	}
-	vari.sendFloat32Array(myMat4.arr);
+	gl.uniformMatrix4fv(oLocations.uniform.manipulatedRM,false,new Float32Array(myMat4.arr));
 };
+//●-
+function sendManipulatedMatrix(gl,oLocations,arrAccumelationToMyMat4,angle){//ライトの位置を視点の回転と共に移動させる
+	myMat4.loadIdentity();
+	for(var ii=0,len=arrAccumelationToMyMat4.length;ii<len;ii++){
+		arrAccumelationToMyMat4[ii](angle);
+	}
+	gl.uniformMatrix4fv(oLocations.uniform.manipulatedM,false,new Float32Array(myMat4.arr));
+};
+function sendNotManipulatedMatrix(gl,oLocations,arrAccumelationToMyMat4,timeSpan){//to calculate the position before manipulation
+	myMat4.loadIdentity();
+	for(var ii=0,len=arrAccumelationToMyMat4.length;ii<len;ii++){
+		arrAccumelationToMyMat4[ii](timeSpan);
+	}
+	gl.uniformMatrix4fv(oLocations.uniform.notManipulatedM,false,new Float32Array(myMat4.arr));
+};
+//-●
+function sendBrightness(gl,oLocations,nValue){
+	//uniform float uPointSizeFloatへ値を転送
+	gl.uniform1f(oLocations.uniform.brightness,nValue);
+};
+function sendAlpha(gl,oLocations,nValue){
+	//uniform float uPointSizeFloatへ値を転送
+	gl.uniform1f(oLocations.uniform.alpha,nValue);
+};
+function sendCassiniFactor(gl,oLocations,fValue){
+	gl.uniform1f(oLocations.uniform.cassiniFactor,fValue);
+};
+
 
 //************************************** DRAW SCENE *************************************************
 
 
-function drawScene(gl,angle){
+function drawScene(gl,oShader,angle){
 
 	//https://stackoverflow.com/questions/7324208/opengl-framebuffer-can-clear-it-but-cant-draw-to-it
 
@@ -554,23 +815,33 @@ function drawScene(gl,angle){
 
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+	var vertexOffset = 0;//このoffsetは頂点のx,y,zごとに進むので、データ的にはoffset*3(4?)ごとに進む
+	var nPointSize = 3.0;
+
 	var member,mvmat,pmat;
 
 	myFRBuffers.shadow.reset();
 	myFRBuffers.shadow.activate();
-	var targets = ["saturn","ring"];
-//	var targets = ["observe"];
-	myShaders.light.activate();
+	var targets = ["saturn","ring","observe"];
 	for(var num in targets){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[targets[num]];
 
-		/** To vertex shader**/
-		myShaders.light.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-		member.buffers.bindElement();
-
-		sendOrthographicMatrix(gl,myShaders.light.uniform.uOrthographicMatrix);
-//		sendAccumeratedMatrix(myShaders.light.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
-		sendAccumeratedMatrix(myShaders.light.uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
+		myShaders.light.activate();
+		assignBufferMapping(gl,oShader.light.locations,member.buffers);//attribute variables are allocated before,change the buffers
+//		pmat = sendPerspectiveMatrix(gl,oShader.light.locations);
+		mvmat = sendModelViewMatrix(gl,oShader.light.locations,member.aAccumeUnits,angle);
+//●-
+		sendOrthographicMatrix(gl,oShader.light.locations);
+		sendNotManipulatedMatrix(gl,oShader.light.locations,member.aMatricesNotManipulated,angle);
+//-●
+//		sendModelViewMatrixInversedTransposed(gl,oShader.light.locations,mvmat);
+//		sendBaseLight(gl,oShader.light.locations,member.baseLight);
+//		sendPointSize(gl,oShader.light.locations,nPointSize);
+//		sendSampler(gl,oShader.light.locations,0);//kkk Is last argument unit number?
+//		sendManipulatedRotationOnly(gl,oShader.light.locations,member.aAccumeUnitsLightDirectional,angle);
+//		sendBrightness(gl,oShader.light.locations,member.brightness);
+//		sendAlpha(gl,oShader.light.locations,member.alpha);
+//		sendCassiniFactor(gl,oShader.light.locations,member.cassiniFactor);
 
 		myTextures.member[member.nameTexture].activate();
 
@@ -581,41 +852,36 @@ function drawScene(gl,angle){
 
 	myTextures.member["screen"].import(myFRBuffers.shadow.texture);
 
-	var names = ["observe","saturn","ring","screen","up","right","back","uranus"];
-//	var names = ["observe"];
+//	myFRBuffers.shadow.activate();
 
-	myShaders.camera.activate();
+	
+//	for(var name in UnitsToDraw){//the last is the texture that is gotten by framebuffer
+//		member = UnitsToDraw[name];
+	var names = ["observe"];
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
-		/** To vertex shader **/
-		myShaders.camera.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-		myShaders.camera.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
-		myShaders.camera.attrib.aVertexColor.assignBuffer(member.buffers.color,4);
-		myShaders.camera.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
-		member.buffers.bindElement();
+		myShaders.camera.activate();
+		assignBufferMapping(gl,oShader.camera.locations,member.buffers);//attribute variables are allocated before,change the buffers
+		pmat = sendPerspectiveMatrix(gl,oShader.camera.locations);
+		mvmat = sendModelViewMatrix(gl,oShader.camera.locations,member.aAccumeUnits,angle);
+		sendModelViewMatrixInversedTransposed(gl,oShader.camera.locations,mvmat);
+		sendBaseLight(gl,oShader.camera.locations,member.baseLight);
+		sendPointSize(gl,oShader.camera.locations,nPointSize);
+		sendSampler(gl,oShader.camera.locations,0);//kkk Is last argument unit number?
+		sendManipulatedRotationOnly(gl,oShader.camera.locations,member.aAccumeUnitsLightDirectional,angle);
+//●
+		sendManipulatedMatrix(gl,oShader.camera.locations,member.aAccumeUnitsLightPoint,angle);
 
-		sendPerspectiveMatrix(gl,myShaders.camera.uniform.uPerspectiveMatrix);
-		pmat = myMat4.arr;//sended data above
-		sendAccumeratedMatrix(myShaders.camera.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
-		mvmat = myMat4.arr;//sended data above
-		sendModelViewMatrixInversedTransposed(myShaders.camera.uniform.uModelViewMatrixInversedTransposed,mvmat);
-		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
-		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
-		myShaders.camera.uniform.uBaseLight.sendFloat(member.baseLight);
-		myShaders.camera.uniform.uPointSizeFloat.sendFloat(3.0);
-		/** Tofragment shader **/
-		myShaders.camera.uniform.uBrightness.sendFloat(member.brightness);
-		myShaders.camera.uniform.uAlpha.sendFloat(member.alpha);
-		myShaders.camera.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
-		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-
+		sendBrightness(gl,oShader.camera.locations,member.brightness);
+		sendAlpha(gl,oShader.camera.locations,member.alpha);
+		sendCassiniFactor(gl,oShader.camera.locations,member.cassiniFactor);
 		myTextures.member[member.nameTexture].activate();
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
 	}
 
 
-/** the way to use more Textures at once **/
+/** the way to use more than one objects **/
 /*
 //pass image into gl.TEXTURE[\d+] 
 activeTexture(gl.TEXTURE0);
@@ -637,8 +903,6 @@ uniform sampler2D uSampler2;<--image1
 //*************************************** START ****************************************************************	
 //start
 function start(){
-
-	myInfo.initialize();
 
 	//** prepare gl canvas **//
 	var canvas = document.getElementById('glcanvas');
@@ -681,53 +945,37 @@ function start(){
 	//    gl.clear(gl.COLOR_BUFFER_BIT);
 	//};
 
-	//** prepare shaders and variables in it **/
-	myShaders.create("light","lightVertexShader","lightFragmentShader",gl);
-		myShaders.light.getAttribLocation("aVertexPosition");
-	//	myShaders.light.getUniformLocation("uPerspectiveMatrix");
-	//	myShaders.light.getUniformLocation("uModelViewMatrix");
-	//	myShaders.light.getUniformLocation("uPointSizeFloat");
-	//	myShaders.light.getUniformLocation("uSampler");
-	//	myShaders.light.getUniformLocation("uModelViewMatrixInversedTransposed");
-	//	myShaders.light.getUniformLocation("uBaseLight");
-	//	myShaders.light.getUniformLocation("uManipulatedRotationMatrix");
-	//	myShaders.light.getUniformLocation("uBrightness");
-	//	myShaders.light.getUniformLocation("uAlpha");
-	//	myShaders.light.getUniformLocation("uCassiniFactor");
-	//	myShaders.light.getUniformLocation("uManipulatedMatrix");
-		myShaders.light.getUniformLocation("uOrthographicMatrix");
-		myShaders.light.getUniformLocation("uNotManipulatedMatrix");
+
+	//** prepare shaders **/
 	myShaders.create("camera","shader-vs","shader-fs",gl);
-		myShaders.camera.activate();
-		myShaders.camera.getAttribLocation("aVertexPosition");
-		myShaders.camera.getAttribLocation("aVertexNormal");
-		myShaders.camera.getAttribLocation("aVertexColor");
-		myShaders.camera.getAttribLocation("aTextureCoord");
-		myShaders.camera.getUniformLocation("uPerspectiveMatrix");
-		myShaders.camera.getUniformLocation("uModelViewMatrix");
-		myShaders.camera.getUniformLocation("uPointSizeFloat");
-		myShaders.camera.getUniformLocation("uSampler");
-		myShaders.camera.getUniformLocation("uModelViewMatrixInversedTransposed");
-		myShaders.camera.getUniformLocation("uBaseLight");
-		myShaders.camera.getUniformLocation("uManipulatedRotationMatrix");
-		myShaders.camera.getUniformLocation("uBrightness");
-		myShaders.camera.getUniformLocation("uAlpha");
-		myShaders.camera.getUniformLocation("uCassiniFactor");
-		myShaders.camera.getUniformLocation("uManipulatedMatrix");
+	myShaders.create("light","lightVertexShader","lightFragmentShader",gl);
+	myShaders.camera.activate();
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+	var oAttributeLocations	= {
+			light:getAttributeLocations("light",gl,myShaders.light.program),
+			camera:getAttributeLocations("camera",gl,myShaders.camera.program)
+	};
+	var oUniformLocations	= {
+		light :getUniformLocations("light",gl,myShaders.light.program),
+		camera:getUniformLocations("camera",gl,myShaders.camera.program)
+	};		
+	var oShader = {
+		light:{
+			program	: myShaders.light.program,
+			locations:{
+				attribute : oAttributeLocations.light,
+				uniform	: oUniformLocations.light
+			}
+		},
+		camera:{
+			program	: myShaders.camera.program,
+			locations:{
+				attribute : oAttributeLocations.camera,
+				uniform	: oUniformLocations.camera
+			}
+		}
+	};
 
 
 
@@ -1200,6 +1448,7 @@ function start(){
 	/** observer **/
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeUnits.push(AccumeMotions.translate(0,1,0));
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,"origin",colorNameText);
 //	labels.addText(0,0,0,"origin",colorNameText);
@@ -1250,7 +1499,7 @@ function start(){
 			myXYZTrigonometry.reposAll(dt);
 			myXYZManipulation.move(dt);
 //			drawScene(gl,oShader.camera,angle);
-			drawScene(gl,angle);
+			drawScene(gl,oShader,angle);
 			timeBefore = timeStamp;
 		}
 		window.requestAnimationFrame(render);
@@ -1322,7 +1571,7 @@ function start(){
 			texture : buffTextureCoordinate,
 			normal : buffNormal,
 			color : buffColors,
-			bindElement : function(){gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,buffIndex)}
+			index : buffIndex
 		};
 	};
 
@@ -1408,7 +1657,7 @@ function start(){
 <div id="canvasContainer">
 <canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
 </div>
-<p id="PRINT_INFO" style="position:absolute;top:0px;left:0px:offset:0px;font-size:40px;background-color:white;"></p>
-<p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;font-size:25px;line-height:28px;offset:0px;background-color:transparent;"></p>
+<p id="PRINT_INFO" style="position:relative;top:0px;left:0px:offset:0px"></p>
+<p id="PRINT_CAUTION" style="position:relative;top:0px;left:0px;color:red;font-size:8px;line-height:8px;offset:0px;background-color:transparent;"></p>
 </div></body></html>
 

@@ -461,6 +461,9 @@
 			//	positions.push(pz[n4]);
 
 				var vN1 = getNormalVector(gl,points[n1],points[n2],points[n3],pointInner);
+var vN=vN1;
+/*
+vN1とvN2を比べていい方を取る。をやっているんだけど、issueあるし、必要ない。
 				var vN2 = getNormalVector(gl,points[n2],points[n3],points[n4],pointInner);
 				var mx = points[n1].x+points[n2].x+points[n3].x+points[n4].x;
 				var my = points[n1].y+points[n2].y+points[n3].y+points[n4].y;
@@ -479,7 +482,9 @@
 				}else{
 					vN = vN2;
 					if(vN2.length==0)PRINT_CAUTION.innerHTML+="It is not a triangle which is made from points["+n1.toString()+"],points["+n2.toString()+"],points["+n3.toString()+"],points["+n4.toString()+"]<br>";
-				}
+console.log("myGLShaple.js ",points[n1],points[n2],points[n3]);
+			}
+*/
 			//	tempNorm = norm(//set points orderd like a sector around the center as first argument
 			//		px[n1],py[n1],pz[n1],
 			//		px[n2],py[n2],pz[n2],

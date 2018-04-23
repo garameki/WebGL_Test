@@ -35,13 +35,14 @@
 
 	Object.defineProperty(myMat4,'get2D'		,{value:getNew2DPosition,writable:false,enumerable:true,configurable:false});
 	function getNew2DPosition(x,y,z){
-		var w=1
+		var w=1;
 
 		// P・A = P`
 		_x11=_a11*x+_a21*y+_a31*z+_a41*w;
 		_x12=_a12*x+_a22*y+_a32*z+_a42*w;
 		_x13=_a13*x+_a23*y+_a33*z+_a43*w;
 		_x14=_a14*x+_a24*y+_a34*z+_a44*w;
+		if(Math.floor(_x14*1000)/1000==0)_x14=0.000000001;
 		_x11=_x11/_x14;
 		_x12=_x12/_x14;
 		_x13=_x13/_x14;
@@ -268,6 +269,7 @@
 		_a21 = 0;		_a22 = s;	_a23 = 0;			_a24 = 0;
 		_a31 = 0;		_a32 = 0;	_a33 = (far + near) * nf;	_a34 = -1;
 		_a41 = 0;		_a42 = 0;	_a43 = 2 * far * near * nf;	_a44 = 0;
+
 
 		//PRINT2.innerHTML = near.toString() + "&nbsp;&nbsp;&nbsp;" + far.toString() + "&nbsp&nbsp&nbsp" + (far*near*nf).toString();
 		//https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix

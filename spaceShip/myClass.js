@@ -94,7 +94,7 @@ console.log("myClass.js");
 		};
 		Labels.prototype.repos = function(gl,pmat,mvmat){
 			myMat4.load(mvmat);// 	must be done outside until before arriving here
-			myMat4.multiArray(pmat);//	muse be done outside until before arriving here
+			myMat4.multiArray(pmat);//	must be done outside until before arriving here
 			for(var ii=0;ii<this.aTexts.length;ii++){
 				this.aTexts[ii].reposition(gl);
 			}

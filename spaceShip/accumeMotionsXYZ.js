@@ -1,7 +1,7 @@
 ﻿(function(){
 	var drawStep = 10;//milli seconds
 
-
+//sum=0;
 
 	var inherits = function(childCtor, parentCtor) {
 	  /** @constructor */
@@ -28,7 +28,6 @@
 
 	//for using under controlled space ship, follow to key board
 	(function(){
-
 		/** global scope **/
 		myXYZMani = myXYZManipulation = { };
 
@@ -68,6 +67,7 @@
 
 			this.speed = 0;
 
+			//axiz to rotate
 			this.frontX = 0;
 			this.frontY = 0;
 			this.frontZ = 1;
@@ -108,7 +108,8 @@
 		//	this.x+=this.frontX*length*this.speed;
 		//	this.y+=this.frontY*length*this.speed;
 		//	this.z-=gDSpeed*0.0001;//this.frontZ*length*this.speed;
-			this.z-=gDSpeed*0.01;//this.frontZ*length*this.speed;
+		//●	this.z-=gDSpeed*0.01;//this.frontZ*length*this.speed;
+			this.y=gDSpeed*0.01;//this.frontZ*length*this.speed;
 		};
 		Member.prototype.turnLR = function(){
 			var theta = gDTurnLR*this.ratioR;
@@ -171,7 +172,10 @@
 				myMat4.load(member.matAccume);
 				for(var ii=0;ii<n;ii++){
 					member.goForward();//_a is not used
-					myMat4.trans(-member.x,-member.y,-member.z);//これがなければいつも前に表示される
+
+					myMat4.trans(-member.x,-member.y,-member.z);//これがなければいつも前に表示される//ここでvecz=vecz+this.zが行われる
+//sum+=member.y;
+//console.log("accumeMotionsXYZ.js sum=",sum);
 					member.turnUD();//_a is not used
 					myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
 					member.turnLR();//_a is not used
@@ -351,8 +355,8 @@
 		var aMember = [];
 		var Member = function(){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
 			SuperMember.call(this);
-			this.rxy = 700;//*(Math.random()-0.5);
-			this.rz  = 700;//*(Math.random()-0.5);
+			this.rxy = 250;//*(Math.random()-0.5);
+			this.rz  = 250;//*(Math.random()-0.5);
 			this.alpha = Math.random()*2*3.14;
 			this.gamma = Math.random()*2*3.14;
 		};
@@ -410,7 +414,7 @@
 		function getMemberByIndex(){
 			return function(num){
 				if(num>=aMember.length || num<0){
-					PRINT_CAUTION.innerHTML+='number is out of range. num='+num.toString()+'<br>';
+					myInfo.caution('number is out of range. num='+num.toString());
 				}
 				return aMember[num];
 			};
