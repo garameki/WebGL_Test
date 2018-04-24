@@ -32,7 +32,7 @@ void hncodeFloat(float z){
 
 //		hncodeFloat(gl_FragCoord.z);
 
-//	gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+	gl_FragColor = vec4(1.0,0.0,0.0,1.0);
 /*
 vec4 encodeFloat (float depth) {
   vec4 bitShift = vec4(
@@ -144,9 +144,13 @@ return comp;
 
 
 		//第一のpositionにはライトのベクトルの向きと反対方向にrotateするためのmatが必要
-		gl_Position = uOrthographicMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
+//		gl_Position = uOrthographicMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
 
-		
+		//http://www.chinedufn.com/webgl-shadow-mapping-tutorial/
+		mat4 textUnitConverter = mat4(0.5,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.5,0.5,1.0);
+		gl_Position = textUnitConverter * uOrthographicMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
+
+
 	}
 </script>
 
@@ -297,105 +301,47 @@ return comp;
 
 <script type='text/javascript'>
 /**
- * print informations on html element
+ * make html information element
 **/
 (function(){
-//:myInfo
 	myInfo = { };
-
-	Object.defineProperty(myInfo,'create',{value:create,writable:true,enumerable:false,configurable:false});
-	function create(sName,nLeft,nTop){
-		Object.defineProperty(myInfo,sName,{value:new PrintText(sName,nLeft,nTop),writable:false,enumerable:true,configurable:false});
-		Object.defineProperty(myInfo[sName],'createLine',{value:createLine(sName),writable:false,enumerable:true,configurable:false});
-	};
-	function createLine(sName){
-		return function(sNameChild,sColor,sBackColor,nSize){
-			myInfo[sName].elep.innerHTML+="<span class="+sName+sNameChild+"></span><br>";
-			//https://stackoverflow.com/questions/30070865/event-that-occurs-after-appendchild
-			var targets,target,count=0;
-			var hoge = setInterval(function(){
-				targets = myInfo[sName].elep.getElementsByClassName(sName+sNameChild);
-				if(targets.length!=0){
-					clearInterval(hoge);
-					target = targets[0];
-					target.style.color = sColor;
-					target.style.backgroundColor = sBackColor;
-					target.style.fontSize = nSize;
-					Object.defineProperty(myInfo[sName],sNameChild,{set:function(str){
-						target.innerText=str;
-
-					},enumerable:true,configurable:false});
-				}else if(++count>10){
-					clearInterval(hoge);
-					console.error("myInfo."+sName+"."+sNameChild+" might be not able to attach withe DOM.");
-				}
-			},100);
-		};
-	};
-	/** inner class **/
-	var body;
-	var flagEleTitle = false;
-	function PrintText(sName,nLeft,nTop){
-		body = document.getElementsByTagName('body');
+	var eled = null;
+	var elep = null;
+	Object.defineProperty(myInfo,'initialize',{value:initialize,writable:false,enumerable:true,configurable:false});
+	function initialize(xx,yy){
+		var body = document.getElementsByTagName('body');
 		if(body.length==0){
-			console.error("DOM is not ready yet about 'myInfo."+sName+"'");
+			console.error("DOM is not ready yet in myInfo.");
 			return null;
 		}
-		var elep = document.createElement('P');
-		body[0].appendChild(elep);
-		elep.style.position='absolute';
-//		elep.style.zIndex=100000;
-		elep.style.left=nLeft.toString()+'px';
-		elep.style.top=nTop.toString()+'px';
-		elep.style.padding='15px';
-		elep.style.borderStyle='dashed';
-		elep.style.borderColor='gold';
-		elep.style.borderWidth='8px';
+		body = body[0];
+		eled = document.createElement('DIV');
+		body.appendChild(eled);
+		eled.style.zIndex=10000;
+		eled.style.position='absolute';
+		eled.style.top=yy.toString()+'px';
+		eled.style.left=xx.toString()+'px';
+		eled.style.paddingBottom='10px';
+		eled.style.paddingRight='10px';
+		eled.style.borderStyle='double';
+		eled.style.borderColor='black';
+		eled.style.borderWidth='10px';
+		
+		this.info="myInfo is ready.";
+	};
+	Object.defineProperty(myInfo,'info',{set:function(str){makeP("blue",15,str);},enumerable:true,configurable:false});
+	Object.defineProperty(myInfo,'caution',{set:function(str){makeP("red",15,str);},enumerable:true,configurable:false});
 
-		this.elep = elep;
-
-		elep.innerHTML="<span style='padding-left:5px;padding-right:5px;color:white;background-color:blue;position:absolute;left:-15px;top:-10px;'>"+sName+"</span>";
-	};
-	var styleCommon = 'font-size:12px;padding-left:5px;padding-right:5px;';
-	Object.defineProperty(PrintText.prototype,'caution',{set:setterCaution,enumerable:true,configurable:false});
-	function setterCaution(str){
-		this.elep.innerHTML+="<span style='color:black;background-color:yellow;"+styleCommon+"'>"+str+"</span><br>";		
-	};
-	Object.defineProperty(PrintText.prototype,'error',{set:setterError,enumerable:true,configurable:false});
-	function setterError(str){
-		this.elep.innerHTML+="<span style='color:white;background-color:red;"+styleCommon+"'>"+str+"</span><br>";		
-	};
-	Object.defineProperty(PrintText.prototype,'info',{set:setterInformation,enumerable:true,configurable:false});
-	function setterInformation(str){
-		this.elep.innerHTML+="<span style='color:white;background-color:blue;"+styleCommon+"'>"+str+"</span><br>";		
-	};
-})();
-/**
- *print text on html
-*/
-(function(){
-//:myline
-	myLine = { };
-	Object.defineProperty(myLine,'create',{value:create,writable:false,enumerable:false,configurable:false});
-	var body;
-	function create(sName,nLeft,nTop,sColor,sBackColor,nSize){
-		body = document.getElementsByTagName('body');
-		if(body.length==0){
-			console.error("DOM is not ready yet about 'myInfo."+sName+"'");
-			return null;
-		}
-		var elep = document.createElement('SPAN');
-		body[0].appendChild(elep);
-		elep.style.position='absolute';
-		elep.style.left=nLeft.toString()+'px';
-		elep.style.top=nTop.toString()+'px';
-		elep.style.color=sColor;
-		elep.style.backgroundColor=sBackColor;
-		elep.style.fontSize = nSize;
-		Object.defineProperty(myLine,sName,{set:function(str){
-//			str = str.toDetoxification(str);//myClass
-			elep.innerText=str;
-		},enumerable:true,configurable:false});
+	function makeP(sColor,iHeight,sMessage){
+		elep = document.createElement('P');
+		eled.appendChild(elep);
+		elep.style.color = sColor;
+		elep.style.fontSize = iHeight.toString()+'px';
+		elep.style.height = (iHeight).toString()+"px";
+		elep.style.offsetTop = '0px';
+		elep.style.offsetLeft = '0px';
+		elep.style.margin = '0px';
+		elep.innerText="・"+sMessage;
 	};
 })();
 /**
@@ -469,7 +415,7 @@ return comp;
 			shader = gl.createShader(gl.VERTEX_SHADER);
 		} else {
 			// unknown shader type
-			myInfo.main.error="Unknown shader type.The element type of shader program must be 'x-shader/x-vertex' or 'x-shader/x-fragment' now.";
+			myInfo("Unknown shader type.The element type of shader program must be 'x-shader/x-vertex' or 'x-shader/x-fragment' now.");
 			return null;
 		}
 
@@ -497,7 +443,7 @@ return comp;
 		this.gl = gl;
 		this.loc = gl.getAttribLocation(prog,name);
 		if(this.loc == -1 || this.loc == null){
-			myInfo.main.caution="Attribute variable '"+name+"' is not used nor exist in shader.";
+			myInfo.caution="Attribute variable '"+name+"' is not used nor exist in shader.";
 		} else {
 			gl.enableVertexAttribArray(this.loc);
 		}
@@ -519,7 +465,7 @@ return comp;
 		this.gl = gl;
 		this.loc = gl.getUniformLocation(prog,name);
 		if(this.loc == -1 || this.loc == null){
-			myInfo.main.caution="Attribute variable '"+name+"' is not used in shader.";
+			myInfo.caution="Attribute variable '"+name+"' is not used in shader.";
 		}
 	};
 	UniformVariable.prototype.sendFloat32Array = function(arr){
@@ -553,10 +499,11 @@ function sendOrthographicMatrix(gl,vari){
 	var top = 500.0;
 	var bottom = -500.0;
 	var far = 500.0;
-	var near = -500.0;
+	var near = -0.0;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 
 	myMat4.loadOrthography(left,right,top,bottom,near,far,aspect);
+
 	//uniform mat4 uOrthographicMatrixへ値を転送
 	vari.sendFloat32Array(myMat4.arr);
 
@@ -609,7 +556,7 @@ function sendAccumeratedMatrix(vari,arrAccumelateToMyMat4,timeSpan){//to calcula
 
 //************************************** DRAW SCENE *************************************************
 
-//:drawscene
+
 function drawScene(gl,angle){
 
 	//https://stackoverflow.com/questions/7324208/opengl-framebuffer-can-clear-it-but-cant-draw-to-it
@@ -625,17 +572,15 @@ function drawScene(gl,angle){
 //	myFRBuffers.shadow.activate();
 	var targets = [];
 
-
-
 //var targets = ["mars"];
 //	var targets = ["jupiter"];
 //	var targets = ["uranus"];
-	var targets = ["saturn","ring"];
+//	var targets = ["saturn","ring"];
 //	var targets = ["ring"]
 //	var targets = ["observe"];
-//	var targets = ["saturn"];
-//	myShaders.light.activate();
-	myShaders.camera.activate();
+	var targets = ["saturn"];
+	myShaders.light.activate();
+//	myShaders.camera.activate();
 	for(var num in targets){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[targets[num]];
 
@@ -653,12 +598,10 @@ function drawScene(gl,angle){
 	}
 	
 	myFRBuffers.shadow.inactivate();
-//	myTextures.member.ring.texture = myFRBuffers.shadow.texture;
 
 	myTextures.member["screen"].import(myFRBuffers.shadow.texture);
 
-//	var names = ["observe","jupiter","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];
-	var names = ["screen","observe","jupiter","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];
+	var names = ["observe","jupiter","saturn","ring","screen","up","right","back","uranus","moon","mars","venus","jupiter"];
 //	var names = ["observe","jupiter","saturn","screen"];
 
 	myShaders.camera.activate();
@@ -712,12 +655,15 @@ uniform sampler2D uSampler2;<--image1
 
 
 //*************************************** START ****************************************************************	
-//:start
+//start
 function start(){
 
-	/** write information on sub screen **/
-	myInfo.create("main",900,0);//ordinary writing with properties of '.info=','.caution=' or '.error='
-	myInfo.main.createLine("span","black","white",10);//changable line writing with property of its name (e.g. myInfo.main.span="your text";)
+	myInfo.initialize(200,0);
+	myInfo.caution="this is copy";
+	myInfo.caution="this is copy";
+	myInfo.caution="this is copy";
+	myInfo.caution="this is copy";
+	myInfo.caution="this is copy";
 
 	//** prepare gl canvas **//
 	var canvas = document.getElementById('glcanvas');
@@ -730,7 +676,6 @@ function start(){
 	}
 	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//(kkk bad)クリップ空間の-1～1の値をcanvasの大きさに変換する
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
-//	gl.clearColor(1.0, 1.0, 1.0, 1.0);	//White out
 	gl.clearDepth(1.0);			//Clear everything
 	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
 	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
@@ -1305,17 +1250,18 @@ function start(){
 
 //********************************************** animation ****************************************************	
 	var timeBefore=0;
-	var span=0;
+	var angle=0;
 	var dt;
 	function render(timeStamp){
 		dt = timeStamp - timeBefore;
 		if(dt>10){
-			span+=dt/16;
-			myInfo.main.span = "span="+(Math.floor(span)).toString();
+			angle+=dt/16;
+			//if(angle>360)angle=0;
+			PRINT_INFO.innerText=angle.toString();
 			myXYZTrigonometry.reposAll(dt);
 			myXYZManipulation.move(dt);
-//			drawScene(gl,oShader.camera,span);
-			drawScene(gl,span);
+//			drawScene(gl,oShader.camera,angle);
+			drawScene(gl,angle);
 			timeBefore = timeStamp;
 		}
 		window.requestAnimationFrame(render);
@@ -1329,6 +1275,11 @@ function start(){
 
 /* all the things to be wanted to draw must be thrown into 'oModel',e.g. shape or text with its position x,y,z*/
 (function(){
+	UnitsToDraw = { };
+	Object.defineProperty(UnitsToDraw,'join',{value:join,writable:false,enumerable:false,configurable:false});	
+	function join(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated){
+		Object.defineProperty(UnitsToDraw,sName,{value:new ToolBox(gl,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated),writable:false,enumerable:true,configurable:false});
+	}
 
 
 	//
@@ -1393,11 +1344,6 @@ function start(){
 
 
 
-	UnitsToDraw = { };
-	Object.defineProperty(UnitsToDraw,'join',{value:join,writable:false,enumerable:false,configurable:false});	
-	function join(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated){
-		Object.defineProperty(UnitsToDraw,sName,{value:new ToolBox(gl,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated),writable:false,enumerable:true,configurable:false});
-	}
 })();//UnitsToDraw
 
 //******************************************** framebuffer & renderBuffer **************************************************
@@ -1407,40 +1353,39 @@ function start(){
 (function(){
 	//myFRBuffers object
 	myFRBuffers = { };
-	Object.defineProperty(myFRBuffers,'create',{value:create,writable:false,enumerable:true,configurable:false});
-	function create(sName,gl,width,height){
-		Object.defineProperty(myFRBuffers,sName,{value:new FRBuffer(gl,width,height),writable:false,enumerable:true,configurable:true});
-	};
 
 	//reference
 	//http://www.chinedufn.com/webgl-shadow-mapping-tutorial/
 	//https://stackoverflow.com/questions/41824631/how-to-work-with-framebuffers-in-webgl/41832778#41832778
 	/** inner class **/
 	  //Texture, Framebuffer and Renderbuffer are necessary at once.
+	  //http://www.chinedufn.com/webgl-shadow-mapping-tutorial/
 	var FRBuffer = function(gl,width,height){
 		this.gl = gl;
 		this.width = width;
 		this.height = height;
 
-		this.texture = gl.createTexture();
+		this.texture = gl.createTexture();//which frame buffer stores image accumeration into
 		this.framebuffer = gl.createFramebuffer();
 		this.renderbuffer = gl.createRenderbuffer();
+
+		this.initialize();
 	};
 	FRBuffer.prototype.initialize = function(){
-		/** prepare texture rendered into **/
 		var gl = this.gl;
-		this.texture = gl.createTexture();//which frame buffer stores image accumeration int
+		this.texture = gl.createTexture();//which frame buffer stores image accumeration into
 		gl.bindTexture(gl.TEXTURE_2D,this.texture);//-->gl.TEXTURE[?]
 		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
 		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.width,this.height,0,gl.RGBA,gl.UNSIGNED_BYTE,null);//pass no image into gl.TEXT[\d+]
+//idea to clear	this.framebuffer = gl.createFramebuffer();//●kkk
+//idea to clear	this.renderbuffer = gl.createRenderbuffer();//●kkk
 	};
 	FRBuffer.prototype.activate = function(){
 		var gl = this.gl;
-
 		gl.viewport(0,0,this.width,this.height);
-		gl.activeTexture(gl.TEXTURE0);////////////////輪のテクスチャーに輪を描く
-		gl.bindTexture(gl.TEXTURE_2D,this.texture);
+//		gl.activeTexture(gl.TEXTURE0);
+//		gl.bindTexture(gl.TEXTURE_2D,this.texture);
 		gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.texture,0);
 
@@ -1460,22 +1405,23 @@ function start(){
 		this.initialize();
 	};
 
+	Object.defineProperty(myFRBuffers,'create',{value:create,writable:false,enumerable:true,configurable:false});
+	function create(sName,gl,width,height){
+		Object.defineProperty(myFRBuffers,sName,{value:new FRBuffer(gl,width,height),writable:false,enumerable:true,configurable:true});
+	};
 })();
 
 </script>
 
-</head><body style="overflow:hidden;" onload="start();">
-<div>
+</head><body style="overflow:hidden;" onload="start();"><div>
+<h3 style="offset:0px;">Animating objects with WebGL</h3>
+<h5 style="offset:0px;">using gl.TRIANGLES mode to draw and not using gl.ELEMENT_ARRAY_BUFFER mode to buffer</h5>
+<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/Tutorial/Lighting_in_WebGL">MDN web docs moz://a(click next page)</a></p>
+<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html">WebGLFundamentals</a></p>
 <div id="canvasContainer">
-	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
+<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
 </div>
 <p id="PRINT_INFO" style="position:absolute;top:0px;left:0px:offset:0px;font-size:40px;background-color:white;"></p>
 <p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;font-size:25px;line-height:28px;offset:0px;background-color:transparent;"></p>
-	<div>
-		<h3 style="offset:0px;">Animating objects with WebGL</h3>
-		<h5 style="offset:0px;">using gl.TRIANGLES mode to draw and not using gl.ELEMENT_ARRAY_BUFFER mode to buffer</h5>
-		<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/Tutorial/Lighting_in_WebGL">MDN web docs moz://a(click next page)</a></p>
-		<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html">WebGLFundamentals</a></p>
-	</div>
 </div></body></html>
 

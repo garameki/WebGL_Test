@@ -109,7 +109,7 @@
 		//	this.y+=this.frontY*length*this.speed;
 		//	this.z-=gDSpeed*0.0001;//this.frontZ*length*this.speed;
 		//●	this.z-=gDSpeed*0.01;//this.frontZ*length*this.speed;
-			this.y=gDSpeed*0.01;//this.frontZ*length*this.speed;
+			this.z-=gDSpeed*0.01;//this.frontZ*length*this.speed;
 		};
 		Member.prototype.turnLR = function(){
 			var theta = gDTurnLR*this.ratioR;

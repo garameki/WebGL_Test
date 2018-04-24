@@ -300,7 +300,7 @@
 		var tmb = 1/(top - bottom);
 		var fmn = 1/(far - near);
 
-		_a11 = 2*rml/aspectRatio;	_a12 = 0;			_a13 = 0;			_a14 = 0;
+		_a11 = 2*rml;			_a12 = 0;			_a13 = 0;			_a14 = 0;
 		_a21 = 0;			_a22 = 2*tmb;			_a23 = 0;			_a24 = 0;
 		_a31 = 0;			_a32 = 0;			_a33 = -2*fmn;			_a34 = 0;
 		_a41 = -(right + left) * rml;	_a42 = -(top + bottom) * tmb;	_a43 = -(far + near) * fmn;	_a44 = 1;
