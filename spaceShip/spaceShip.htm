@@ -666,7 +666,7 @@ function drawScene(gl,angle){
 	myShaders.light.activate();//console.log("1current program=",gl.getParameter(gl.CURRENT_PROGRAM));
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-	var names = ["uranus"];
+	var names = ["ring","saturn"];
 	myShaders.camera.activate();
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
@@ -690,6 +690,8 @@ function drawScene(gl,angle){
 
 		myTextures.member[member.nameTexture].activate();
 
+		myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
+		myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
 	}//camera
@@ -810,7 +812,22 @@ uniform sampler2D uSampler2;<--image1
 };
 
 
+
+
+
+
+
+
+
 //*************************************** START ****************************************************************	
+
+
+
+
+
+
+
+
 //:start
 function start(){
 
@@ -829,6 +846,10 @@ function start(){
 	canvas.width=canvas.clientWidth;//necessary
 	canvas.height=canvas.clientHeight;//necessary
 	var gl=canvas.getContext("webgl2");
+	if(!gl){
+		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
+		return;
+	}
 	gl[gl.FASTEST]="FAST";
 	gl[gl.NICEST]="NICEST";
 	gl[gl.DONT_CARE]="OK";
@@ -849,16 +870,20 @@ function start(){
 //	gl[]="";
 
 	
-	if(!gl){
-		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
-		return;
-	}
 	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//(kkk bad)クリップ空間の-1～1の値をcanvasの大きさに変換する
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
 //	gl.clearColor(1.0, 1.0, 1.0, 1.0);	//White out
-	gl.clearDepth(1.0);			//Clear everything
+	gl.clearDepth(0.0001);			//Clear everything
 	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
 	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
+
+		//As the depth value is greater ,the depth become farther.
+	
+	gl.enable(gl.STENCIL_TEST);
+	gl.stencilFunc(gl.LEQUAL,15,1);
+
+
+
 {
 	//https://stackoverflow.com/questions/47216022/webgl-gl-fragcolor-alpha-behave-differently-in-chrome-with-firefox
 	//i've been thanking David Guan
@@ -926,7 +951,7 @@ function start(){
 
 
 	/** prepare frame buffer & render buffer **/
-	myFRBuffers.create("shadow",gl,128,128);//16384<-----MAX_RENDER_SIZE
+	myFRBuffers.create("shadow",gl,32,32);//16384<-----MAX_RENDER_SIZE
 	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
 
 
@@ -1437,7 +1462,7 @@ function start(){
 
 //	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
 //	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	aAccumeUnits.push(AccumeMotions.translate(-20,0,-30));//seen from the distance
+	aAccumeUnits.push(AccumeMotions.translate(-10,-10,-30));//seen from the distance
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,"screen",colorNameText);//kkk
 	var shape = myGLShape.rectangle(gl,20,20);
@@ -1594,17 +1619,20 @@ function start(){
 	};
 	FRBuffer.prototype.activate = function(){
 		var gl = this.gl;
-		gl.viewport(0,0,this.width,this.height);
+//		gl.viewport(0,0,this.width,this.height);
+		gl.viewport(0,0,64,64);
+
+
 	//	gl.activeTexture(gl.TEXTURE0+1);////////////////輪のテクスチャーに輪を描く
 	//	gl.bindTexture(gl.TEXTURE_2D,this.texture);
 		gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.texture,0);
 
-	//	gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
-	//	gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.width,this.height);
-	//	gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
-//stencil	gl.renderbufferStorage(gl.RENDERBUFFER,gl.STENCIL_COMPONENT16,this.width,this.height);
-//stencil	gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
+		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.width,this.height);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.STENCIL_COMPONENT16,this.width,this.height);
+//		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
 
 
 	};
@@ -1612,7 +1640,7 @@ function start(){
 		var gl=this.gl;
 		gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 		gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-	//	gl.bindRenderbuffer(gl.RENDERBUFFER,null);
+		gl.bindRenderbuffer(gl.RENDERBUFFER,null);
 	};
 	FRBuffer.prototype.reset = function(){
 		//https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/rendering/framebuffer-texture-clear.html
@@ -1627,7 +1655,7 @@ function start(){
 </head><body style="overflow:hidden;" onload="start();">
 <div>
 <div id="canvasContainer">
-	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
+	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:512px;height:512px;"></canvas>
 </div>
 <p id="PRINT_INFO" style="position:absolute;top:0px;left:0px:offset:0px;font-size:40px;background-color:white;"></p>
 <p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;font-size:25px;line-height:28px;offset:0px;background-color:transparent;"></p>
