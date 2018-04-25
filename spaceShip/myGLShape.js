@@ -586,6 +586,7 @@ console.log("myGLShaple.js ",points[n1],points[n2],points[n3]);
 			tex:textureCoordinates,
 			ind:indices,
 			draw:function(){
+//console.log("myGLShape.js:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE));
 				gl.drawElements(gl.TRIANGLES,countTriangle*3,gl.UNSIGNED_SHORT,0);
 			}
 

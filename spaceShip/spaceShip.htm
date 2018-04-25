@@ -15,7 +15,7 @@
 <!--******************************* SHADER PROGMRAMS *****************************************************-->
 <!--Fragment shader-->
 <script id="lightFragmentShader" type="x-shader/x-fragment">
-
+	varying lowp vec4 vColor;
 
 
 
@@ -33,6 +33,7 @@ void hncodeFloat(float z){
 //		hncodeFloat(gl_FragCoord.z);
 
 //	gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+	gl_FragColor = vColor;
 /*
 vec4 encodeFloat (float depth) {
   vec4 bitShift = vec4(
@@ -98,6 +99,12 @@ return comp;
 <script id="lightVertexShader" type="x-shader/x-vertex">
 
 	attribute vec3 aVertexPosition;//x y z
+	attribute vec3 aVertexNormal;//x y z
+	attribute vec4 aVertexColor;//R G B Alpha
+	attribute vec2 aTextureCoord;//x y
+
+
+	varying lowp vec4 vColor;
 
 	uniform mat4 uOrthographicMatrix;
 	uniform mat4 uNotManipulatedMatrix;
@@ -105,6 +112,10 @@ return comp;
 
 
 	void main(void) {
+
+
+		vColor = aVertexColor;
+
 
 		vec3 directional = normalize(uNotManipulatedMatrix * vec4(0.0,0.0,0.0,1.0) - vec4(0.0,0.0,0.0,1.0)).xyz;//means PosSaturn - PosMovedOrigin
 
@@ -144,7 +155,9 @@ return comp;
 
 
 		//第一のpositionにはライトのベクトルの向きと反対方向にrotateするためのmatが必要
+//●kkk
 		gl_Position = uOrthographicMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
+//		gl_Position = vec4(0.0,0.0,-10.0,1.0);
 
 		
 	}
@@ -184,8 +197,9 @@ return comp;
 
 		//http://www.chinedufn.com/webgl-shadow-mapping-tutorial/
 //?		highp   vec4 texelColor = texture2D(uSampler,vTextureCoord);//en version
-		gl_FragColor = vec4(shadowFlag) * vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
-//		gl_FragColor=vec4(0.0,1.0,1.0,0.5);
+//●kkk
+//		gl_FragColor = vec4(shadowFlag) * vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
+		gl_FragColor=vec4(0.0,1.0,1.0,0.5);
 	}
 </script>
 
@@ -197,8 +211,8 @@ return comp;
 <script id="shader-vs" type="x-shader/x-vertex">
 
 	//'attribute' this type is used in vertex shader only.This type is assigned on buffers defined in js
-	attribute vec3 aVertexNormal;//x y z
 	attribute vec3 aVertexPosition;//x y z
+	attribute vec3 aVertexNormal;//x y z
 	attribute vec4 aVertexColor;//R G B Alpha
 	attribute vec2 aTextureCoord;//x y
 
@@ -226,6 +240,7 @@ return comp;
 
 
 	void main(void) {
+//●kkk
 		gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
 
 		gl_PointSize = uPointSizeFloat;
@@ -356,19 +371,26 @@ return comp;
 
 		elep.innerHTML="<span style='padding-left:5px;padding-right:5px;color:white;background-color:blue;position:absolute;left:-15px;top:-10px;'>"+sName+"</span>";
 	};
-	var styleCommon = 'font-size:12px;padding-left:5px;padding-right:5px;';
 	Object.defineProperty(PrintText.prototype,'caution',{set:setterCaution,enumerable:true,configurable:false});
 	function setterCaution(str){
-		this.elep.innerHTML+="<span style='color:black;background-color:yellow;"+styleCommon+"'>"+str+"</span><br>";		
+		this.print(str,"black","yellow");
 	};
 	Object.defineProperty(PrintText.prototype,'error',{set:setterError,enumerable:true,configurable:false});
 	function setterError(str){
-		this.elep.innerHTML+="<span style='color:white;background-color:red;"+styleCommon+"'>"+str+"</span><br>";		
+		this.print(str,"white","red");
 	};
 	Object.defineProperty(PrintText.prototype,'info',{set:setterInformation,enumerable:true,configurable:false});
 	function setterInformation(str){
-		this.elep.innerHTML+="<span style='color:white;background-color:blue;"+styleCommon+"'>"+str+"</span><br>";		
+		this.print(str,"white","blue");
 	};
+
+	/** inner function **/
+	var styleCommon = 'font-size:12px;padding-left:5px;padding-right:5px;';
+	PrintText.prototype.print = function(str,sFColor,sBColor){
+		this.elep.innerHTML+="<span style='color:"+sFColor+";background-color:"+sBColor+";"+styleCommon+"'>・"+str+"</span><br>";		
+	};
+
+
 })();
 /**
  *print text on html
@@ -402,6 +424,7 @@ return comp;
  * make shader
 */
 (function(){
+//:myshaders
 	myShaders = { };
 
 	/** Property **/
@@ -484,26 +507,32 @@ return comp;
 		}
 		return shader;
 	};
-
+//●lll
 	/** For attribute variable **/
 	Shader.prototype.getAttribLocation = function(sNameVariable){
-		Object.defineProperty(this.attrib,sNameVariable,{value:new AttribVariable(this.gl,this.program,sNameVariable),writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(this.attrib,sNameVariable,{value:new AttribVariable(this.gl,this.program,sNameVariable,this.programName),writable:false,enumerable:true,configurable:false});
 	};
 	/** inner class **/
 	const normalize = false;
 	const stride = 0;//shaderを呼び出すごとに進むバイト数//これは(buffer.slice((offset + i) * stride,size);)という意味
 	const offset = 0;
-	var AttribVariable = function(gl,prog,name,numComponents){
+	var AttribVariable = function(gl,prog,name,progName){
 		this.gl = gl;
 		this.loc = gl.getAttribLocation(prog,name);
 		if(this.loc == -1 || this.loc == null){
-			myInfo.main.caution="Attribute variable '"+name+"' is not used nor exist in shader.";
+			myInfo.main.error="Can't initialize attribute type of '"+name+"' variable, such that it's not used nor exist in '"+progName+"' shader.";
+			d
 		} else {
 			gl.enableVertexAttribArray(this.loc);
 		}
-		this.numComponents = numComponents;
 	};
+	var flagError = false;
 	AttribVariable.prototype.assignBuffer = function(buffer,numComponents){
+		if(buffer==void 0 && !flagError){
+			myInfo.main.error="buffer="+buffer+" in AttribVariable.prototype.assinBuffer()";
+			flagError = true;
+			stop();
+		};
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER,buffer);
 		this.gl.vertexAttribPointer(this.loc,numComponents,this.gl.FLOAT,normalize,stride,offset);
 	};
@@ -512,14 +541,15 @@ return comp;
 
 	/** For uniform variable **/
 	Shader.prototype.getUniformLocation = function(sNameVariable){
-		Object.defineProperty(this.uniform,sNameVariable,{value:new UniformVariable(this.gl,this.program,sNameVariable),writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(this.uniform,sNameVariable,{value:new UniformVariable(this.gl,this.program,sNameVariable,this.programName),writable:false,enumerable:true,configurable:false});
 	};
 	/** inner class **/
-	var UniformVariable = function(gl,prog,name){
+	var UniformVariable = function(gl,prog,name,progName){
 		this.gl = gl;
 		this.loc = gl.getUniformLocation(prog,name);
 		if(this.loc == -1 || this.loc == null){
-			myInfo.main.caution="Attribute variable '"+name+"' is not used in shader.";
+			myInfo.main.error="Can't initialize uniform type of '"+name+"' variable, such that it's not used nor exist in '"+progName+"' shader.";
+			stop();
 		}
 	};
 	UniformVariable.prototype.sendFloat32Array = function(arr){
@@ -544,10 +574,8 @@ return comp;
 
 function sendOrthographicMatrix(gl,vari){
 
-	/*
-		https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix		from cite site:
-		orthographic matrix...myMat4 already has a property defined
-	*/
+		//https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix		from cite site:
+		//orthographic matrix...myMat4 already has a property defined
 	var right = 500.0;
 	var left = -500.0;
 	var top = 500.0;
@@ -617,49 +645,56 @@ function drawScene(gl,angle){
 
 	//Clear the depth-buffer and color-buffer and so on before we start drawing on it
 
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+//	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	var member,mvmat,pmat;
 
 	myFRBuffers.shadow.reset();
-//	myFRBuffers.shadow.activate();
+	myFRBuffers.shadow.activate();
+
+
 	var targets = [];
-
-
-
 //var targets = ["mars"];
+//	var targets = ["mars"];
 //	var targets = ["jupiter"];
-//	var targets = ["uranus"];
-	var targets = ["saturn","ring"];
+	var targets = ["uranus"];
+//	var targets = ["saturn","ring"];
 //	var targets = ["ring"]
 //	var targets = ["observe"];
 //	var targets = ["saturn"];
-//	myShaders.light.activate();
-	myShaders.camera.activate();
+	var names = ["observe","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
+
+
+	myShaders.light.activate();
+
 	for(var num in targets){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[targets[num]];
 
 		/** To vertex shader**/
 		myShaders.light.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders.light.attrib.aVertexColor.assignBuffer(member.buffers.color,4);//●kkk
+//		myShaders.light.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
+//		myShaders.light.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+
 		member.buffers.bindElement();
 
 		sendOrthographicMatrix(gl,myShaders.light.uniform.uOrthographicMatrix);
-//		sendAccumeratedMatrix(myShaders.light.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+	//	sendAccumeratedMatrix(myShaders.light.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
 		sendAccumeratedMatrix(myShaders.light.uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
 
 		myTextures.member[member.nameTexture].activate();
 
 		member.draw();//in which texture activated is for use
-	}
+	}//shadow
 	
 	myFRBuffers.shadow.inactivate();
-//	myTextures.member.ring.texture = myFRBuffers.shadow.texture;
 
+//	myTextures.member.ring.texture = myFRBuffers.shadow.texture;
 	myTextures.member["screen"].import(myFRBuffers.shadow.texture);
 
-//	var names = ["observe","jupiter","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];
-	var names = ["screen","observe","jupiter","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];
-//	var names = ["observe","jupiter","saturn","screen"];
+//	var names = ["screen","observe","jupiter","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
+	var names = ["screen","observe","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
+//	var names = ["screen","observe","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter","ring"];//<-----JUPITERからrenderされる
 
 	myShaders.camera.activate();
 	for(var num in names){//the last is the texture that is gotten by framebuffer
@@ -671,25 +706,43 @@ function drawScene(gl,angle){
 		myShaders.camera.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
 		member.buffers.bindElement();
 
+
+		/** only using camera shader **/
+		// buffering order (all texture use gl.TEXTURE0)
+			//var targets = ["uranus"];
+			//myShaders.camera.activate();
+			//x myTextures.member["screen"].import(myFRBuffers.shadow.texture);
+			//var names = ["screen","observe","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
+			//myShaders.camera.activate();
+		// buff->screen->observe->jupiter->saturn->fing->up->right->back->uranus->moon->mars->venus->jupiter :next ->buff->screen->...
+		//equals
+		// uranus->screen->observe->jupiter->saturn->fing->up->right->back->uranus->moon->mars->venus->jupiter :next ->uranus->screen->...
+		//jupiterにuranusのtextureをつけようとするのはなぜか。screenを見ると、textureがuranusになっているのは明らか.
+		//defaultのframebufferには
+		//renderbufferはgl.canvas.width x gl.canvas.heightに描いている!!
+
+
+
+
 		sendPerspectiveMatrix(gl,myShaders.camera.uniform.uPerspectiveMatrix);
 		pmat = myMat4.arr;//sended data above
 		sendAccumeratedMatrix(myShaders.camera.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
 		mvmat = myMat4.arr;//sended data above
 		sendModelViewMatrixInversedTransposed(myShaders.camera.uniform.uModelViewMatrixInversedTransposed,mvmat);
-		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
+//		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
 		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
 		myShaders.camera.uniform.uBaseLight.sendFloat(member.baseLight);
 		myShaders.camera.uniform.uPointSizeFloat.sendFloat(3.0);
 		/** Tofragment shader **/
-		myShaders.camera.uniform.uBrightness.sendFloat(member.brightness);
-		myShaders.camera.uniform.uAlpha.sendFloat(member.alpha);
-		myShaders.camera.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+	//	myShaders.camera.uniform.uBrightness.sendFloat(member.brightness);
+	//	myShaders.camera.uniform.uAlpha.sendFloat(member.alpha);
+	//	myShaders.camera.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
 		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 
 		myTextures.member[member.nameTexture].activate();
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
-	}
+	}//camera
 
 
 /** the way to use more Textures at once **/
@@ -764,6 +817,9 @@ function start(){
 	//** prepare shaders and variables in it **/
 	myShaders.create("light","lightVertexShader","lightFragmentShader",gl);
 		myShaders.light.getAttribLocation("aVertexPosition");
+	//	myShaders.light.getAttribLocation("aVertexNormal");
+		myShaders.light.getAttribLocation("aVertexColor");
+	//	myShaders.light.getAttribLocation("aTextureCoord");
 	//	myShaders.light.getUniformLocation("uPerspectiveMatrix");
 	//	myShaders.light.getUniformLocation("uModelViewMatrix");
 	//	myShaders.light.getUniformLocation("uPointSizeFloat");
@@ -789,14 +845,16 @@ function start(){
 		myShaders.camera.getUniformLocation("uSampler");
 		myShaders.camera.getUniformLocation("uModelViewMatrixInversedTransposed");
 		myShaders.camera.getUniformLocation("uBaseLight");
-		myShaders.camera.getUniformLocation("uManipulatedRotationMatrix");
-		myShaders.camera.getUniformLocation("uBrightness");
-		myShaders.camera.getUniformLocation("uAlpha");
-		myShaders.camera.getUniformLocation("uCassiniFactor");
+//		myShaders.camera.getUniformLocation("uManipulatedRotationMatrix");
+	//	myShaders.camera.getUniformLocation("uBrightness");
+	//	myShaders.camera.getUniformLocation("uAlpha");
+	//	myShaders.camera.getUniformLocation("uCassiniFactor");
 		myShaders.camera.getUniformLocation("uManipulatedMatrix");
 
 
-	myFRBuffers.create("shadow",gl,1024,1024);
+	/** prepare frame buffer & render buffer **/
+	myFRBuffers.create("shadow",gl,gl.canvas.width,gl.canvas.height);
+
 
 
 
@@ -1026,6 +1084,11 @@ function start(){
 	var shape = myGLShape.sphere(gl,r);
 	UnitsToDraw.join(gl,"jupiter",shape,aAccumeUnits,labels,nameTextureJupiter,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedJupiter);
 
+
+	var aMatricesNotManipulatedCommon = [];
+	aMatricesNotManipulatedCommon.push(AccumeMotions.rotate(1,0,0,0,90));
+	aMatricesNotManipulatedCommon.push(AccumeMotions.rotate(0,1,0,1,0));
+	aMatricesNotManipulatedCommon.push(AccumeMotionsXYZ.trans(xyz));
 
 
 	/** Moon **/
@@ -1425,11 +1488,14 @@ function start(){
 		this.texture = gl.createTexture();
 		this.framebuffer = gl.createFramebuffer();
 		this.renderbuffer = gl.createRenderbuffer();
+
+		this.initialize();
 	};
 	FRBuffer.prototype.initialize = function(){
 		/** prepare texture rendered into **/
 		var gl = this.gl;
 		this.texture = gl.createTexture();//which frame buffer stores image accumeration int
+//		gl.activeTexture(gl.TEXTURE0+1);////////////////輪のテクスチャーに輪を描く
 		gl.bindTexture(gl.TEXTURE_2D,this.texture);//-->gl.TEXTURE[?]
 		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
@@ -1437,9 +1503,8 @@ function start(){
 	};
 	FRBuffer.prototype.activate = function(){
 		var gl = this.gl;
-
 		gl.viewport(0,0,this.width,this.height);
-		gl.activeTexture(gl.TEXTURE0);////////////////輪のテクスチャーに輪を描く
+//		gl.activeTexture(gl.TEXTURE0+1);////////////////輪のテクスチャーに輪を描く
 		gl.bindTexture(gl.TEXTURE_2D,this.texture);
 		gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.texture,0);
@@ -1447,6 +1512,8 @@ function start(){
 		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
 		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.width,this.height);
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.STENCIL_COMPONENT16,this.width,this.height);
+//		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
 	};
 	FRBuffer.prototype.inactivate = function(){
 		var gl=this.gl;
@@ -1467,7 +1534,7 @@ function start(){
 </head><body style="overflow:hidden;" onload="start();">
 <div>
 <div id="canvasContainer">
-	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:840px;height:480px;"></canvas>
+	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:1024px;height:1024px;"></canvas>
 </div>
 <p id="PRINT_INFO" style="position:absolute;top:0px;left:0px:offset:0px;font-size:40px;background-color:white;"></p>
 <p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;font-size:25px;line-height:28px;offset:0px;background-color:transparent;"></p>

@@ -17,7 +17,11 @@
 		this.texture = gl.createTexture();
 	};
 	Texture.prototype.activate = function(){
-//		this.gl.activeTexture(this.gl.TEXTURE0);//+this.number);//ここで保存されていればbindしなくて済む
+
+		this.gl.activeTexture(this.gl.TEXTURE0);//+this.number);//ここで保存されていればbindしなくて済む
+//console.log("myTextures.js:activeTexture=",this.gl.getParameter(this.gl.ACTIVE_TEXTURE));
+//console.log("myTextures.js:this.texture=",this.texture,"name=",this.name);
+
 		this.gl.bindTexture   (this.gl.TEXTURE_2D,this.texture);//kkk this.textureとしてアドレスを補完するべきなのか？それともTEXTURE0に保存さててしまうのか？
 	};
 	Texture.prototype.read = function(){
@@ -28,11 +32,11 @@
 				//gl.TEXT[\d]* must be connected in fragment shader,so when i use only one texture in the shader,it is not necessary for js-script to use gl.TEXTURE0 above.
 				//https://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
 //●consider-able	gl.activeTexture(gl.TEXTURE0+myself.number);//https://stackoverflow.com/questions/11292599/how-to-use-multiple-textures-in-webgl toji answered
-//無くても出来るぞ	gl.activeTexture(gl.TEXTURE0);//kkk
+			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture   (gl.TEXTURE_2D,myself.texture);//kkk this.textureとしてアドレスを補完するべきなのか？それともTEXTURE0に保存さててしまうのか？
 			gl.texImage2D    (gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
 			gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-			gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
+			gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？gl.ACTIVE_TEXTURE
 			gl.generateMipmap(gl.TEXTURE_2D);//gl.TEXTURE_2Dをmipmapに適用
 		};
 
