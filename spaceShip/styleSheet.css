@@ -1,16 +1,16 @@
 ﻿body {
-	overflow:hidden;
+	/* overflow:hidden; */
 }
 
 #canvasContainer {/* this has one canvas and more than one text elements*/
 	position:relative;
-	overflow:hidden;
+/*	overflow:hidden; */
 
 }
 
 .divGLText {/*this have a element as textNode*/
 	position:absolute;
-	overflow:hidden;
+/*	overflow:hidden; */
 	z-index:1000;
 }
 

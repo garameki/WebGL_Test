@@ -539,7 +539,7 @@ return comp;
 		this.gl.enableVertexAttribArray(this.loc);
 		this.gl.vertexAttribPointer(this.loc,numComponents,this.gl.FLOAT,normalize,stride,offset);
 
-		console.log("arrayBuffer=",this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING)," was pointed");
+//console.log("arrayBuffer=",this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING)," was pointed");
 	};
 
 
@@ -653,7 +653,7 @@ function drawScene(gl,angle){
 	myFRBuffers.shadow.reset();
 	myFRBuffers.shadow.activate();
 
-
+/**************************
 	var targets = [];
 //	targets.push("mars");
 //	targets.push("jupiter");
@@ -662,15 +662,47 @@ function drawScene(gl,angle){
 //	targets.push("ring");
 //	targets.push("observe");
 //	targets.push("saturn");
-	var names = ["observe","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
-
-
 
 	myShaders.light.activate();//console.log("1current program=",gl.getParameter(gl.CURRENT_PROGRAM));
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+	var names = ["uranus"];
+	myShaders.camera.activate();
+	for(var num in names){//the last is the texture that is gotten by framebuffer
+		member = UnitsToDraw[names[num]];
+		// To vertex shader
+		myShaders.camera.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders.camera.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
+		myShaders.camera.attrib.aVertexColor.assignBuffer(member.buffers.color,4);
+		myShaders.camera.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
+
+		sendPerspectiveMatrix(gl,myShaders.camera.uniform.uPerspectiveMatrix);
+		pmat = myMat4.arr;//sended data above
+		sendAccumeratedMatrix(myShaders.camera.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		mvmat = myMat4.arr;//sended data above
+		sendModelViewMatrixInversedTransposed(myShaders.camera.uniform.uModelViewMatrixInversedTransposed,mvmat);
+		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+		myShaders.camera.uniform.uBaseLight.sendFloat(member.baseLight);
+		myShaders.camera.uniform.uPointSizeFloat.sendFloat(3.0);
+		// Tofragment shader
+		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+
+		myTextures.member[member.nameTexture].activate();
+
+		member.draw();//in which texture activated is for use
+		member.labels.repos(gl,pmat,mvmat);
+	}//camera
+
+
+
+
+
+/*****************
 	for(var num in targets){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[targets[num]];
 
-		/** To vertex shader**/
+		// To vertex shader
 		myShaders.light.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
 		myShaders.light.attrib.aVertexColor.assignBuffer(member.buffers.color,4);//●kkk
 //		myShaders.light.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
@@ -683,23 +715,18 @@ function drawScene(gl,angle){
 		sendAccumeratedMatrix(myShaders.light.uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
 
 		myTextures.member[member.nameTexture].activate();
-console.log("1bindingTexture =",gl.getParameter(gl.TEXTURE_BINDING_2D));
-console.log("1frameBuffer =",gl.getParameter(gl.FRAMEBUFFER_BINDING));
-console.log("1renderBuffer =",gl.getParameter(gl.RENDERBUFFER_BINDING));
-console.log("1drawFrameBuffer =",gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING));
-console.log("1activeAttributes=",gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_ATTRIBUTES));
-console.log("1activeUniforms=",gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_UNIFORMS));
-console.log("1uniformBufferBinding=",gl.getParameter(gl.UNIFORM_BUFFER_BINDING));
-console.log("1uniformBufferOffsetAlignment=",gl.getParameter(gl.UNIFORM_BUFFER_OFFSET_ALIGNMENT));
-console.log("framebuffer=",gl.getParameter(gl.FRAMEBUFFER_BINDING));
-	myInfo.main.framebuffer = "FRAME BUFFER:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
-	myInfo.main.renderbuffer = "RENDER BUFFER:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
+		if(false){console.log("1bindingTexture =",gl.getParameter(gl.TEXTURE_BINDING_2D));console.log("1frameBuffer =",gl.getParameter(gl.FRAMEBUFFER_BINDING));console.log("1renderBuffer =",gl.getParameter(gl.RENDERBUFFER_BINDING));console.log("1drawFrameBuffer =",gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING));console.log("1activeAttributes=",gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_ATTRIBUTES));console.log("1activeUniforms=",gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_UNIFORMS));console.log("1uniformBufferBinding=",gl.getParameter(gl.UNIFORM_BUFFER_BINDING));console.log("1uniformBufferOffsetAlignment=",gl.getParameter(gl.UNIFORM_BUFFER_OFFSET_ALIGNMENT));console.log("framebuffer=",gl.getParameter(gl.FRAMEBUFFER_BINDING));}
+		myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
+		myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
 
-	//myInfo.main.renderbuffer = "RENDER BUFFER:"+eval(gl.getParameter(gl.RENDERBUFFER_BINDING)._name;
-	member.draw();//in which texture activated is for use
+		member.draw();//in which texture activated is for use
 	}//shadow
+
+* * * * * * * * * * */
+
 	
 	myFRBuffers.shadow.inactivate();
+	myInfo.main.framebufferstatus = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
 
 //	myTextures.member.ring.texture = myFRBuffers.shadow.texture;
 	myTextures.member["screen"].import(myFRBuffers.shadow.texture);
@@ -708,7 +735,8 @@ console.log("framebuffer=",gl.getParameter(gl.FRAMEBUFFER_BINDING));
 	var names = ["screen","observe","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
 //	var names = ["screen","observe","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter","ring"];//<-----JUPITERからrenderされる
 
-	myShaders.camera.activate();console.log("2current program=",gl.getParameter(gl.CURRENT_PROGRAM));
+	myShaders.camera.activate();
+//console.log("2current program=",gl.getParameter(gl.CURRENT_PROGRAM));
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
 		/** To vertex shader **/
@@ -752,7 +780,7 @@ console.log("framebuffer=",gl.getParameter(gl.FRAMEBUFFER_BINDING));
 		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 
 		myTextures.member[member.nameTexture].activate();
-console.log("2bindingTexture =",gl.getParameter(gl.TEXTURE_BINDING_2D));
+//console.log("2bindingTexture =",gl.getParameter(gl.TEXTURE_BINDING_2D));
 
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
@@ -792,6 +820,7 @@ function start(){
 	myInfo.main.createLine("glstatus","black","white",10);
 	myInfo.main.createLine("glerror","black","white",10);
 	myInfo.main.createLine("framebuffer","black","white",10);
+	myInfo.main.createLine("framebufferstatus","black","white",10);
 	myInfo.main.createLine("renderbuffer","black","white",10);
 	
 
@@ -810,6 +839,14 @@ function start(){
 	gl[gl.INVALID_FRAMEBUFFER_OPERATION]="INVALID FRAMEBUFFER OPERATION";
 	gl[gl.OUT_OF_MEMORY]="OUT OF MEMORY";
 	gl[gl.CONTEXT_LOST_WEBGL]="CONTEXT LOST WEBGL";
+	/** checkFramebufferStatus() **/
+	gl[gl.FRAMEBUFFER_COMPLETE]="READY";
+	gl[gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT]="INCOMPLETE";
+	gl[gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT]="INCOMPLETE ATTACHMENT";
+	gl[gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS]="INCOMPLETE DIMENSIONS";
+	gl[gl.FRAMEBUFFER_UNSUPPORTED]="UNSUPPORTED";
+	gl[gl.FRAMEBUFFER_INCOMPLETE_MULTISAMPLE]="INCOMPLETE MULTI SAMPLE";
+//	gl[]="";
 
 	
 	if(!gl){
@@ -889,12 +926,15 @@ function start(){
 
 
 	/** prepare frame buffer & render buffer **/
-	myFRBuffers.create("shadow",gl,gl.canvas.width,gl.canvas.height);
+	myFRBuffers.create("shadow",gl,128,128);//16384<-----MAX_RENDER_SIZE
+	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+
 
 
 
 
 	//** prepare textures **
+	myInfo.main.info = "max texture size ="+gl.MAX_TEXTURE_SIZE;flagMaxTexture=true;
 	var nameTextureSun = "sun";
 	myTextures.join(gl,nameTextureSun);
 	var nameTextureBase = "earth";
@@ -1391,7 +1431,10 @@ function start(){
 	/** screen to draw shadow **/
 
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(0,0,1,0,90));
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0,90));
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0,90));
+	aAccumeUnits.push(AccumeMotions.rotate(0,0,1,0,180));
+
 //	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
 //	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 	aAccumeUnits.push(AccumeMotions.translate(-20,0,-30));//seen from the distance
@@ -1525,10 +1568,11 @@ function start(){
 	var FRBuffer = function(gl,width,height){
 		this.gl = gl;
 
-		myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
-
 		this.width = width;
 		this.height = height;
+
+		var size = width * height;
+		if(size > gl.getParameter(gl.MAX_RENDERBUFFER_SIZE))myInfo.main.caution = "framebuffer size is too large "+size;
 
 		this.framebuffer = gl.createFramebuffer();
 		this.framebuffer._name = "framebuffer";

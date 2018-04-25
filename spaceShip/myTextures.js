@@ -17,7 +17,6 @@
 		this.number = number;//texture number
 		this.texture = gl.createTexture();
 		this.texture._name = name;
-		if(!flagMaxTexture){myInfo.main.info = "max texture size ="+gl.MAX_TEXTURE_SIZE;flagMaxTexture=true;}
 
 console.log("myTextures.js:this.texture=",this.texture);
 	};
@@ -34,8 +33,11 @@ console.log("myTextures.js:this.texture=",this.texture);
 		var image = new Image();
 		var myself = this;
 		image.onload = function (){
-
-				//gl.TEXT[\d]* must be connected in fragment shader,so when i use only one texture in the shader,it is not necessary for js-script to use gl.TEXTURE0 above.
+			var size = image.naturalWidth*image.naturalHeight;
+			if(size > Number(gl.getParameter(gl.MAX_TEXTURE_SIZE))){
+				myInfo.main.caution="The size is over  '"+myself.name+"' "+size;
+			}
+			//gl.TEXT[\d]* must be connected in fragment shader,so when i use only one texture in the shader,it is not necessary for js-script to use gl.TEXTURE0 above.
 				//https://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
 //●consider-able	gl.activeTexture(gl.TEXTURE0+myself.number);//https://stackoverflow.com/questions/11292599/how-to-use-multiple-textures-in-webgl toji answered
 			gl.activeTexture(gl.TEXTURE0);

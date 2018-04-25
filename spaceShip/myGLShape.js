@@ -594,9 +594,9 @@ console.log("myGLShaple.js ",points[n1],points[n2],points[n3]);
 			ind:indices,
 			draw:function(){
 //:sphere2
-console.log("myGLShape:sphere2:bindTexture=",gl.getParameter(gl.TEXTURE_BINDING_2D));
-console.log("myGLShape:sphere2:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE),"gl.TEXTURE0=",gl.TEXTURE0);
-console.log("myGLShape:sphere2:elementArrayBuffer=",gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING));
+//console.log("myGLShape:sphere2:bindTexture=",gl.getParameter(gl.TEXTURE_BINDING_2D));
+//console.log("myGLShape:sphere2:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE),"gl.TEXTURE0=",gl.TEXTURE0);
+//console.log("myGLShape:sphere2:elementArrayBuffer=",gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING));
 				gl.drawElements(gl.TRIANGLES,countTriangle*3,gl.UNSIGNED_SHORT,0);
 			}
 
@@ -677,8 +677,8 @@ nn++;
 			ind:index,
 			draw:function(){
 //:ring
-console.log("myGLShape:ring:bindTexture=",gl.getParameter(gl.TEXTURE_BINDING_2D));
-console.log("myGLShape:ring:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE));
+//console.log("myGLShape:ring:bindTexture=",gl.getParameter(gl.TEXTURE_BINDING_2D));
+//console.log("myGLShape:ring:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE));
 				gl.drawElements(gl.TRIANGLES,countTriangle*3,gl.UNSIGNED_SHORT,0);
 			}
 
