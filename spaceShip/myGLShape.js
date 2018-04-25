@@ -377,6 +377,7 @@
 			20,21,22,20,22,23
 		];
 		return {
+			name:'hexahedron',
 			n:36,
 			pos:positions,
 			nor:normals,
@@ -407,8 +408,13 @@
 		var x,y,z;
 		for(gamma=-90;gamma<=90;gamma+=dgam){
 			nLongitude++;
-			for(alpha=-180;alpha<=180;alpha+=dal){
-				if(flagFirstTime){
+			for(var alphaB=-180;alphaB<=180;alphaB+=dal){
+if(alphaB==180){
+	alpha=179.85;
+}else{
+	alpha=alphaB;
+}
+			if(flagFirstTime){
 					//console.log("alpha=",alpha);
 					nLatitude++;
 				}
@@ -426,7 +432,7 @@
 			flagFirstTime=false;
 		}
 		var pointInner = new myClass.Point(0,0,0);
-	console.log(" nLongitude=",nLongitude," nLatitude=",nLatitude);
+//	console.log(" nLongitude=",nLongitude," nLatitude=",nLatitude);
 		var countRectangle=0;
 		var ii,kk;
 		var n1,n2,n3,n4;
@@ -579,6 +585,7 @@ console.log("myGLShaple.js ",points[n1],points[n2],points[n3]);
 
 //	console.log("nVerteces(of all triangles)=",countTriangle*3);
 		return {
+			name:'sphere2',
 			n:countTriangle*3,//countTriangle*3,//全ての三角形の頂点の総数
 			pos:positions,
 			nor:normals,
@@ -586,7 +593,10 @@ console.log("myGLShaple.js ",points[n1],points[n2],points[n3]);
 			tex:textureCoordinates,
 			ind:indices,
 			draw:function(){
-//console.log("myGLShape.js:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE));
+//:sphere2
+console.log("myGLShape:sphere2:bindTexture=",gl.getParameter(gl.TEXTURE_BINDING_2D));
+console.log("myGLShape:sphere2:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE),"gl.TEXTURE0=",gl.TEXTURE0);
+console.log("myGLShape:sphere2:elementArrayBuffer=",gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING));
 				gl.drawElements(gl.TRIANGLES,countTriangle*3,gl.UNSIGNED_SHORT,0);
 			}
 
@@ -598,7 +608,7 @@ console.log("myGLShaple.js ",points[n1],points[n2],points[n3]);
 	 *saturn ring
 	*/
 	function ringPlane(gl,rI,rO){
-console.log("rI=",rI,"rO=",rO);
+//console.log("rI=",rI,"rO=",rO);
 		var rad = Math.PI/180;
 		var dr = (rO - rI)*0.05;
 		var pitch = dr / (rO - rI);
@@ -634,7 +644,7 @@ nn++;
 				textureCoordinate.push(sumPitch,0.0,sumPitch,1.0,sumPitch+pitch,1.0,sumPitch+pitch,0.0);
 //				textureCoordinate.push(	0.0,0.0,0.0,1.0,1.0,1.0,1.0,0.0);
 			}
-console.log("sumPitch=",sumPitch);
+//console.log("sumPitch=",sumPitch);
 			sumPitch+=pitch;
 		}
 
@@ -656,8 +666,8 @@ console.log("sumPitch=",sumPitch);
 			index.push(kk * 4  + 3);	//No.6
 			countTriangle++;
 		}
-console.log("nn=",nn);
-console.log("countTriangle=",countTriangle);
+//console.log("nn=",nn);
+//console.log("countTriangle=",countTriangle);
 		return {
 			n:countTriangle*3,//全ての三角形の頂点の総数
 			pos:vertex,
@@ -666,6 +676,9 @@ console.log("countTriangle=",countTriangle);
 			tex:textureCoordinate,
 			ind:index,
 			draw:function(){
+//:ring
+console.log("myGLShape:ring:bindTexture=",gl.getParameter(gl.TEXTURE_BINDING_2D));
+console.log("myGLShape:ring:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE));
 				gl.drawElements(gl.TRIANGLES,countTriangle*3,gl.UNSIGNED_SHORT,0);
 			}
 
