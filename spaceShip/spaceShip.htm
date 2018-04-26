@@ -665,7 +665,22 @@ function drawScene(gl,angle){
 
 	myShaders.light.activate();//console.log("1current program=",gl.getParameter(gl.CURRENT_PROGRAM));
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+{
+	//https://open.gl/depthstencils
+	gl.enable(gl.STENCIL_TEST);
+	//gl.stencilFunc(gl.LEQUAL,15,1);
+}
+{
+	gl.enable(gl.BLEND);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+}
 
+{
+	//https://open.gl/depthstencils	gl.stencilFunc(gl.ALWAYS,1,0xFF);
+	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);
+	gl.stencilMask(gl.FALSE);
+	gl.clear(gl.STENCIL_BUFFER_BIT);
+}
 	var names = ["ring","saturn"];
 	myShaders.camera.activate();
 	for(var num in names){//the last is the texture that is gotten by framebuffer
@@ -697,9 +712,6 @@ function drawScene(gl,angle){
 	}//camera
 
 
-
-
-
 /*****************
 	for(var num in targets){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[targets[num]];
@@ -727,15 +739,23 @@ function drawScene(gl,angle){
 * * * * * * * * * * */
 
 	
+{
+	//https://open.gl/depthstencils
+//	gl.stencilFunc(gl.EQUAL,1,0xFF);
+	gl.stencilMask(0x00);
+//	gl.depthMask(gl.TRUE);
+}
+
+
+
 	myFRBuffers.shadow.inactivate();
 	myInfo.main.framebufferstatus = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
 
 //	myTextures.member.ring.texture = myFRBuffers.shadow.texture;
 	myTextures.member["screen"].import(myFRBuffers.shadow.texture);
+	myTextures.member["ring"].import(myFRBuffers.shadow.texture);
 
-//	var names = ["screen","observe","jupiter","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
-	var names = ["screen","observe","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
-//	var names = ["screen","observe","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter","ring"];//<-----JUPITERからrenderされる
+	var names = ["screen","saturn","ring","observe","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
 
 	myShaders.camera.activate();
 //console.log("2current program=",gl.getParameter(gl.CURRENT_PROGRAM));
@@ -1629,9 +1649,9 @@ function start(){
 		gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.texture,0);
 
 		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
-		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.width,this.height);
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
-//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.STENCIL_COMPONENT16,this.width,this.height);
+//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.width,this.height);
+//		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH24_STENCIL8,this.width,this.height);
 //		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
 
 
