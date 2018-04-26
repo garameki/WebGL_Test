@@ -674,18 +674,19 @@ function drawScene(gl,angle){
 	gl.enable(gl.BLEND);
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 }
-
 {
 	//https://open.gl/depthstencils	gl.stencilFunc(gl.ALWAYS,1,0xFF);
 	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);
 	gl.stencilMask(gl.FALSE);
 	gl.clear(gl.STENCIL_BUFFER_BIT);
 }
-	var names = ["ring","saturn"];
+	var names = ["ring2"];
 	myShaders.camera.activate();
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
 		// To vertex shader
+
+
 		myShaders.camera.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
 		myShaders.camera.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
 		myShaders.camera.attrib.aVertexColor.assignBuffer(member.buffers.color,4);
@@ -703,7 +704,7 @@ function drawScene(gl,angle){
 		// Tofragment shader
 		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 
-		myTextures.member[member.nameTexture].activate();
+		myTextures.member["ring"].activate();
 
 		myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
 		myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
@@ -753,7 +754,7 @@ function drawScene(gl,angle){
 
 //	myTextures.member.ring.texture = myFRBuffers.shadow.texture;
 	myTextures.member["screen"].import(myFRBuffers.shadow.texture);
-	myTextures.member["ring"].import(myFRBuffers.shadow.texture);
+//	myTextures.member["ring"].import(myFRBuffers.shadow.texture);
 
 	var names = ["screen","saturn","ring","observe","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
 
@@ -1372,6 +1373,32 @@ function start(){
 
 
 
+	/** Ring2 **/
+	var rOut = myBall.saturn.radius*2.327;
+	var rIn = myBall.saturn.radius*1.116086;
+//	var xyz = myXYZTrigonometry.createMember();
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(0,0,1,0,90));
+//	aAccumeUnits.push(AccumeMotions.rotate(0,0,0,0,90));
+//	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0.5,90));
+	aAccumeUnits.push(AccumeMotions.translate(-100,-100,-100));
+
+//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+//	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+//	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(AccumeMotions.axisY(1));
+						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
+						//	aAccumeUnits.push(AccumeMotions.none());
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,"ring2",colorNameText);//kkk
+	var shape = myGLShape.ring(gl,rIn,rOut);
+	UnitsToDraw.join(gl,"ring2",shape,aAccumeUnits,labels,nameTextureRing,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaRing,baseLightSun,cassiniFactorRing,aMatricesNotManipulatedSaturn);
+
+
+
+
+
 	/** satellite thrown in various random directions **/
 /*
 	for(var hh=0;hh<10;hh++){
@@ -1482,7 +1509,7 @@ function start(){
 
 //	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
 //	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	aAccumeUnits.push(AccumeMotions.translate(-10,-10,-30));//seen from the distance
+	aAccumeUnits.push(AccumeMotions.translate(0,0,-30));//seen from the distance
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,"screen",colorNameText);//kkk
 	var shape = myGLShape.rectangle(gl,20,20);
