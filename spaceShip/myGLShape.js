@@ -77,20 +77,30 @@ console.log("nn=",nn);
 			);
 		}
 		var textureCoordinates = [];
+		textureCoordinates.push(1.0,1.0);
+		textureCoordinates.push(1.0,1.0);
+		for(ii=0;ii<nn;ii++){
+			textureCoordinates.push(
+				1.0,1.0,
+				1.0,1.0,
+				1.0,1.0,
+				1.0,1.0,1.0,1.0
+			);
+		}
 
 
 		var indices = [];
 		var nTriangle = 0;
-		for(ii=0;ii<nn;ii++){
+		for(ii=0;ii<nn-1;ii++){
 			indices.push(0,2+ii,3+ii);
 			nTriangle++;		
 		};
-		for(ii=0;ii<nn;ii++){
+		for(ii=0;ii<nn-1;ii++){
 			indices.push(nn+ii+2,nn+ii+3,2*nn+ii+2);
 			indices.push(2*nn+ii+2,2*nn+ii+3,nn+ii+3);		
 			nTriangle+=2;
 		};
-		for(ii=0;ii<nn;ii++){
+		for(ii=0;ii<nn-1;ii++){
 			indices.push(1,3*nn+ii+2,3*nn+ii+3);
 			nTriangle++;
 		};
@@ -98,7 +108,8 @@ console.log("nn=",nn);
 
 		return {
 			name:'cylindricalCalumn',
-			n:nn*4,
+//for drawArray		n:nn*4,///+6,
+			n:nTriangle*3,
 			pos:positions,
 			nor:normals,
 			col:colors,

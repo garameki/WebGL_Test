@@ -756,7 +756,8 @@ function drawScene(gl,angle){
 	myTextures.member["screen"].import(myFRBuffers.shadow.texture);
 //	myTextures.member["ring"].import(myFRBuffers.shadow.texture);
 
-	var names = ["screen","saturn","ring","observe","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
+//	var names = ["shadow","screen","saturn","ring","observe","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
+	var names = ["shadow","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
 
 	myShaders.camera.activate();
 //console.log("2current program=",gl.getParameter(gl.CURRENT_PROGRAM));
@@ -1488,7 +1489,15 @@ function start(){
 
 
 
-
+	/** shadow **/
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0,90));
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,"shadow",colorNameText);
+//	labels.addText(0,0,0,"origin",colorNameText);
+	var shape = myGLShape.cylindricalCalumn(gl,500,500);
+		UnitsToDraw.join(gl,"shadow",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 
