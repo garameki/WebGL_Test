@@ -17,109 +17,88 @@
 	//entities
 //●
 	function cylindricalCalumn(gl,radius,height){
-		var circlePosX = [];
-		var circlePosY = [];
-		var circlePosZ = [];
-		for(var theta = 0;theta > 360;theta += 10){
+		var rad = Math.PI/180;
+		var aCirclePos = [];
+		for(var theta = 0;theta < 360;theta += 10){
 			posx = radius * Math.cos(theta * rad);
 			posy = radius * Math.sin(theta * rad);	
 			posz = 0;
-			circlePosX.push(posx);
-			circlePosY.push(posy);
+			aCirclePos.push(new myClass.Point(posx,posy,posz));
 		}
 		var innerP = new myClass.Point(0,0,height*0.5);
-
-		var x1,y1,x2,y2;
+		var ii,nn = aCirclePos.length;
+console.log("nn=",nn);
 		var normals = [];
+		var pointOrigin = new myClass.Point(0,0,0);
+		var pointHeight = new myClass.Point(0,0,-height);
+
 		var positions = [];
 		positions.push(0,0,0);
-		positions.push(height,height,height);
-		for(var ii=0,len=circlePosX.length-1;ii<len;ii++){
-			x1 = circlePosX[ii];
-			y1 = circlePosY[ii];
-			y2 = circlePosX[ii+1];
-			y2 = circlePosY[ii+1];
-			positions.push(x1);
-			positions.push(y1);
+		normals.push(0,0,1);
+		positions.push(0,0,-height);
+		normals.push(0,0,-1);
+
+		for(ii=0;ii<nn;ii++){
+			pos = aCirclePos[ii];
+			positions.push(pos.x);
+			positions.push(pos.y);
 			positions.push(0);
-			normals.push(getNormal(x1,y1,0,innerP));
-			positions.push(x2)
-			positions.push(y2)
-			positions.push(0)
-			normals.push(getNormal(x2,y2,0,innerP));
+			normals.push(0,0,1);
 		}
-		for(var ii=0,len=circlePosX.length-1;ii<len;ii++){
-			x1 = circlePosX[ii];
-			y1 = circlePosY[ii];
-			y2 = circlePosX[ii+1];
-			y2 = circlePosY[ii+1];
-			positions.push(x1);
-			positions.push(y2);
+		for(ii=0;ii<nn;ii++){
+			pos = aCirclePos[ii];
+			positions.push(pos.x);
+			positions.push(pos.y);
 			positions.push(0);
-			normals.push(getNormal(x1,y1,0,innerP));
-			positions.push(x2)
-			positions.push(y2)
-			positions.push(0);
-			normals.push(getNormal(x2,y2,0,innerP));
-			positions.push(x1);
-			positions.push(y2);
-			positions.push(height);
-			normals.push(getNormal(x1,y1,height,innerP));
-			positions.push(x2)
-			positions.push(y2)
-			positions.push(height);
-			normals.push(getNormal(x2,y2,height,innerP));
+			normals.push(pos.x,pos.y,0);
 		}
-		for(var ii=0,len=circlePosX.length-1;ii<len;ii++){
-			x1 = circlePosX[ii];
-			y1 = circlePosY[ii];
-			y2 = circlePosX[ii+1];
-			y2 = circlePosY[ii+1];
-			positions.push(x1);
-			positions.push(y2);
-			positions.push(height);
-			normals.push(getNormal(x1,y1,height,innerP));
-			positions.push(x2)
-			positions.push(y2)
-			positions.push(height)
-			normals.push(getNormal(x2,y2,height,innerP));
+		for(ii=0;ii<nn;ii++){
+			pos = aCirclePos[ii];
+			positions.push(pos.x);
+			positions.push(pos.y);
+			positions.push(-height);
+			normals.push(pos.x,pos.y,0);
+		}
+		for(ii=0;ii<nn;ii++){
+			pos = aCirclePos[ii];
+			positions.push(pos.x);
+			positions.push(pos.y);
+			positions.push(-height);
+			normals.push(0,0,-1);
 		}
 		var colors = [];
-		for(var ii=0,len=circlePosX.length-1;ii<len;ii++){
+		colors.push(1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0);
+		for(ii=0;ii<nn;ii++){
 			colors.push(
-				0.0,0.0,0.0,0.0,
-				0.0,0.0,0.0,0.0,
-				0.0,0.0,0.0,0.0,
-				0.0,0.0,0.0,0.0,
-				0.0,0.0,0.0,0.0,
-				0.0,0.0,0.0,0.0,
-				0.0,0.0,0.0,0.0,
-				0.0,0.0,0.0,0.0
+				1.0,1.0,1.0,1.0,
+				1.0,1.0,1.0,1.0,
+				1.0,1.0,1.0,1.0,
+				1.0,1.0,1.0,1.0
 			);
 		}
 		var textureCoordinates = [];
 
 
 		var indices = [];
-		var n = circlePosX.length;
 		var nTriangle = 0;
-		for(var ii=0,len=n-1;ii<len;ii++){
+		for(ii=0;ii<nn;ii++){
 			indices.push(0,2+ii,3+ii);
 			nTriangle++;		
 		};
-		for(var ii=0,len=n-1;ii<len;ii++){
-			indices.push(2+ii,3+ii,2+ii+n);
-			indices.push(2+ii+n,3+ii+n,3+ii);		
+		for(ii=0;ii<nn;ii++){
+			indices.push(nn+ii+2,nn+ii+3,2*nn+ii+2);
+			indices.push(2*nn+ii+2,2*nn+ii+3,nn+ii+3);		
 			nTriangle+=2;
 		};
-		n=n+n;
-		for(var ii=0,len=n-1;ii<len;ii++){
-			indices.push(1,2+ii+n,3+ii+n);		
+		for(ii=0;ii<nn;ii++){
+			indices.push(1,3*nn+ii+2,3*nn+ii+3);
 			nTriangle++;
 		};
+
+
 		return {
 			name:'cylindricalCalumn',
-			n:nTriangle*3,
+			n:nn*4,
 			pos:positions,
 			nor:normals,
 			col:colors,
@@ -128,7 +107,7 @@
 			draw:function(){
 				gl.drawElements(gl.TRIANGLES,nTriangle*3,gl.UNSIGNED_SHORT,0);
 			}
-		}
+		};
 	};
 
 	function rectangle(gl,width,height){
@@ -824,7 +803,7 @@ nn++;
 			var yellow = myColorName.yellow(1);
 
 		var pCenter = new myClass.Point((p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3);
-		var vio = new myClass.Vector(pCenter.x-pInnerBody.x,pCenter.y-pInnerBody.y,pCenter.z-pInnerBody.z);
+		var vio = new myClass.Vector(pCenter.x - pInnerBody.x,pCenter.y - pInnerBody.y,pCenter.z - pInnerBody.z);
 		var pio = pCenter.calcTranslate(vio);
 		var vP = new myClass.Vector(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
 		var vQ = new myClass.Vector(p3.x-p1.x,p3.y-p1.y,p3.z-p1.z);
