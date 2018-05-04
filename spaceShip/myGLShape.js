@@ -516,7 +516,7 @@ console.log("nn=",nn);
 			nLongitude++;
 			for(var alphaB=-180;alphaB<=180;alphaB+=dal){
 if(alphaB==180){
-	alpha=179.85;
+	alpha=179.999;
 }else{
 	alpha=alphaB;
 }

@@ -13,7 +13,72 @@
 
 
 <!--******************************* SHADER PROGMRAMS *****************************************************-->
-<!--Fragment shader-->
+<!--ringshadow shader-->
+<script id="ringshadowFragmentShader" type="x-shader/x-fragment">
+
+	uniform sampler2D uSampler;
+
+	varying lowp vec2 vTextureCoord;
+	varying highp float zz;
+
+	void main(void) {
+
+//		if(gl_FragCoord.z - zz < 0.0001){
+//			//keep
+//		}else{
+			gl_FragColor = vec4(texture2D(uSampler,vTextureCoord).rgb,0.5);
+//		}
+	}
+</script>
+<script id="ringshadowVertexShader" type="x-shader/x-vertex">
+//土星をリング平面に写像 reposition the point of surface of saturn onto the ring plane
+
+	attribute vec3 aVertexPosition;//x y z
+	attribute vec2 aTextureCoord;//x y
+
+	uniform mat4 uPerspectiveMatrix;
+	uniform mat4 uModelViewMatrix;
+	uniform mat4 uModelViewMatrixInversedTransposed;
+	uniform mat4 uManipulatedMatrix;
+
+	varying lowp vec2 vTextureCoord;//本来要らない
+	varying highp float zz;
+
+	void main(void) {
+		//makeShadow
+
+//		highp vec4 mvmit = normalize(uModelViewMatrix[0].xyzw);
+
+		highp vec3 nn = normalize(((uModelViewMatrixInversedTransposed * vec4(0.0,0.0,-1.0,1.0))).xyz);//リングの法線
+		highp vec3 pos0 = (uManipulatedMatrix * vec4(0.0,0.0,0.0,1.0)).xyz;//移動後の原点の位置
+		highp vec3 pos1 = (uModelViewMatrix * vec4(aVertexPosition,1.0)).xyz;//対象の点
+		highp vec3 pos3 = (uModelViewMatrix * vec4(0.0,0.0,0.0,1.0)).xyz;//リングの中心
+
+		//リング平面の法線の方向を光源側にする
+		highp float ganma = dot(nn,pos3-pos0);
+		if(ganma<0.0)nn=-nn;
+
+		//移動させる点pos1がリング平面の、光源側なのか、その反対側なのかを判定する
+		highp float alpha = dot(nn,pos3-pos0)/max(dot(nn,pos1-pos0),0.0000001);
+		highp vec3 pos2;
+		highp float beta;
+		highp float eta = dot(pos1-pos3,pos0-pos3);
+		if(abs(alpha)>1.0){
+			pos2 = alpha * pos1 + (1.0 - alpha) * pos0;
+		}else{
+			beta = dot(nn,pos3-pos1);
+			pos2 = 0.99 * beta * nn + pos1;
+		}
+		gl_Position = uPerspectiveMatrix * vec4(pos2,1.0);
+
+			vTextureCoord = aTextureCoord;
+			zz = aVertexPosition.z;
+		
+	}
+</script>
+
+
+<!--light shader-->
 <script id="lightFragmentShader" type="x-shader/x-fragment">
 	varying lowp vec4 vColor;
 
@@ -35,28 +100,6 @@ void hncodeFloat(float z){
 //		hncodeFloat(gl_FragCoord.z);
 
 //	gl_FragColor = vec4(1.0,0.0,0.0,1.0);
-/*
-vec4 encodeFloat (float depth) {
-  vec4 bitShift = vec4(
-256.0 * 256.0 * 256.0,
-256.0 * 256.0,
-256.0,
-1.0
-);
-vec4 bitMask = vec4(
-0.0,
-1.0 / 256.0,
-1.0 / 256.0,
-1.0 / 256.0
-);
-vec4 comp = fract(depth * bitShift);
-comp -= comp.xxyz * bitMask;
-return comp;
-}
-*/
-//x		gl_FragColor = texture2D(uSampler,vec2(vTextureCoord.s,vTextureCoord.t));
-//		gl_FragColor = texture2D(uSampler,vTextureCoord);//mediump型
-//		gl_FragColor = vColor;
 
 		//uSamplerの数字とgl.TEXT0の数字は共通？
 
@@ -168,26 +211,25 @@ return comp;
 
 
 
-
-
-
+<!-- normal shader -->
 <script id="shader-fs" type="x-shader/x-fragment">
-	varying lowp vec4 vColor;	//as same as vertex shader
-	varying lowp vec2 vTextureCoord;//as same as vertex shader
-	varying lowp vec3 vNTimesEachRGB;//as same as vertex shader
-//○	varying highp vec4 vColor;//●	//as same as vertex shader
-//○	varying highp vec2 vTextureCoord;//as same as vertex shader
-//○	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
+//hint
+//	varying lowp vec4 vColor;	//as same as vertex shader
+//	varying lowp vec2 vTextureCoord;//as same as vertex shader
+//	varying lowp vec3 vNTimesEachRGB;//as same as vertex shader
+	varying highp vec4 vColor;//●	//as same as vertex shader
+	varying highp vec2 vTextureCoord;//as same as vertex shader
+	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
 
-//	uniform mediump float uBrightness;
-//	uniform mediump float uAlpha;
-//	uniform mediump float uCassiniFactor;//if zero , not avairable,,if 1 , avairable
+	uniform mediump float uBrightness;
+	uniform mediump float uAlpha;
+	uniform mediump float uCassiniFactor;//if zero , not avairable,,if 1 , avairable
 	uniform sampler2D uSampler;//common variable between shader and js
 
 	void main(void) {
 
 	/* method 1 */
-		gl_FragColor = texture2D(uSampler,vTextureCoord);
+	//	gl_FragColor = texture2D(uSampler,vTextureCoord);
 
 	/* method 2 */
 	//	gl_FragColor = vColor;
@@ -199,6 +241,11 @@ return comp;
 	//	mediump float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする
 	//	mediump float shadowFlag =1.0;
 	//	gl_FragColor = vec4(shadowFlag) * vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
+
+	/* method 4 */
+		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
+		highp float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする
+		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
 	}
 </script>
 
@@ -229,13 +276,13 @@ return comp;
 	uniform float uBaseLight;// 0.0-1.0 ?
 	uniform float uPointSizeFloat;//a float value
 
-	varying lowp vec4 vColor;
-	varying lowp vec2 vTextureCoord;
-	varying lowp vec3 vNTimesEachRGB;
 //hint
-//○	varying highp vec4 vColor;
-//○	varying highp vec2 vTextureCoord;
-//○	varying highp vec3 vNTimesEachRGB;
+//	varying lowp vec4 vColor;
+//	varying lowp vec2 vTextureCoord;
+//	varying lowp vec3 vNTimesEachRGB;
+	varying highp vec4 vColor;
+	varying highp vec2 vTextureCoord;
+	varying highp vec3 vNTimesEachRGB;
 
 
 	void main(void) {
@@ -353,7 +400,7 @@ return comp;
 	function PrintText(sName,nLeft,nTop){
 		body = document.getElementsByTagName('body');
 		if(body.length==0){
-			console.error("DOM is not ready yet about 'myInfo."+sName+"'");
+			console.caution("DOM is not ready yet about 'myInfo."+sName+"', too early to use");
 			return null;
 		}
 		var elep = document.createElement('P');
@@ -638,129 +685,115 @@ function sendAccumeratedMatrix(vari,arrAccumelateToMyMat4,timeSpan){//to get a m
 
 //************************************** DRAW SCENE *************************************************
 
+
+var stencil_status = function(gl){
+	myInfo.main.stencilwritemask = "stencil mask front:"+gl.getParameter(gl.STENCIL_WRITEMASK).toString(16);
+	myInfo.main.stencilbackwritemask = "stencil mask back:"+gl.getParameter(gl.STENCIL_BACK_WRITEMASK).toString(16);
+	myInfo.main.stencilbits = "stencil bit length: "+gl.getParameter(gl.STENCIL_BITS);
+	myInfo.main.stencilfunc = "stencilFunc("+gl[gl.getParameter(gl.STENCIL_FUNC)]+","+gl.getParameter(gl.STENCIL_REF).toString(2)+","+gl.getParameter(gl.STENCIL_VALUE_MASK).toString(2)+")";
+};
+
+
+var ccc8 = 1/0xFF;
+var c8 = function (a){
+	return a*ccc8;
+};
+var ccc24 = 1/0xFFFFFF;
+var c24 = function (a){
+	return a*ccc24;
+};
+
+
 //:drawscene
 //:scene
 function drawScene(gl,angle){
 
-	//https://stackoverflow.com/questions/7324208/opengl-framebuffer-can-clear-it-but-cant-draw-to-it
-
-	//Clear the depth-buffer and color-buffer and so on before we start drawing on it
-
-//	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
 	var member,mvmat,pmat;
 
+
+/** idea **
+
+	aAccumeUnits.push(dfsfdsfsfs);
+
+	aAccumeUnits.create("saturn");
+	aAccumeUnits.saturn.push(dkjfladjf,"manipu");//push with tag classified
+	aAccumeUnits.saturn.push(dkjfladjf,"rot");
+	aAccumeUnits.saturn.push(dkjfladjf,"trans");
+	...
+	mat = aAccumeUnits.saturn.accumeAll();
+	mat = aAccumeUnits.saturn.accumeNotRotate();//using query
+	mat = aAccumeUnits.saturn.accumeNotTranslte();//using query
+	mat = aAccumeUnits.saturn.accumeNotManipulated();//...
+	mat = aAccumeUnits.saturn.accumeManipulated();//...
+
+	myShader.camera.uniform.uNotManipulatedMatrix.sendFlorat32Array(mat);//for example
+*/
+
+
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 0 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+	//フレームバッファ(shadow)をclear & turn on
 	myFRBuffers.shadow.reset();
-	myFRBuffers.shadow.activate();
+//	myFRBuffers.shadow.activate();
+	myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
+	myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
 
-/**************************
-	var targets = [];
-//	targets.push("mars");
-//	targets.push("jupiter");
-	targets.push("uranus");
-//	targets.push("saturn","ring");
-//	targets.push("ring");
-//	targets.push("observe");
-//	targets.push("saturn");
+	//color
+	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));
+//	gl.clearColor(c8(0xFF),c8(0xFF),c8(0xFF),c8(0xFF));
+	gl.clear(gl.COLOR_BUFFER_BIT);
+//	gl.colorMask(false,false,false,false);
+//	gl.colorMask(true,true,true,true);
 
-	myShaders.light.activate();//console.log("1current program=",gl.getParameter(gl.CURRENT_PROGRAM));
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-{
-	//https://open.gl/depthstencils
-	gl.enable(gl.STENCIL_TEST);
-	//gl.stencilFunc(gl.LEQUAL,15,1);
-}
-{
-	gl.enable(gl.BLEND);
+	//depth
+//	gl.enable(gl.DEPTH_TEST);
+//	gl.disable(gl.DEPTH_TEST);
+//	gl.clearDepth(c24(0xFFFFFF));
+//	gl.clear(gl.DEPTH_BUFFER_BIT);
+//	gl.depthFunc(gl.LEQUAL);
+
+	//stencil
+//	gl.enable(gl.STENCIL_TEST);
+//	gl.disable(gl.STENCIL_TEST);
+//	gl.clearStencil(0xFF);//クリア時にstencil bufferを埋め尽くす値
+//	gl.clear(gl.STENCIL_BUFFER_BIT);
+
+	//blend
+	gl.enable(gl.BLEND);//後に描かれたものが前に描かれたものとブレンドされる
+				//---> ①奥の太陽②手前の輪---○　①手前の輪②奥の太陽---X
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-}
-{
-	//https://open.gl/depthstencils	gl.stencilFunc(gl.ALWAYS,1,0xFF);
-	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);
-	gl.stencilMask(gl.FALSE);
-	gl.clear(gl.STENCIL_BUFFER_BIT);
-}
-	var names = ["ring2"];
-	myShaders.camera.activate();
-	for(var num in names){//the last is the texture that is gotten by framebuffer
-		member = UnitsToDraw[names[num]];
-		// To vertex shader
+//	gl.blendFunc(gl.ONE_MINUS_SRC_ALPHA,gl.SRC_ALPHA);
+
+gl.disable(gl.DEPTH_TEST);
+gl.disable(gl.STENCIL_TEST);
 
 
-		myShaders.camera.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-		myShaders.camera.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
-		myShaders.camera.attrib.aVertexColor.assignBuffer(member.buffers.color,4);
-		myShaders.camera.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
-		member.buffers.bindElement();
-
-		sendPerspectiveMatrix(gl,myShaders.camera.uniform.uPerspectiveMatrix);
-		pmat = myMat4.arr;//sended data above
-		sendAccumeratedMatrix(myShaders.camera.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
-		mvmat = myMat4.arr;//sended data above
-		sendModelViewMatrixInversedTransposed(myShaders.camera.uniform.uModelViewMatrixInversedTransposed,mvmat);
-		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
-		myShaders.camera.uniform.uBaseLight.sendFloat(member.baseLight);
-		myShaders.camera.uniform.uPointSizeFloat.sendFloat(3.0);
-		// Tofragment shader
-		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-
-		myTextures.member["ring"].activate();
-
-		myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
-		myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
-		member.draw();//in which texture activated is for use
-		member.labels.repos(gl,pmat,mvmat);
-	}//camera
-
-
-/*****************
-	for(var num in targets){//the last is the texture that is gotten by framebuffer
-		member = UnitsToDraw[targets[num]];
-
-		// To vertex shader
-		myShaders.light.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-		myShaders.light.attrib.aVertexColor.assignBuffer(member.buffers.color,4);//●kkk
-//		myShaders.light.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
-//		myShaders.light.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
-
-		member.buffers.bindElement();
-
-		sendOrthographicMatrix(gl,myShaders.light.uniform.uOrthographicMatrix);
-	//	sendAccumeratedMatrix(myShaders.light.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
-		sendAccumeratedMatrix(myShaders.light.uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
-
-		myTextures.member[member.nameTexture].activate();
-		if(false){console.log("1bindingTexture =",gl.getParameter(gl.TEXTURE_BINDING_2D));console.log("1frameBuffer =",gl.getParameter(gl.FRAMEBUFFER_BINDING));console.log("1renderBuffer =",gl.getParameter(gl.RENDERBUFFER_BINDING));console.log("1drawFrameBuffer =",gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING));console.log("1activeAttributes=",gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_ATTRIBUTES));console.log("1activeUniforms=",gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_UNIFORMS));console.log("1uniformBufferBinding=",gl.getParameter(gl.UNIFORM_BUFFER_BINDING));console.log("1uniformBufferOffsetAlignment=",gl.getParameter(gl.UNIFORM_BUFFER_OFFSET_ALIGNMENT));console.log("framebuffer=",gl.getParameter(gl.FRAMEBUFFER_BINDING));}
-		myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
-		myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
-
-		member.draw();//in which texture activated is for use
-	}//shadow
-
-* * * * * * * * * * */
-
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 3 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	
-{
-	//https://open.gl/depthstencils
-//	gl.stencilFunc(gl.EQUAL,1,0xFF);
-	gl.stencilMask(0x00);
-//	gl.depthMask(gl.TRUE);
-}
-
-
-
-	myFRBuffers.shadow.inactivate();
 	myInfo.main.framebufferstatus = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
+	myFRBuffers.shadow.inactivate();
 
-//	myTextures.member.ring.texture = myFRBuffers.shadow.texture;
+
 	myTextures.member["screen"].import(myFRBuffers.shadow.texture);
-//	myTextures.member["ring"].import(myFRBuffers.shadow.texture);
 
-//	var names = ["shadow","screen","saturn","ring","observe","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
-	var names = ["shadow","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 4 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+	gl.enable(gl.DEPTH_TEST);
+//		gl.disable(gl.DEPTH_TEST);
+	gl.clearDepth(0xFFFFFF);
+//		gl.clearDepth(0x0);
+	gl.clear(gl.DEPTH_BUFFER_BIT);
+	gl.depthFunc(gl.LEQUAL);
+
+//	gl.enable(gl.STENCIL_TEST);
+	gl.disable(gl.STENCIL_TEST);
+//	gl.stencilFunc(gl.EQUAL,0xFF,0xFF);
+//	gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
+
+	var names = ["earth","plane","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
 	myShaders.camera.activate();
-//console.log("2current program=",gl.getParameter(gl.CURRENT_PROGRAM));
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
 		/** To vertex shader **/
@@ -769,24 +802,6 @@ function drawScene(gl,angle){
 		myShaders.camera.attrib.aVertexColor.assignBuffer(member.buffers.color,4);
 		myShaders.camera.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
 		member.buffers.bindElement();
-
-
-		/** only using camera shader **/
-		// buffering order (all texture use gl.TEXTURE0)
-			//var targets = ["uranus","up"];
-			//myShaders.camera.activate();
-			//x myTextures.member["screen"].import(myFRBuffers.shadow.texture);
-			//var names = ["screen","observe","saturn","ring","up","right","back","uranus","moon","mars","venus","jupiter"];//<-----JUPITERからrenderされる
-			//myShaders.camera.activate();
-		// buff->screen->observe->jupiter->saturn->fing->up->right->back->uranus->moon->mars->venus->jupiter :next ->buff->screen->...
-		//equals
-		// uranus->screen->observe->jupiter->saturn->fing->up->right->back->uranus->moon->mars->venus->jupiter :next ->uranus->screen->...
-		//jupiterにuranusのtextureをつけようとするのはなぜか。screenを見ると、textureがuranusになっているのは明らか.
-		//defaultのframebufferには
-		//renderbufferはgl.canvas.width x gl.canvas.heightに描いている!!
-
-
-
 
 		sendPerspectiveMatrix(gl,myShaders.camera.uniform.uPerspectiveMatrix);
 		pmat = myMat4.arr;//sended data above
@@ -798,13 +813,12 @@ function drawScene(gl,angle){
 		myShaders.camera.uniform.uBaseLight.sendFloat(member.baseLight);
 		myShaders.camera.uniform.uPointSizeFloat.sendFloat(3.0);
 		/** Tofragment shader **/
-	//	myShaders.camera.uniform.uBrightness.sendFloat(member.brightness);
-	//	myShaders.camera.uniform.uAlpha.sendFloat(member.alpha);
-	//	myShaders.camera.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+		myShaders.camera.uniform.uBrightness.sendFloat(member.brightness);
+		myShaders.camera.uniform.uAlpha.sendFloat(member.alpha);
+		myShaders.camera.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
 		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 
 		myTextures.member[member.nameTexture].activate();
-//console.log("2bindingTexture =",gl.getParameter(gl.TEXTURE_BINDING_2D));
 
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
@@ -814,6 +828,86 @@ function drawScene(gl,angle){
 
 	myInfo.main.glerror = "GL error:"+gl[gl.getError()];
 	myInfo.main.glstatus = "GL status:"+gl[gl.getParameter(gl.FRAGMENT_SHADER_DERIVATIVE_HINT)];
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 1 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+//	gl.disable(gl.DEPTH_TEST);
+//	gl.enable(gl.DEPTH_TEST);
+//	gl.clearDepth(c24(0xFFFFFF));
+//	gl.clear(gl.DEPTH_BUFFER_BIT);
+//	gl.depthFunc(gl.LEQUAL);
+
+	gl.enable(gl.STENCIL_TEST);
+	gl.clearStencil(0xFF);
+	gl.clear(gl.STENCIL_BUFFER_BIT);
+
+	gl.stencilFunc(gl.EQUAL,0xFE,0xFE);
+//	gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
+	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);
+
+	myShaders.camera.activate();
+		member = UnitsToDraw["ring"];
+		/** To vertex shader **/
+		myShaders.camera.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders.camera.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
+		myShaders.camera.attrib.aVertexColor.assignBuffer(member.buffers.color,4);
+		myShaders.camera.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
+
+		sendPerspectiveMatrix(gl,myShaders.camera.uniform.uPerspectiveMatrix);
+		pmat = myMat4.arr;//sended data above
+		sendAccumeratedMatrix(myShaders.camera.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		mvmat = myMat4.arr;//sended data above
+		sendModelViewMatrixInversedTransposed(myShaders.camera.uniform.uModelViewMatrixInversedTransposed,mvmat);
+//		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
+		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+		myShaders.camera.uniform.uBaseLight.sendFloat(member.baseLight);
+		myShaders.camera.uniform.uPointSizeFloat.sendFloat(3.0);
+		/** Tofragment shader **/
+		myShaders.camera.uniform.uBrightness.sendFloat(member.brightness);
+		myShaders.camera.uniform.uAlpha.sendFloat(member.alpha);
+		myShaders.camera.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+
+		myTextures.member[member.nameTexture].activate();
+
+		member.draw();//in which texture activated is for use
+		member.labels.repos(gl,pmat,mvmat);
+
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 2 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+	gl.disable(gl.DEPTH_TEST);
+//	gl.enable(gl.DEPTH_TEST);
+//	gl.clearDepth(c24(0x0));
+//	gl.clear(gl.DEPTH_BUFFER_BIT);
+//	gl.depthFunc(gl.LEQUAL);
+
+//●	gl.enable(gl.STENCIL_TEST);
+//	gl.clearStencil(0xFF);
+//	gl.clear(gl.STENCIL_BUFFER_BIT);
+	gl.stencilFunc(gl.EQUAL,0xFE,0xFF);
+	gl.stencilOp(gl.KEEP,gl.REPLACE,gl.KEEP);
+//	gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
+
+	stencil_status(gl);
+	myShaders.ringshadow.activate();
+		member = UnitsToDraw["saturn2"];
+			myShaders.ringshadow.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+			myShaders.ringshadow.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+			member.buffers.bindElement();
+			sendPerspectiveMatrix(gl,myShaders.ringshadow.uniform.uPerspectiveMatrix);
+			sendAccumeratedMatrix(myShaders.ringshadow.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+			sendAccumeratedMatrix(myShaders.ringshadow.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+			mvmat = myMat4.arr;//sended data above
+			sendModelViewMatrixInversedTransposed(myShaders.ringshadow.uniform.uModelViewMatrixInversedTransposed,mvmat);
+			myTextures.member["saturn2"].activate();
+			myShaders.ringshadow.uniform.uSampler.sendInt(0);
+		member.draw();
+
+
+
+
 
 /** the way to use more Textures at once **/
 /*
@@ -854,20 +948,28 @@ uniform sampler2D uSampler2;<--image1
 function start(){
 
 	/** write information on sub screen **/
-	myInfo.create("main",900,0);//ordinary writing with properties of '.info=','.caution=' or '.error='
+
+	myInfo.create("main",550,0);//ordinary writing with properties of '.info=','.caution=' or '.error='
+
 	myInfo.main.createLine("span","black","white",10);//changable line writing with property of its name (e.g. myInfo.main.span="your text";)
 	myInfo.main.createLine("glstatus","black","white",10);
 	myInfo.main.createLine("glerror","black","white",10);
-	myInfo.main.createLine("framebuffer","black","white",10);
 	myInfo.main.createLine("framebufferstatus","black","white",10);
+	myInfo.main.createLine("framebuffer","black","white",10);
 	myInfo.main.createLine("renderbuffer","black","white",10);
+	myInfo.main.createLine("stencilfunc","black","white",10);
+	myInfo.main.createLine("stencilwritemask","black","white",10);
+	myInfo.main.createLine("stencilbackwritemask","black","white",10);
+	myInfo.main.createLine("stencilbits","black","white",10);
+
 	
 
 	//** prepare gl canvas **//
 	var canvas = document.getElementById('glcanvas');
 	canvas.width=canvas.clientWidth;//necessary
 	canvas.height=canvas.clientHeight;//necessary
-	var gl=canvas.getContext("webgl2");
+//	var gl=canvas.getContext("webgl2",{stencil:true,premultipliedAlpha: false});//https://wgld.org/d/webgl/w038.html
+	var gl=canvas.getContext("webgl2",{stencil:true,premultipliedAlpha:true});//https://wgld.org/d/webgl/w038.html
 	if(!gl){
 		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
 		return;
@@ -889,22 +991,24 @@ function start(){
 	gl[gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS]="INCOMPLETE DIMENSIONS";
 	gl[gl.FRAMEBUFFER_UNSUPPORTED]="UNSUPPORTED";
 	gl[gl.FRAMEBUFFER_INCOMPLETE_MULTISAMPLE]="INCOMPLETE MULTI SAMPLE";
+	gl[gl.NEVER]="NEVER";
+	gl[gl.LESS]="LESS";
+	gl[gl.EQUAL]="EQUAL";
+	gl[gl.LEQUAL]="LEQUAL";
+	gl[gl.GREATER]="GREATER";
+	gl[gl.NOTEQUAL]="NOT EQUAL";
+	gl[gl.GEQUAL]="GEQUAL";
+	gl[gl.ALWAYS]="ALWAYS";
+	/** blend gl.blendEquation() **/
+	gl[gl.FUNC_ADD]="BLEND_ADD";
+	gl[gl.FUNC_SUBTRACT]="BLEND_SUBSTRACT";
+	gl[gl.FUNC_REVERSE_SUBTRACT]="BLEND_REVERSE_SUBSTRUCT";
 //	gl[]="";
 
 	
 	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//(kkk bad)クリップ空間の-1～1の値をcanvasの大きさに変換する
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
 //	gl.clearColor(1.0, 1.0, 1.0, 1.0);	//White out
-	gl.clearDepth(0.0001);			//Clear everything
-	gl.enable(gl.DEPTH_TEST);		//Enable depth testing	    		// 深度テストを有効化
-	gl.depthFunc(gl.LEQUAL);		//Near things obscure far things	// 近くにある物体は、遠くにある物体を覆い隠す
-
-		//As the depth value is greater ,the depth become farther.
-	
-	gl.enable(gl.STENCIL_TEST);
-	gl.stencilFunc(gl.LEQUAL,15,1);
-
-
 
 {
 	//https://stackoverflow.com/questions/47216022/webgl-gl-fragcolor-alpha-behave-differently-in-chrome-with-firefox
@@ -934,6 +1038,16 @@ function start(){
 	//};
 
 	//** prepare shaders and variables in it **/
+	myShaders.create("ringshadow","ringshadowVertexShader","ringshadowFragmentShader",gl);
+		myShaders.ringshadow.getAttribLocation("aVertexPosition");
+		myShaders.ringshadow.getAttribLocation("aTextureCoord");
+		myShaders.ringshadow.getUniformLocation("uSampler");
+		myShaders.ringshadow.getUniformLocation("uModelViewMatrixInversedTransposed");
+		myShaders.ringshadow.getUniformLocation("uModelViewMatrix");
+		myShaders.ringshadow.getUniformLocation("uPerspectiveMatrix");
+
+		myShaders.ringshadow.getUniformLocation("uManipulatedMatrix");
+
 	myShaders.create("light","lightVertexShader","lightFragmentShader",gl);
 		myShaders.light.getAttribLocation("aVertexPosition");
 	//	myShaders.light.getAttribLocation("aVertexNormal");
@@ -965,15 +1079,16 @@ function start(){
 		myShaders.camera.getUniformLocation("uModelViewMatrixInversedTransposed");
 		myShaders.camera.getUniformLocation("uBaseLight");
 //		myShaders.camera.getUniformLocation("uManipulatedRotationMatrix");
-	//	myShaders.camera.getUniformLocation("uBrightness");
-	//	myShaders.camera.getUniformLocation("uAlpha");
-	//	myShaders.camera.getUniformLocation("uCassiniFactor");
+		myShaders.camera.getUniformLocation("uBrightness");
+		myShaders.camera.getUniformLocation("uAlpha");
+		myShaders.camera.getUniformLocation("uCassiniFactor");
 		myShaders.camera.getUniformLocation("uManipulatedMatrix");
 	var nn = gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_ATTRIBUTES);if(nn!=null)for(var ii=0;ii<nn;ii++){gl.disableVertexAttribArray(ii);};
 
 
 	/** prepare frame buffer & render buffer **/
-	myFRBuffers.create("shadow",gl,32,32);//16384<-----MAX_RENDER_SIZE
+	var wide = 128;
+	myFRBuffers.create("shadow",gl,wide,wide,wide,wide);//16384<-----MAX_RENDER_SIZE
 	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
 
 
@@ -1008,17 +1123,12 @@ function start(){
 	myTextures.join(gl,nameTextureScreen);
 	var nameTextureObserve = "niku_stand2";
 	myTextures.join(gl,nameTextureObserve);
-
-
-
-
-
+	var nameTextureSaturn2 = "saturn2";
+	myTextures.join(gl,nameTextureSaturn2);
+	var nameTextureWhite = "white";
 	var nameTextureAtomosphere = "white";
 //issue	myTextures.create(gl,nameTextureAtomosphere,myColorName.white(0.5));//preserve alpha here
 	myTextures.join(gl,nameTextureAtomosphere);
-
-
-
 
 
 
@@ -1055,8 +1165,8 @@ function start(){
 	myBall.join("sun",695508);
 	myBall.join("jupiter",71492);
 	myBall.join("saturn",60268);
-//	myBall.join("uranus",25559);
-	myBall.join("uranus",125559);
+	myBall.join("uranus",25559);
+//	myBall.join("uranus",125559);
 	myBall.join("neptune",24764);
 	myBall.join("earth",6378);
 	myBall.join("venus",6051);
@@ -1090,8 +1200,9 @@ function start(){
 		//plane
 	var xyzCenter = myXYZManipulation.createMember();
 	var aAccumeUnits = [];
-	if(_front_){
-		aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
+//	if(_front_){
+	if(true){
+		aAccumeUnits.push(AccumeMotions.translate(0,0,-20));
 		var labels = new myClass.Labels();
 		labels.addText(0,-1,0,"ship",colorNameText);
 	} else {
@@ -1117,7 +1228,7 @@ function start(){
 //	var xyzSun = myXYZTrigonometry.createMember();
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
-////●	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0.01,0));
 
 //	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSun));//revolution公転
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
@@ -1130,7 +1241,7 @@ function start(){
 	labels.addText(0,-5,0,"Sun",colorNameText);
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
-//	UnitsToDraw.join(gl,"sun",shape,aAccumeUnits,labels,nameTextureSun,aAccumeLightingDirectionalSun,aAccumeLightingPointSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"sun",shape,aAccumeUnits,labels,nameTextureSun,aAccumeLightingDirectionalSun,aAccumeLightingPointSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 	/** common **/
 	var aAccumeLightingDirectional = [];
@@ -1138,7 +1249,6 @@ function start(){
 	var aAccumeLightingPoint = [];
 	aAccumeLightingPoint.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 
-/*
 		//Earth
 	var r = myBall.earth.radius;
 	var xyzEarth = myXYZTrigonometry.createMember();
@@ -1146,8 +1256,8 @@ function start(){
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
 
-//	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzEarth));//revolution公転
-//	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzEarth));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 
 	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
 						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
@@ -1159,7 +1269,6 @@ function start(){
 	var shape = myGLShape.sphere(gl,r);
 	UnitsToDraw.join(gl,"earth",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
-*/
 
 
 	/** Atomosphere of Earth **/
@@ -1332,71 +1441,42 @@ function start(){
 	/** Saturn **/
 	var r = myBall.saturn.radius;
 	var xyzSaturn = myXYZTrigonometry.createMember();
-	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(AccumeMotions.axisY(1));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnits.push(AccumeMotions.none());
+	var aAccumeUnitsSaturn = [];
+	aAccumeUnitsSaturn.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnitsSaturn.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnitsSaturn.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+	aAccumeUnitsSaturn.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnitsSaturn.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnitsSaturn.push(AccumeMotions.axisY(1));
+						//	aAccumeUnitsSaturn.push(AccumeMotions.translate(0,0,-50));
+						//	aAccumeUnitsSaturn.push(AccumeMotions.none());
+
 	var aMatricesNotManipulatedSaturn = [];
 	aMatricesNotManipulatedSaturn.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aMatricesNotManipulatedSaturn.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
 	aMatricesNotManipulatedSaturn.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
 
-
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureSaturn,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"saturn",shape,aAccumeUnits,labels,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
-
-
+	UnitsToDraw.join(gl,"saturn",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
 
 	/** Ring **/
 	var rOut = myBall.saturn.radius*2.327;
 	var rIn = myBall.saturn.radius*1.116086;
-//	var xyz = myXYZTrigonometry.createMember();
-	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
-//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(AccumeMotions.axisY(1));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnits.push(AccumeMotions.none());
+	var aAccumeUnitsRing = aAccumeUnitsSaturn;
+	var aMatricesNotManipulatedRing = aMatricesNotManipulatedSaturn;
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,"",colorNameText);//kkk
 	var shape = myGLShape.ring(gl,rIn,rOut);
-	UnitsToDraw.join(gl,"ring",shape,aAccumeUnits,labels,nameTextureRing,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaRing,baseLightSun,cassiniFactorRing,aMatricesNotManipulatedSaturn);
+	UnitsToDraw.join(gl,"ring",shape,aAccumeUnitsRing,labels,nameTextureRing,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaRing,baseLightSun,cassiniFactorRing,aMatricesNotManipulatedRing);
 
 
-
-	/** Ring2 **/
-	var rOut = myBall.saturn.radius*2.327;
-	var rIn = myBall.saturn.radius*1.116086;
-//	var xyz = myXYZTrigonometry.createMember();
-	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(0,0,1,0,90));
-//	aAccumeUnits.push(AccumeMotions.rotate(0,0,0,0,90));
-//	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0.5,90));
-	aAccumeUnits.push(AccumeMotions.translate(-100,-100,-100));
-
-//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-//	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
-//	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(AccumeMotions.axisY(1));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myClass.Labels();
-	labels.addText(0,0,0,"ring2",colorNameText);//kkk
-	var shape = myGLShape.ring(gl,rIn,rOut);
-	UnitsToDraw.join(gl,"ring2",shape,aAccumeUnits,labels,nameTextureRing,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaRing,baseLightSun,cassiniFactorRing,aMatricesNotManipulatedSaturn);
-
-
+	/** Saturn2 **/
+	var r = myBall.saturn.radius;
+	var shape = myGLShape.sphere(gl,r);
+	UnitsToDraw.join(gl,"saturn2",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn2,[],aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
+//	UnitsToDraw.join(gl,"saturn2",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn,[],aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
 
 
 
@@ -1422,7 +1502,7 @@ function start(){
 */
 
 
-	/* These two kinds of objects below must always be lit from right angle ,so that they are lighten most brightly*/
+	/* These two kinds of objects below must always be lit from right(90 degree) angle ,so that they are lighten most brightly*/
 	/* In other words,they must be always lit brightly.(e.g. indicater , axes and so on) */
 	/** common **/
 	var aAccumeLightingDirectional = [];
@@ -1454,19 +1534,19 @@ function start(){
 
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
-	aAccumeUnits.push(AccumeMotions.translate(-30,-15,-30));
+	aAccumeUnits.push(AccumeMotions.translate(-15,-15,-30));
 	var labels = new myClass.Labels();
 	labels.addText(0,0,5,"back",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1));
-		UnitsToDraw.join(gl,"back",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+		UnitsToDraw.join(gl,"back",shape,aAccumeUnits,labels,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 	var labels = new myClass.Labels();
 	labels.addText(0,5,0,"up",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1));
-		UnitsToDraw.join(gl,"up",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+		UnitsToDraw.join(gl,"up",shape,aAccumeUnits,labels,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 	var labels = new myClass.Labels();
 	labels.addText(5,0,0,"right",colorNameText);
 	var shape = myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1));
-		UnitsToDraw.join(gl,"right",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+		UnitsToDraw.join(gl,"right",shape,aAccumeUnits,labels,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 
@@ -1482,7 +1562,7 @@ function start(){
 	labels.addText(0,0,0,"origin",colorNameText);
 //	labels.addText(0,0,0,"origin",colorNameText);
 	var shape = myGLShape.triangle(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,-10),new myClass.Point(-5,0,-10),myColorName.magenta(1));
-		UnitsToDraw.join(gl,"observe",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+		UnitsToDraw.join(gl,"observer",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 
@@ -1633,12 +1713,11 @@ function start(){
  *make render buffer with frame buffer and texture of void
 */
 (function(){
-
-	//myFRBuffers object
+//:myFRBuffers
 	myFRBuffers = { };
 	Object.defineProperty(myFRBuffers,'create',{value:create,writable:false,enumerable:true,configurable:false});
-	function create(sName,gl,width,height){
-		Object.defineProperty(myFRBuffers,sName,{value:new FRBuffer(gl,width,height),writable:false,enumerable:true,configurable:true});
+	function create(sName,gl,tWidth,tHeight,vWidth,vHeight){
+		Object.defineProperty(myFRBuffers,sName,{value:new FRBuffer(gl,tWidth,tHeight,vWidth,vHeight),writable:false,enumerable:true,configurable:true});
 	};
 
 	//reference
@@ -1646,13 +1725,15 @@ function start(){
 	//https://stackoverflow.com/questions/41824631/how-to-work-with-framebuffers-in-webgl/41832778#41832778
 	/** inner class **/
 	  //Texture, Framebuffer and Renderbuffer are necessary at once.
-	var FRBuffer = function(gl,width,height){
+	var FRBuffer = function(gl,tWidth,tHeight,vWidth,vHeight){
 		this.gl = gl;
 
-		this.width = width;
-		this.height = height;
+		this.tWidth = tWidth;
+		this.tHeight = tHeight;
+		this.vWidth = vWidth;//for viewport()
+		this.vHeight = vHeight;
 
-		var size = width * height;
+		var size = tWidth * tHeight;
 		if(size > gl.getParameter(gl.MAX_RENDERBUFFER_SIZE))myInfo.main.caution = "framebuffer size is too large "+size;
 
 		this.framebuffer = gl.createFramebuffer();
@@ -1668,33 +1749,37 @@ function start(){
 		this.texture = gl.createTexture();//which frame buffer stores image accumeration int
 		this.texture._name = "frameBufferTexture";
 	//	gl.activeTexture(gl.TEXTURE0+1);////////////////輪のテクスチャーに輪を描く
+
 		gl.bindTexture(gl.TEXTURE_2D,this.texture);//-->gl.TEXTURE[?]
 		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
-		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.width,this.height,0,gl.RGBA,gl.UNSIGNED_BYTE,null);//pass no image into gl.TEXT[\d+]
+		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.tWidth,this.tHeight,0,gl.RGBA,gl.UNSIGNED_BYTE,null);//pass no image into gl.TEXT[\d+]
 	};
 	FRBuffer.prototype.activate = function(){
 		var gl = this.gl;
-//		gl.viewport(0,0,this.width,this.height);
-		gl.viewport(0,0,64,64);
-
+		gl.viewport(0,0,this.vWidth,this.vHeight);
 
 	//	gl.activeTexture(gl.TEXTURE0+1);////////////////輪のテクスチャーに輪を描く
 	//	gl.bindTexture(gl.TEXTURE_2D,this.texture);
+
 		gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
-		gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.texture,0);
-
 		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
-//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.width,this.height);
-//		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
-//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH24_STENCIL8,this.width,this.height);
-//		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
 
+
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D, this.texture, 0);
+
+
+
+//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.tWidth,this.tHeight);
+//		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH24_STENCIL8,this.tWidth,this.tHeight);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
 
 	};
 	FRBuffer.prototype.inactivate = function(){
 		var gl=this.gl;
 		gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+		gl.bindTexture(gl.TEXTURE_2D,null);
 		gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER,null);
 	};
@@ -1703,7 +1788,6 @@ function start(){
 		this.gl.deleteTexture(this.texture);
 		this.initialize();
 	};
-
 })();
 
 </script>

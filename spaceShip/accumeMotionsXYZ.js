@@ -29,7 +29,7 @@
 	//for using under controlled space ship, follow to key board
 	(function(){
 		/** global scope **/
-		myXYZMani = myXYZManipulation = { };
+		myXYZManipulation = myXYZMani = { };
 
 		//key codes
 		const R=39;//→
@@ -66,6 +66,12 @@
 
 
 			this.speed = 0;
+
+			this.speedX = 0;
+			this.speedY = 0;
+			this.speedZ = 0;
+
+
 
 			//axiz to rotate
 			this.frontX = 0;
@@ -355,8 +361,8 @@
 		var aMember = [];
 		var Member = function(){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
 			SuperMember.call(this);
-			this.rxy = 250;//*(Math.random()-0.5);
-			this.rz  = 250;//*(Math.random()-0.5);
+			this.rxy = 1000*(Math.random()-0.5);
+			this.rz  = 1000*(Math.random()-0.5);
 			this.alpha = Math.random()*2*3.14;
 			this.gamma = Math.random()*2*3.14;
 		};

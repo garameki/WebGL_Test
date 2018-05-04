@@ -35,7 +35,7 @@ console.log("myTextures.js:this.texture=",this.texture);
 		image.onload = function (){
 			var size = image.naturalWidth*image.naturalHeight;
 			if(size > Number(gl.getParameter(gl.MAX_TEXTURE_SIZE))){
-				myInfo.main.caution="The size is over  '"+myself.name+"' "+size;
+//				myInfo.main.caution="The size is over  '"+myself.name+"' "+size;
 			}
 			//gl.TEXT[\d]* must be connected in fragment shader,so when i use only one texture in the shader,it is not necessary for js-script to use gl.TEXTURE0 above.
 				//https://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
