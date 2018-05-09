@@ -13,21 +13,110 @@
 
 
 <!--******************************* SHADER PROGMRAMS *****************************************************-->
+<!--drawTextureOnClipSpaceWithMakingBlackPartTransparentPart-->
+<script id="drawTextureOnClipSpaceWithMakingBlackPartTransparentPart-fs" type="x-shader/x-fragment">
+	uniform sampler2D uSampler;
+
+	varying lowp vec2 vCoord;
+	void main(void){
+		highp float newCoordX = (vCoord.x + 1.0) * 0.5;
+		highp float newCoordY = (vCoord.y + 1.0) * 0.5;
+		highp vec2 newCoord = vec2(newCoordX,newCoordY);
+		highp vec3 rgb = texture2D(uSampler,newCoord).rgb;
+//		highp float brightness = dot(rgb,rgb);
+//		highp float alpha=1.0;
+//		if(brightness > 0.3){
+//			rgb = vec3(1.0);//alpha = 0.0;
+//		}else{
+//			rgb = vec3(0x0F/0xFF);//alpha = 1.0;
+//		};
+		gl_FragColor = vec4(rgb,1.0);//alpha);z
+
+	//	discard;
+	}
+</script>
+<script id="drawTextureOnClipSpaceWithMakingBlackPartTransparentPart-vs" type="x-shader/x-vertex">
+	attribute vec2 aVertexPosition;
+
+	varying lowp vec2 vCoord;
+	void main(void){
+		
+		gl_Position = vec4(aVertexPosition,0.0,1.0);//x y z w
+		vCoord = aVertexPosition.xy;
+	}
+</script>
+<!--drawTextureOnClipSpace-->
+<script id="drawTextureOnClipSpace-fs" type="x-shader/x-fragment">
+	uniform sampler2D uSampler;
+
+	varying lowp vec2 vCoord;
+	void main(void){
+		lowp float newCoordX = (vCoord.x + 1.0) * 0.5;
+		lowp float newCoordY = (vCoord.y + 1.0) * 0.5;
+		lowp vec2 newCoord = vec2(newCoordX,newCoordY);
+
+		lowp vec3 rrr = texture2D(uSampler,newCoord).rrr;
+
+		gl_FragColor = vec4((rrr-vec3(0.9998))*5000.0,1.0);
+
+	//	discard;
+	}
+</script>
+<script id="drawTextureOnClipSpace-vs" type="x-shader/x-vertex">
+	attribute vec2 aVertexPosition;
+
+	varying lowp vec2 vCoord;
+	void main(void){
+		
+		gl_Position = vec4(aVertexPosition,0.0,1.0);//x y z w
+		vCoord = aVertexPosition.xy;
+	}
+</script>
+<!--drawTextureDepthBufferOnClipSpace-->
+<script id="drawTextureDepthBufferOnClipSpace-fs" type="x-shader/x-fragment">
+	uniform sampler2D uSampler;
+
+	varying lowp vec2 vCoord;
+	void main(void){
+		lowp float newCoordX = (vCoord.x + 1.0) * 0.5;
+		lowp float newCoordY = (vCoord.y + 1.0) * 0.5;
+		lowp vec2 newCoord = vec2(newCoordX,newCoordY);
+
+		lowp vec3 rrr = texture2D(uSampler,newCoord).rrr;
+
+		gl_FragColor = vec4((rrr-vec3(0.9998))*5000.0,1.0);
+
+	//	discard;
+	}
+</script>
+<script id="drawTextureDepthBufferOnClipSpace-vs" type="x-shader/x-vertex">
+	attribute vec2 aVertexPosition;
+
+	varying lowp vec2 vCoord;
+	void main(void){
+		
+		gl_Position = vec4(aVertexPosition,0.0,1.0);//x y z w
+		vCoord = aVertexPosition.xy;
+	}
+</script>
+
+
+
 <!--ringshadow shader-->
 <script id="ringshadowFragmentShader" type="x-shader/x-fragment">
 
 	uniform sampler2D uSampler;
 
 	varying lowp vec2 vTextureCoord;
-	varying highp float zz;
 
 	void main(void) {
 
-//		if(gl_FragCoord.z - zz < 0.0001){
-//			//keep
-//		}else{
-			gl_FragColor = vec4(texture2D(uSampler,vTextureCoord).rgb,0.5);
-//		}
+		highp float hh = gl_FragColor.r;
+		if(hh > 0.0/255.0 ){
+			discard;
+		}else{
+			gl_FragColor = vec4(texture2D(uSampler,vTextureCoord).rgb,1.0);
+		}
 	}
 </script>
 <script id="ringshadowVertexShader" type="x-shader/x-vertex">
@@ -42,7 +131,6 @@
 	uniform mat4 uManipulatedMatrix;
 
 	varying lowp vec2 vTextureCoord;//本来要らない
-	varying highp float zz;
 
 	void main(void) {
 		//makeShadow
@@ -72,7 +160,6 @@
 		gl_Position = uPerspectiveMatrix * vec4(pos2,1.0);
 
 			vTextureCoord = aTextureCoord;
-			zz = aVertexPosition.z;
 		
 	}
 </script>
@@ -570,9 +657,8 @@ void hncodeFloat(float z){
 		this.loc = gl.getAttribLocation(prog,name);
 		if(this.loc == -1 || this.loc == null){
 			myInfo.main.error="Can't initialize attribute type of '"+name+"' variable, such that it's not used nor exist in '"+progName+"' shader.";
-			d
 		} else {
-			myInfo.main.info="'"+name+"' was enabled in '"+progName+"' program.";
+			//●myInfo.main.info="'"+name+"' was enabled in '"+progName+"' program.";
 		}
 	};
 	var flagError = false;
@@ -588,7 +674,13 @@ void hncodeFloat(float z){
 
 //console.log("arrayBuffer=",this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING)," was pointed");
 	};
-
+	AttribVariable.prototype.assignArray = function(arr,numComponents){
+		var buff = this.gl.createBuffer();
+		this.gl.bindBuffer(this.gl.ARRAY_BUFFER,buff);
+		this.gl.bufferData(this.gl.ARRAY_BUFFER,new Float32Array(arr),this.gl.STATIC_DRAW);
+		this.gl.enableVertexAttribArray(this.loc);
+		this.gl.vertexAttribPointer(this.loc,numComponents,this.gl.FLOAT,normalize,stride,offset);
+	};
 
 
 	/** For uniform variable **/
@@ -684,7 +776,57 @@ function sendAccumeratedMatrix(vari,arrAccumelateToMyMat4,timeSpan){//to get a m
 };
 
 //************************************** DRAW SCENE *************************************************
+var drawPlanets = function(gl,names,angle){
+	for(var num in names){//the last is the texture that is gotten by framebuffer
+		member = UnitsToDraw[names[num]];
+		/** To vertex shader **/
+		myShaders.camera.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders.camera.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
+		myShaders.camera.attrib.aVertexColor.assignBuffer(member.buffers.color,4);
+		myShaders.camera.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
 
+		sendPerspectiveMatrix(gl,myShaders.camera.uniform.uPerspectiveMatrix);
+		pmat = myMat4.arr;//sended data above
+		sendAccumeratedMatrix(myShaders.camera.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		mvmat = myMat4.arr;//sended data above
+		sendModelViewMatrixInversedTransposed(myShaders.camera.uniform.uModelViewMatrixInversedTransposed,mvmat);
+//		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
+		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+		myShaders.camera.uniform.uBaseLight.sendFloat(member.baseLight);
+		myShaders.camera.uniform.uPointSizeFloat.sendFloat(3.0);
+		/** Tofragment shader **/
+		myShaders.camera.uniform.uBrightness.sendFloat(member.brightness);
+		myShaders.camera.uniform.uAlpha.sendFloat(member.alpha);
+		myShaders.camera.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+
+		myTextures.member[member.nameTexture].activate();
+
+		member.draw();//in which texture activated is for use
+		member.labels.repos(gl,pmat,mvmat);
+	}//camera
+
+
+};
+
+var drawShadows = function(gl,names,angle){
+
+	for(var num in names){//the last is the texture that is gotten by framebuffer
+		member = UnitsToDraw[names[num]];
+			myShaders.ringshadow.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+			myShaders.ringshadow.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+			member.buffers.bindElement();
+			sendPerspectiveMatrix(gl,myShaders.ringshadow.uniform.uPerspectiveMatrix);
+			sendAccumeratedMatrix(myShaders.ringshadow.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+			sendAccumeratedMatrix(myShaders.ringshadow.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+			mvmat = myMat4.arr;//sended data above
+			sendModelViewMatrixInversedTransposed(myShaders.ringshadow.uniform.uModelViewMatrixInversedTransposed,mvmat);
+			myTextures.member[member.nameTexture].activate();
+			myShaders.ringshadow.uniform.uSampler.sendInt(0);
+		member.draw();
+	}
+};
 
 var stencil_status = function(gl){
 	myInfo.main.stencilwritemask = "stencil mask front:"+gl.getParameter(gl.STENCIL_WRITEMASK).toString(16);
@@ -734,10 +876,8 @@ function drawScene(gl,angle){
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 0 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 	//フレームバッファ(shadow)をclear & turn on
-	myFRBuffers.shadow.reset();
+//	myFRBuffers.shadow.reset();
 //	myFRBuffers.shadow.activate();
-	myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
-	myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
 
 	//color
 	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));
@@ -760,154 +900,175 @@ function drawScene(gl,angle){
 //	gl.clear(gl.STENCIL_BUFFER_BIT);
 
 	//blend
-	gl.enable(gl.BLEND);//後に描かれたものが前に描かれたものとブレンドされる
+	//Final Color = ObjectColor * SourceBlendFactor(テクスチャ) + PixelColor * DestinationBlendFactor(画面) //https://msdn.microsoft.com/ja-jp/library/cc324560.aspx
+//	gl.disable(gl.BLEND);
+//	gl.enable(gl.BLEND);//後に描かれたものが前に描かれたものとブレンドされる//https://sites.google.com/site/hackthewebgl/learning-webglhon-yaku/the-lessons/lesson-8
 				//---> ①奥の太陽②手前の輪---○　①手前の輪②奥の太陽---X
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+//	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 //	gl.blendFunc(gl.ONE_MINUS_SRC_ALPHA,gl.SRC_ALPHA);
+//	gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
 
+gl.disable(gl.BLEND);
 gl.disable(gl.DEPTH_TEST);
 gl.disable(gl.STENCIL_TEST);
+//*************************************************************************************************
+//*************************************************************************************************
+//*************************************************************************************************
+//*************************************************************************************************
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-
-// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 3 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-	
-	myInfo.main.framebufferstatus = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
-	myFRBuffers.shadow.inactivate();
-
-
-	myTextures.member["screen"].import(myFRBuffers.shadow.texture);
-
+	myFRBuffers.shadow.reset();
+	myFRBuffers.shadow.activate("CTDTSN");
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 4 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-	gl.enable(gl.DEPTH_TEST);
-//		gl.disable(gl.DEPTH_TEST);
+	//draw opaque objects at first!! After this ,draw transparent objects
+
+	gl.disable(gl.BLEND);
+
+	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));
+	gl.clear(gl.COLOR_BUFFER_BIT);
+
+
 	gl.clearDepth(0xFFFFFF);
 //		gl.clearDepth(0x0);
 	gl.clear(gl.DEPTH_BUFFER_BIT);
 	gl.depthFunc(gl.LEQUAL);
 
-//	gl.enable(gl.STENCIL_TEST);
-	gl.disable(gl.STENCIL_TEST);
-//	gl.stencilFunc(gl.EQUAL,0xFF,0xFF);
-//	gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
-
-	var names = ["earth","plane","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
-	myShaders.camera.activate();
-	for(var num in names){//the last is the texture that is gotten by framebuffer
-		member = UnitsToDraw[names[num]];
-		/** To vertex shader **/
-		myShaders.camera.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-		myShaders.camera.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
-		myShaders.camera.attrib.aVertexColor.assignBuffer(member.buffers.color,4);
-		myShaders.camera.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
-		member.buffers.bindElement();
-
-		sendPerspectiveMatrix(gl,myShaders.camera.uniform.uPerspectiveMatrix);
-		pmat = myMat4.arr;//sended data above
-		sendAccumeratedMatrix(myShaders.camera.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
-		mvmat = myMat4.arr;//sended data above
-		sendModelViewMatrixInversedTransposed(myShaders.camera.uniform.uModelViewMatrixInversedTransposed,mvmat);
-//		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
-		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
-		myShaders.camera.uniform.uBaseLight.sendFloat(member.baseLight);
-		myShaders.camera.uniform.uPointSizeFloat.sendFloat(3.0);
-		/** Tofragment shader **/
-		myShaders.camera.uniform.uBrightness.sendFloat(member.brightness);
-		myShaders.camera.uniform.uAlpha.sendFloat(member.alpha);
-		myShaders.camera.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
-		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-
-		myTextures.member[member.nameTexture].activate();
-
-		member.draw();//in which texture activated is for use
-		member.labels.repos(gl,pmat,mvmat);
-	}//camera
 
 
-
-	myInfo.main.glerror = "GL error:"+gl[gl.getError()];
-	myInfo.main.glstatus = "GL status:"+gl[gl.getParameter(gl.FRAGMENT_SHADER_DERIVATIVE_HINT)];
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 1 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-//	gl.disable(gl.DEPTH_TEST);
-//	gl.enable(gl.DEPTH_TEST);
-//	gl.clearDepth(c24(0xFFFFFF));
-//	gl.clear(gl.DEPTH_BUFFER_BIT);
-//	gl.depthFunc(gl.LEQUAL);
-
-	gl.enable(gl.STENCIL_TEST);
 	gl.clearStencil(0xFF);
 	gl.clear(gl.STENCIL_BUFFER_BIT);
+		gl.stencilFunc(gl.LEQUAL,0xFF,0xFF);
+		gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
+		gl.stencilOp(gl.REPLACE,gl.REPLACE,gl.REPLACE);
 
+//	var names = ["earth","plane","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
+	var names = ["earth","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
+	myShaders.camera.activate();
+		drawPlanets(gl,names,angle);
+
+//:::::::::::::::::::::::::: 1. draw ring without the part of depth at cassini :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+if(true){
+
+if(false){
+	//screenの何も書かれていないところに前のcolorがあった場合には透過する
+
+	//Final Color = ObjectColor * SourceBlendFactor + PixelColor * DestinationBlendFactor //https://msdn.microsoft.com/ja-jp/library/cc324560.aspx
+	//ブレンディングは透過とは違う//https://sites.google.com/site/hackthewebgl/learning-webglhon-yaku/the-lessons/lesson-8
+	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));//これだとscreenが透過する(blend時)
+//		gl.clearColor(c8(0xFF),c8(0xFF),c8(0xFF),c8(0xFF));//これだとscreenが真っ黒(blend時)
+	gl.clear(gl.COLOR_BUFFER_BIT);
+//		gl.colorMask(false,false,false,true);
+//	gl.colorMask(true,true,true,true);
+
+	gl.disable(gl.DEPTH_TEST);
+//		gl.enable(gl.DEPTH_TEST);
+//		gl.clearDepth(c24(0xFFFFFF));
+//		gl.clear(gl.DEPTH_BUFFER_BIT);
+//		gl.depthFunc(gl.LEQUAL);
+
+	gl.disable(gl.STENCIL_TEST);
+//	gl.enable(gl.STENCIL_TEST);
+	gl.clearStencil(0xFF);
+	gl.clear(gl.STENCIL_BUFFER_BIT);
 	gl.stencilFunc(gl.EQUAL,0xFE,0xFE);
 //	gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
-	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);
-
+	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);//trueの部分にOperationが加わり、ステンシルバッファが書き換えられる
+}//boolean
 	myShaders.camera.activate();
-		member = UnitsToDraw["ring"];
-		/** To vertex shader **/
-		myShaders.camera.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-		myShaders.camera.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
-		myShaders.camera.attrib.aVertexColor.assignBuffer(member.buffers.color,4);
-		myShaders.camera.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
-		member.buffers.bindElement();
+		names = ["ring"];
+		drawPlanets(gl,names,angle);
+}//boolean
 
-		sendPerspectiveMatrix(gl,myShaders.camera.uniform.uPerspectiveMatrix);
-		pmat = myMat4.arr;//sended data above
-		sendAccumeratedMatrix(myShaders.camera.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
-		mvmat = myMat4.arr;//sended data above
-		sendModelViewMatrixInversedTransposed(myShaders.camera.uniform.uModelViewMatrixInversedTransposed,mvmat);
-//		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
-		sendAccumeratedMatrix(myShaders.camera.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
-		myShaders.camera.uniform.uBaseLight.sendFloat(member.baseLight);
-		myShaders.camera.uniform.uPointSizeFloat.sendFloat(3.0);
-		/** Tofragment shader **/
-		myShaders.camera.uniform.uBrightness.sendFloat(member.brightness);
-		myShaders.camera.uniform.uAlpha.sendFloat(member.alpha);
-		myShaders.camera.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
-		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-
-		myTextures.member[member.nameTexture].activate();
-
-		member.draw();//in which texture activated is for use
-		member.labels.repos(gl,pmat,mvmat);
+//:::::::::::::::::::::::::::::: 2. draw the shadow of the Saturn ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 2 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+if(true){
+
+	//レンダーバッファを深度バッファにして、シェーダー内でテクスチャーとして使えば、なんとかなるのか
+	//だから、2枚のテクスチャーを用意して、一枚は深度ステンシルバッファ、もう一枚はカラーバッファとして使えばいいのか
+if(false){
+
+	gl.enable(gl.BLEND);//後に描かれたものが前に描かれたものとブレンドされる//https://sites.google.com/site/hackthewebgl/learning-webglhon-yaku/the-lessons/lesson-8
+				//---> ①奥の太陽②手前の輪---○　①手前の輪②奥の太陽---X
+//	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+//	gl.blendFunc(gl.ONE_MINUS_SRC_ALPHA,gl.SRC_ALPHA);
+//	gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+
+
+//●	gl.blendFunc(gl.,gl.);//destinationの黒い部分には黒色を付けない
+
 
 	gl.disable(gl.DEPTH_TEST);
 //	gl.enable(gl.DEPTH_TEST);
 //	gl.clearDepth(c24(0x0));
 //	gl.clear(gl.DEPTH_BUFFER_BIT);
-//	gl.depthFunc(gl.LEQUAL);
+	gl.depthFunc(gl.NOTEQUAL);
 
-//●	gl.enable(gl.STENCIL_TEST);
+//	gl.disable(gl.STENCIL_TEST);
+	gl.enable(gl.STENCIL_TEST);
 //	gl.clearStencil(0xFF);
 //	gl.clear(gl.STENCIL_BUFFER_BIT);
 	gl.stencilFunc(gl.EQUAL,0xFE,0xFF);
-	gl.stencilOp(gl.KEEP,gl.REPLACE,gl.KEEP);
+	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);
+//	gl.stencilOp(gl.KEEP,gl.REPLACE,gl.KEEP);
 //	gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
 
+
+
 	stencil_status(gl);
+
+}//boolean
+
+
 	myShaders.ringshadow.activate();
-		member = UnitsToDraw["saturn2"];
-			myShaders.ringshadow.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-			myShaders.ringshadow.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
-			member.buffers.bindElement();
-			sendPerspectiveMatrix(gl,myShaders.ringshadow.uniform.uPerspectiveMatrix);
-			sendAccumeratedMatrix(myShaders.ringshadow.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
-			sendAccumeratedMatrix(myShaders.ringshadow.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
-			mvmat = myMat4.arr;//sended data above
-			sendModelViewMatrixInversedTransposed(myShaders.ringshadow.uniform.uModelViewMatrixInversedTransposed,mvmat);
-			myTextures.member["saturn2"].activate();
-			myShaders.ringshadow.uniform.uSampler.sendInt(0);
-		member.draw();
+		names = ["saturn2"];
+		drawShadows(gl,names,angle);
+}//boolean
 
 
+// ::::::::::::::::::::::::::::::::::: replace the contents of screen :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+	
+	myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
+	myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
+	myInfo.main.framebufferstatus = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
+
+//::::::::::::::::::::::::: frame buffer ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+	myFRBuffers.shadow.inactivate();
+//	myTextures.member["screen"].import(myFRBuffers.shadow.textureColorBuffer);
+	myTextures.member["screen"].import(myFRBuffers.shadow.textureDepthBuffer);
+
+//:::::::::::::::::::: draw frame buffer on clipping space on screen ::::::::::::::::::::::::::
 
 
+	gl.disable(gl.BLEND);
+//	gl.enable(gl.BLEND);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);//テクスチャの黒は透過
+//	gl.blendFunc(gl.ONE_MINUS_DST_ALPHA,gl.DST_ALPHA);
+
+	gl.enable(gl.DEPTH_TEST);
+	gl.disable(gl.DEPTH_TEST);
+	gl.disable(gl.STENCIL_TEST);
+
+	//https://qiita.com/ienaga/items/3263a752da3287a6c4b6
+//	myShaders.drawTextureOnClipSpace.activate();
+	myShaders.drawTextureDepthBufferOnClipSpace.activate();
+		/** To vertex shader **/
+		myShaders.drawTextureOnClipSpace.attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
+		myShaders.drawTextureOnClipSpace.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member["screen"].activate();
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+	
+//:::::::::::::::::::::::::::::::::: GLSL STATUS ::::::::::::::::::::::::::::::::::::::::::
+
+	myInfo.main.glerror = "GL error:"+gl[gl.getError()];
+//●	myInfo.main.glstatus = "GL status:"+gl[gl.getParameter(gl.FRAGMENT_SHADER_DERIVATIVE_HINT)];
+
+
+//*********************************** END *****************************************************
 
 /** the way to use more Textures at once **/
 /*
@@ -961,6 +1122,10 @@ function start(){
 	myInfo.main.createLine("stencilwritemask","black","white",10);
 	myInfo.main.createLine("stencilbackwritemask","black","white",10);
 	myInfo.main.createLine("stencilbits","black","white",10);
+	myInfo.main.createLine("colorbufferattach","black","white",10);
+	myInfo.main.createLine("depthbufferattach","black","white",10);
+	myInfo.main.createLine("stencilbufferattach","black","white",10);
+
 
 	
 
@@ -968,11 +1133,22 @@ function start(){
 	var canvas = document.getElementById('glcanvas');
 	canvas.width=canvas.clientWidth;//necessary
 	canvas.height=canvas.clientHeight;//necessary
-//	var gl=canvas.getContext("webgl2",{stencil:true,premultipliedAlpha: false});//https://wgld.org/d/webgl/w038.html
-	var gl=canvas.getContext("webgl2",{stencil:true,premultipliedAlpha:true});//https://wgld.org/d/webgl/w038.html
+//	var gl=canvas.getContext("webgl2",{premultipliedAlpha:false});https://stackoverflow.com/questions/47216022/webgl-gl-fragcolor-alpha-behave-differently-in-chrome-with-firefox
+//	var gl=canvas.getContext("webgl2",{stencil:true});//https://wgld.org/d/webgl/w038.html
+//	var gl=canvas.getContext("webgl2",{antialias:true});//http://d.hatena.ne.jp/nakamura001/20120201/1328105898
+//	var gl=canvas.getContext("webgl2",{preserveDrawingBuffer:false});//do not know how to use???//https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+	var gl=canvas.getContext("webgl2");
+//	var gl=canvas.getContext("webgl");
 	if(!gl){
 		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
 		return;
+	}
+	ext = gl.getExtension('WEBGL_depth_texture');//available in webgl1 ,in webgl2 this is default functionality
+	gl._WEBGL_depth_texture = ext;
+	console.log("enabled extensions");
+	var exts = gl.getSupportedExtensions();
+	for(var ii in exts){
+		console.log(exts[ii]);
 	}
 	gl[gl.FASTEST]="FAST";
 	gl[gl.NICEST]="NICEST";
@@ -1005,16 +1181,21 @@ function start(){
 	gl[gl.FUNC_REVERSE_SUBTRACT]="BLEND_REVERSE_SUBSTRUCT";
 //	gl[]="";
 
-	
+console.log("gl=",gl);
+
+
 	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//(kkk bad)クリップ空間の-1～1の値をcanvasの大きさに変換する
+
+//console.log("viewport:",gl.canvas.width,gl.canvas.height);
+
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
 //	gl.clearColor(1.0, 1.0, 1.0, 1.0);	//White out
 
 {
-	//https://stackoverflow.com/questions/47216022/webgl-gl-fragcolor-alpha-behave-differently-in-chrome-with-firefox
-	//i've been thanking David Guan
-	gl.enable(gl.BLEND);
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+//	//https://stackoverflow.com/questions/47216022/webgl-gl-fragcolor-alpha-behave-differently-in-chrome-with-firefox
+//	//i've been thanking David Guan
+//	gl.enable(gl.BLEND);
+//	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 };
 {
 //	//not available
@@ -1067,7 +1248,7 @@ function start(){
 		myShaders.light.getUniformLocation("uOrthographicMatrix");
 		myShaders.light.getUniformLocation("uNotManipulatedMatrix");
 	myShaders.create("camera","shader-vs","shader-fs",gl);
-		myShaders.camera.activate();
+		myShaders.camera.activate();//there this is 'cause for clear vertex buffers probably.
 		myShaders.camera.getAttribLocation("aVertexPosition");
 		myShaders.camera.getAttribLocation("aVertexNormal");
 		myShaders.camera.getAttribLocation("aVertexColor");
@@ -1083,13 +1264,24 @@ function start(){
 		myShaders.camera.getUniformLocation("uAlpha");
 		myShaders.camera.getUniformLocation("uCassiniFactor");
 		myShaders.camera.getUniformLocation("uManipulatedMatrix");
+	myShaders.create("drawTextureOnClipSpace","drawTextureOnClipSpace-vs","drawTextureOnClipSpace-fs",gl);
+		myShaders.drawTextureOnClipSpace.getAttribLocation("aVertexPosition");
+		myShaders.drawTextureOnClipSpace.getUniformLocation("uSampler");
+	myShaders.create("drawTextureOnClipSpaceWithMakingBlackPartTransparentPart","drawTextureOnClipSpaceWithMakingBlackPartTransparentPart-vs","drawTextureOnClipSpaceWithMakingBlackPartTransparentPart-fs",gl);
+		myShaders.drawTextureOnClipSpaceWithMakingBlackPartTransparentPart.getAttribLocation("aVertexPosition");
+		myShaders.drawTextureOnClipSpaceWithMakingBlackPartTransparentPart.getUniformLocation("uSampler");
+	myShaders.create("drawTextureDepthBufferOnClipSpace","drawTextureDepthBufferOnClipSpace-vs","drawTextureDepthBufferOnClipSpace-fs",gl);
+		myShaders.drawTextureDepthBufferOnClipSpace.getAttribLocation("aVertexPosition");
+		myShaders.drawTextureDepthBufferOnClipSpace.getUniformLocation("uSampler");
+
 	var nn = gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_ATTRIBUTES);if(nn!=null)for(var ii=0;ii<nn;ii++){gl.disableVertexAttribArray(ii);};
 
 
 	/** prepare frame buffer & render buffer **/
-	var wide = 128;
+	var wide = 512;
 	myFRBuffers.create("shadow",gl,wide,wide,wide,wide);//16384<-----MAX_RENDER_SIZE
 	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+
 
 
 
@@ -1720,9 +1912,13 @@ function start(){
 		Object.defineProperty(myFRBuffers,sName,{value:new FRBuffer(gl,tWidth,tHeight,vWidth,vHeight),writable:false,enumerable:true,configurable:true});
 	};
 
+
 	//reference
+	//https://wgld.org/d/webgl/w051.html
 	//http://www.chinedufn.com/webgl-shadow-mapping-tutorial/
 	//https://stackoverflow.com/questions/41824631/how-to-work-with-framebuffers-in-webgl/41832778#41832778
+	//http://www.wakayama-u.ac.jp/~tokoi/lecture/gg/ggnote13.pdf
+	//http://www.songho.ca/opengl/gl_fbo.html
 	/** inner class **/
 	  //Texture, Framebuffer and Renderbuffer are necessary at once.
 	var FRBuffer = function(gl,tWidth,tHeight,vWidth,vHeight){
@@ -1746,46 +1942,143 @@ function start(){
 	FRBuffer.prototype.initialize = function(){
 		/** prepare texture rendered into **/
 		var gl = this.gl;
-		this.texture = gl.createTexture();//which frame buffer stores image accumeration int
-		this.texture._name = "frameBufferTexture";
-	//	gl.activeTexture(gl.TEXTURE0+1);////////////////輪のテクスチャーに輪を描く
 
-		gl.bindTexture(gl.TEXTURE_2D,this.texture);//-->gl.TEXTURE[?]
-		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
-		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.tWidth,this.tHeight,0,gl.RGBA,gl.UNSIGNED_BYTE,null);//pass no image into gl.TEXT[\d+]
+		this.textureColorBuffer = gl.createTexture();
+		this.textureColorBuffer._name = "ColorBufferTexture";
+			gl.bindTexture(gl.TEXTURE_2D,this.textureColorBuffer);//-->gl.TEXTURE[?]
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
+			gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.tWidth,this.tHeight,0,gl.RGBA,gl.UNSIGNED_SHORT_4_4_4_4,null);//pass no image into gl.TEXT[\d+]
+		//https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
+		this.textureDepthBuffer = gl.createTexture();
+		this.textureDepthBuffer._name = "DepthBufferTexture";
+			gl.bindTexture(gl.TEXTURE_2D,this.textureDepthBuffer);//-->gl.TEXTURE[?]
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
+			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT16,this.tWidth,this.tHeight,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);//pass no image into gl.TEXT[\d+]
+		//https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
+		this.textureStencilBuffer = gl.createTexture();
+		this.textureStencilBuffer._name = "StencilBufferTexture";
+			gl.bindTexture(gl.TEXTURE_2D,this.textureStencilBuffer);//-->gl.TEXTURE[?]
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
+			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH24_STENCIL8,this.tWidth,this.tHeight,0,gl.DEPTH_STENCIL,gl.UNSIGNED_INT_24_8,null);//pass no image into gl.TEXT[\d+]
 	};
-	FRBuffer.prototype.activate = function(){
+	FRBuffer.prototype.activate = function(sMode){
 		var gl = this.gl;
 		gl.viewport(0,0,this.vWidth,this.vHeight);
 
-	//	gl.activeTexture(gl.TEXTURE0+1);////////////////輪のテクスチャーに輪を描く
-	//	gl.bindTexture(gl.TEXTURE_2D,this.texture);
+//console.log("viewport-FRBuffer:",this.vWidth,this.vHeight);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
-		gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
-
-
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D, this.texture, 0);
-
-
-
-//		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.tWidth,this.tHeight);
-//		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
-		gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH24_STENCIL8,this.tWidth,this.tHeight);
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
-
+		var matches,nameBuff;
+		matches = sMode.match(/C[NTR]D[NTR]S[NTR]|C[NTR]S[NTR]D[NTR]|D[NTR]C[NTR]S[NTR]|D[NTR]S[NTR]C[NTR]|S[NTR]C[NTR]D[NTR]|S[NTR]D[NTR]C[NTR]/g);
+		if(matches == null){
+			myInfo.main.error = "FRBuffer.*.activate('HERE') 's HERE is wrong strings";
+			return;
+		}
+		matches = sMode.match(/CR/);
+		if(matches != null){
+			matches = sMode.match(/DR|SR/);
+			if(matches != null){
+				myInfo.main.error = "FRBuffer.*.activate('HERE') 's HERE contains CR and, DR, SR or both";
+				return;
+			}
+		}
+		matches = sMode.match(/R/);
+		if(matches != null){
+			gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
+		}else{
+			gl.bindRenderbuffer(gl.RENDERBUFFER,null);
+		}
+		nameBuff = "COLOR BUFFER ATTACHING TO :";
+		matches = sMode.match(/C(.)/);
+		var mode = matches[1];
+		switch(mode){
+			case "N":
+				gl.colorMask(false,false,false,false);
+				myInfo.main.colorbufferattach = nameBuff + "None";
+				break;
+			case "T":
+				gl.colorMask(true,true,true,true);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D, this.textureColorBuffer, 0);
+				myInfo.main.colorbufferattach = nameBuff + "Texture";
+				break;
+			case "R":
+				gl.colorMask(true,true,true,true);
+				gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA4,this.tWidth,this.tHeight);
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+				myInfo.main.colorbufferattach = nameBuff + "Renderbuffer";
+				break;
+			default:
+		}
+		matches = sMode.match(/DRSR|SRDR|DRC.SR|SRC.DR/g);
+		if(matches != null){
+			gl.enable(gl.DEPTH_TEST);
+			gl.enable(gl.STENCIL_TEST);
+			gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_STENCIL,this.tWidth,this.tHeight);
+			gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);
+			myInfo.main.depthbufferattach = "  DEPTH BUFFER ATTACHING TO : Renderbuffer";
+			myInfo.main.stencilbufferattach = "STENCIL BUFFER ATTACHING TO : Renderbuffer";
+			return;//*********** return ***************/
+		}
+		nameBuff = "DEPTH BUFFER ATTACHING TO : ";
+		matches = sMode.match(/D(.)/);
+		var mode = matches[1];
+		switch(mode){
+			case "N":
+				gl.disable(gl.DEPTH_TEST);
+				myInfo.main.depthbufferattach = nameBuff + "None";
+				break;
+			case "T":
+				gl.enable(gl.DEPTH_TEST);
+				//gl.bindTexture(gl.TEXTURE_2D, this.textureDepthBuffer);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D, this.textureDepthBuffer, 0);
+				myInfo.main.depthbufferattach = nameBuff + "Texture";
+				break;
+			case "R":
+				gl.enable(gl.DEPTH_TEST);
+				gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.tWidth,this.tHeight);
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+				myInfo.main.depthbufferattach = nameBuff + "Renderbuffer";
+				break;
+			default:
+		}
+		nameBuff = "STENCIL BUFFER ATTACHING TO :";
+		matches = sMode.match(/S(.)/);
+		var mode = matches[1];
+		switch(mode){
+			case "N":
+				gl.disable(gl.STENCIL_TEST);
+				myInfo.main.stencilbufferattach = nameBuff + "None";
+				break;
+			case "T":
+				gl.enable(gl.STENCIL_TEST);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.STENCIL_ATTACHMENT,gl.TEXTURE_2D, this.textureStencilBuffer, 0);
+				myInfo.main.stencilbufferattach = nameBuff + "Texture";
+				break;
+			case "R":
+				gl.enable(gl.STENCIL_TEST);
+				gl.renderbufferStorage(gl.RENDERBUFFER,gl.STENCIL_INDEX8,this.tWidth,this.tHeight);
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+				myInfo.main.stencilbufferattach = nameBuff + "Renderbuffer";
+				break;
+			default:
+		}
 	};
 	FRBuffer.prototype.inactivate = function(){
 		var gl=this.gl;
 		gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+//console.log("viewport-3:",gl.canvas.width,gl.canvas.height);
 		gl.bindTexture(gl.TEXTURE_2D,null);
 		gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER,null);
 	};
 	FRBuffer.prototype.reset = function(){
 		//https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/rendering/framebuffer-texture-clear.html
-		this.gl.deleteTexture(this.texture);
+		this.gl.deleteTexture(this.textureColorBuffer);
+		this.gl.deleteTexture(this.textureDepthBuffer);
+		this.gl.deleteTexture(this.textureStencilBuffer);
 		this.initialize();
 	};
 })();
