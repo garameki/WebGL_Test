@@ -1,20 +1,5 @@
-﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
-<link rel="stylesheet"		type="text/css"		href="./styleSheet.css"></link>
-<script id="library"		type="text/javascript"	src="./myLib.js"></script>
-<script id="calculationXYZ"	type="text/javascript"	src="./accumeMotionsXYZ.js"></script>
-<script id="matrix"		type="text/javascript"	src="./myMatrix.js"></script>
-<script id="color"		type="text/javascript"	src="./myColor.js"></script>
-<script id="class"		type="text/javascript"	src="./myClass.js"></script>
-<script id="shape"		type="text/javascript"	src="./myGLShape.js"></script>
-<script id="motions"		type="text/javascript"	src="./accumeMotions.js"></script>
-<script id="textures"		type="text/javascript"	src="./myTextures.js"></script>
-<script id="fbo"		type="text/javascript"	src="./myFBOs.js"></script>
-
-
-
-
-<!--******************************* SHADER PROGMRAMS *****************************************************-->
-<!--drawTextureOnClipSpaceWithMakingBlackPartTransparentPart-->
+﻿//******************************* SHADER PROGMRAMS *****************************************************-->
+//--drawTextureOnClipSpaceWithMakingBlackPartTransparentPart
 <script id="drawTextureOnClipSpaceWithMakingBlackPartTransparentPart-fs" type="x-shader/x-fragment">
 	uniform sampler2D uSampler;
 
@@ -46,66 +31,34 @@
 		vCoord = aVertexPosition.xy;
 	}
 </script>
+<!--drawTextureOnClipSpace-->
+<script id="drawTextureOnClipSpace-fs" type="x-shader/x-fragment">
+	uniform sampler2D uSampler;
 
-
-<!--***********************************************************************************************************-->
-<!--***********************************************************************************************************-->
-<!--mixTwoTexturesWithDepthes-->
-
-<script id="mixTwoTexturesWithDepthes-fs" type="x-shader/x-fragment">
-	uniform sampler2D uSampler0;//color buffer of source
-	uniform sampler2D uSampler1;//depth buffer of source
-	uniform sampler2D uSampler2;//color buffer of destination
-	uniform sampler2D uSampler3;//depth buffer of destination(地)
-
-	varying highp vec2 vCoord;
+	varying lowp vec2 vCoord;
 	void main(void){
-//gl.DEPTH_COMPONENT16
-//gl.DEPTH24_STENCIL8 <===It's high quality for DEPTH_TESTing to draw objects which have z coordinate each other.
+		lowp float newCoordX = (vCoord.x + 1.0) * 0.5;
+		lowp float newCoordY = (vCoord.y + 1.0) * 0.5;
+		lowp vec2 newCoord = vec2(newCoordX,newCoordY);
 
-		//.rだけに16bitすべてが入っています。g,b,aはゼロです;.r contains all 16 bit. g, b and a has zero value each other.
+		gl_FragColor = vec4(texture2D(uSampler,newCoord).rgb,1.0);
 
-		highp float depthSource = texture2D(uSampler1,vCoord).r * 16777216.0;
-		highp float depthDestination = texture2D(uSampler3,vCoord).r * 16777216.0;
-
-		//gl_FragCoord.zは現在渡されているrectangleのもの(aVertexPositionから計算したもの)だから、画面上のものとは別物。!!!!!!!!!
-		//だから、以前に描いたもののDEPTHと比べたいときには以前描いたもののDEPTH TEXTUREを用意して、それと比べなければならない
-
-		//16ビットなので、texelに65536を描けると整数になります probablement
-//		if(depthSource * 65536.0 > depthDestination * 65536.0){
-		if(depthSource < depthDestination){
-			gl_FragColor = vec4(texture2D(uSampler0,vCoord).rgb,1.0);
-		}else{
-			gl_FragColor = vec4(texture2D(uSampler2,vCoord).rgb,1.0);
-//			discard;
-		}
+	//	discard;
 	}
 </script>
-<script id="mixTwoTexturesWithDepthes-vs" type="x-shader/x-vertex">
+<script id="drawTextureOnClipSpace-vs" type="x-shader/x-vertex">
 	attribute vec2 aVertexPosition;
 
-	varying highp vec2 vCoord;
+	varying lowp vec2 vCoord;
 	void main(void){
 		
-		vCoord = aVertexPosition.xy * 0.5 + 0.5;
 		gl_Position = vec4(aVertexPosition,0.0,1.0);//x y z w
-
+		vCoord = aVertexPosition.xy;
 	}
 </script>
-<!--************************************************************************************************-->
-<!--***********************************************************************************************************-->
-
-
-
-
-
-
-
-
-
 <!--drawTextureDepthBufferOnClipSpace-->
 <script id="drawTextureDepthBufferOnClipSpace-fs" type="x-shader/x-fragment">
-	uniform sampler2D uSampler;//color buffer
+	uniform sampler2D uSampler;
 
 	varying lowp vec2 vCoord;
 	void main(void){
@@ -332,12 +285,12 @@ void hncodeFloat(float z){
 <!-- normal shader -->
 <script id="shader-fs" type="x-shader/x-fragment">
 //hint
-	varying lowp vec4 vColor;	//as same as vertex shader
-	varying lowp vec2 vTextureCoord;//as same as vertex shader
-	varying lowp vec3 vNTimesEachRGB;//as same as vertex shader
-//	varying highp vec4 vColor;//●	//as same as vertex shader
-//	varying highp vec2 vTextureCoord;//as same as vertex shader
-//	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
+//	varying lowp vec4 vColor;	//as same as vertex shader
+//	varying lowp vec2 vTextureCoord;//as same as vertex shader
+//	varying lowp vec3 vNTimesEachRGB;//as same as vertex shader
+	varying highp vec4 vColor;//●	//as same as vertex shader
+	varying highp vec2 vTextureCoord;//as same as vertex shader
+	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
 
 	uniform mediump float uBrightness;
 	uniform mediump float uAlpha;
@@ -361,8 +314,8 @@ void hncodeFloat(float z){
 	//	gl_FragColor = vec4(shadowFlag) * vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
 
 	/* method 4 */
-		lowp vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
-		lowp float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする
+		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
+		highp float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする
 		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
 	}
 </script>
@@ -398,9 +351,9 @@ void hncodeFloat(float z){
 //	varying lowp vec4 vColor;
 //	varying lowp vec2 vTextureCoord;
 //	varying lowp vec3 vNTimesEachRGB;
-	varying lowp vec4 vColor;
-	varying lowp vec2 vTextureCoord;
-	varying lowp vec3 vNTimesEachRGB;
+	varying highp vec4 vColor;
+	varying highp vec2 vTextureCoord;
+	varying highp vec3 vNTimesEachRGB;
 
 
 	void main(void) {
@@ -722,8 +675,6 @@ void hncodeFloat(float z){
 	var UniformVariable = function(gl,prog,name,progName){
 		this.gl = gl;
 		this.loc = gl.getUniformLocation(prog,name);
-		this._name = name;
-		this._prog = prog;
 		if(this.loc == -1 || this.loc == null){
 			myInfo.main.error="Can't initialize uniform type of '"+name+"' variable, such that it's not used nor exist in '"+progName+"' shader.";
 			stop();
@@ -832,9 +783,9 @@ var drawPlanets = function(gl,names,angle){
 		myShaders.camera.uniform.uBrightness.sendFloat(member.brightness);
 		myShaders.camera.uniform.uAlpha.sendFloat(member.alpha);
 		myShaders.camera.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+		myShaders.camera.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 
-		myShaders.camera.uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-		myTextures.member[member.nameTexture].activate(1);
+		myTextures.member[member.nameTexture].activate();
 
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
@@ -855,7 +806,7 @@ var drawShadows = function(gl,names,angle){
 			sendAccumeratedMatrix(myShaders.ringshadow.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
 			mvmat = myMat4.arr;//sended data above
 			sendModelViewMatrixInversedTransposed(myShaders.ringshadow.uniform.uModelViewMatrixInversedTransposed,mvmat);
-			myTextures.member[member.nameTexture].activate(0);
+			myTextures.member[member.nameTexture].activate();
 			myShaders.ringshadow.uniform.uSampler.sendInt(0);
 		member.draw();
 	}
@@ -906,127 +857,119 @@ function drawScene(gl,angle){
 
 
 
-//:::::::::::::::::::::: HINTS :::::::::::::::::::::::::::::::::::::::::
-//
-//	//フレームバッファ(shadow)をclear & turn on
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 0 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+	//フレームバッファ(shadow)をclear & turn on
 //	myFBOs.shadow.reset();
 //	myFBOs.shadow.activate();
-//
-//	//color
-//	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));
+
+	//color
+	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));
 //	gl.clearColor(c8(0xFF),c8(0xFF),c8(0xFF),c8(0xFF));
-//	gl.clear(gl.COLOR_BUFFER_BIT);
+	gl.clear(gl.COLOR_BUFFER_BIT);
 //	gl.colorMask(false,false,false,false);
 //	gl.colorMask(true,true,true,true);
-//
-//	//depth
+
+	//depth
 //	gl.enable(gl.DEPTH_TEST);
 //	gl.disable(gl.DEPTH_TEST);
 //	gl.clearDepth(c24(0xFFFFFF));
 //	gl.clear(gl.DEPTH_BUFFER_BIT);
 //	gl.depthFunc(gl.LEQUAL);
-//
-//	//stencil
+
+	//stencil
 //	gl.enable(gl.STENCIL_TEST);
 //	gl.disable(gl.STENCIL_TEST);
 //	gl.clearStencil(0xFF);//クリア時にstencil bufferを埋め尽くす値
 //	gl.clear(gl.STENCIL_BUFFER_BIT);
-//
-//	//blend
-//	//Final Color = ObjectColor * SourceBlendFactor(テクスチャ) + PixelColor * DestinationBlendFactor(画面) //https://msdn.microsoft.com/ja-jp/library/cc324560.aspx
+
+	//blend
+	//Final Color = ObjectColor * SourceBlendFactor(テクスチャ) + PixelColor * DestinationBlendFactor(画面) //https://msdn.microsoft.com/ja-jp/library/cc324560.aspx
 //	gl.disable(gl.BLEND);
 //	gl.enable(gl.BLEND);//後に描かれたものが前に描かれたものとブレンドされる//https://sites.google.com/site/hackthewebgl/learning-webglhon-yaku/the-lessons/lesson-8
-//				//---> ①奥の太陽②手前の輪---○　①手前の輪②奥の太陽---X
+				//---> ①奥の太陽②手前の輪---○　①手前の輪②奥の太陽---X
 //	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 //	gl.blendFunc(gl.ONE_MINUS_SRC_ALPHA,gl.SRC_ALPHA);
 //	gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
-//
-//:::::::::::::::::::::::::::::::::::::::::: DRAW OPAQUE OBJECTS ::::::::::::::::::::::::::::::::::::::::::
-//***************************************************************************
-//******************************* 1 *****************************************
-//***************************************************************************
+
+gl.disable(gl.BLEND);
+gl.disable(gl.DEPTH_TEST);
+gl.disable(gl.STENCIL_TEST);
+//*************************************************************************************************
+//*************************************************************************************************
+//*************************************************************************************************
+//*************************************************************************************************
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 	myFBOs.shadow.reset();
-	myFBOs.shadow.activate("CTDTSN");
-//***************************************************************************
+	myFBOs.shadow.activate("CRDTSN");
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 4 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 	//draw opaque objects at first!! After this ,draw transparent objects
 
-	/** BLENDER **/
 	gl.disable(gl.BLEND);
 
-	/** COLOR **/
-	gl.colorMask(true,true,true,true);
 	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));
 	gl.clear(gl.COLOR_BUFFER_BIT);
 
-	/** DEPTH **/
-	gl.enable(gl.DEPTH_TEST);
+
 	gl.clearDepth(0xFFFFFF);
+//		gl.clearDepth(0x0);
 	gl.clear(gl.DEPTH_BUFFER_BIT);
 	gl.depthFunc(gl.LEQUAL);
 
-	/** STENCIL **/
-	gl.disable(gl.STENCIL_TEST);
+
+
+	gl.clearStencil(0xFF);
+	gl.clear(gl.STENCIL_BUFFER_BIT);
+		gl.stencilFunc(gl.LEQUAL,0xFF,0xFF);
+		gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
+		gl.stencilOp(gl.REPLACE,gl.REPLACE,gl.REPLACE);
 
 //	var names = ["earth","plane","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
 	var names = ["earth","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
-//	var names = ["earth","saturn","up","right","back","uranus","moon","mars","venus","jupiter","mercury"];//<-----JUPITERからrenderされる
 	myShaders.camera.activate();
 		drawPlanets(gl,names,angle);
 
-//:::::::::::::::::::::::::: DRAW CASSINI STENCIL :::::::::::::::::::::::::::::::::::
+//:::::::::::::::::::::::::: 1. draw ring without the part of depth at cassini :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-//リングを遅延レンダリングして、screenに重ねて描画してみる.しかも、DEPTHありで。
+if(true){
 
-//***************************** 2 ***********************************************
-//*******************************************************************************
-	myFBOs.shadow.inactivate();//一回ここでinactiveにしないと、次の土星の輪だけが描かれる
-	myTextures.member["destinationColorBuffer"].import(myFBOs.shadow.textureColorBuffer);
-	myTextures.member["destinationDepthBuffer"].import(myFBOs.shadow.textureDepthBuffer);
+if(false){
+	//screenの何も書かれていないところに前のcolorがあった場合には透過する
 
-	//deleteTextureは参照をやめるだけではなく、なかみまでけしてしまうのではないだろうか
-
-	myFBOs.shadow.activate("CTDTSN");//ここをOFFにすると太陽が描かれる
-//	myFBOs.shadow.reset();
-//******************************************************************************
-		//reference
-		//Final Color = ObjectColor * SourceBlendFactor + PixelColor * DestinationBlendFactor //https://msdn.microsoft.com/ja-jp/library/cc324560.aspx
-		//ブレンディングは透過とは違う//https://sites.google.com/site/hackthewebgl/learning-webglhon-yaku/the-lessons/lesson-8
-	/** BLEND **/
-	gl.disable(gl.BLEND);
-
-	/** COLOR **/
-		gl.colorMask(false,false,false,true);
-	gl.colorMask(true,true,true,true);
+	//Final Color = ObjectColor * SourceBlendFactor + PixelColor * DestinationBlendFactor //https://msdn.microsoft.com/ja-jp/library/cc324560.aspx
+	//ブレンディングは透過とは違う//https://sites.google.com/site/hackthewebgl/learning-webglhon-yaku/the-lessons/lesson-8
 	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));//これだとscreenが透過する(blend時)
 //		gl.clearColor(c8(0xFF),c8(0xFF),c8(0xFF),c8(0xFF));//これだとscreenが真っ黒(blend時)
 	gl.clear(gl.COLOR_BUFFER_BIT);
+//		gl.colorMask(false,false,false,true);
+//	gl.colorMask(true,true,true,true);
 
-	/** DEPTH **/
-//		gl.disable(gl.DEPTH_TEST);
-	gl.enable(gl.DEPTH_TEST);
-	gl.clearDepth(c24(0xFFFFFF));
-	gl.clear(gl.DEPTH_BUFFER_BIT);
-	gl.depthFunc(gl.LEQUAL);
+	gl.disable(gl.DEPTH_TEST);
+//		gl.enable(gl.DEPTH_TEST);
+//		gl.clearDepth(c24(0xFFFFFF));
+//		gl.clear(gl.DEPTH_BUFFER_BIT);
+//		gl.depthFunc(gl.LEQUAL);
 
-	/** STENCIL **/
 	gl.disable(gl.STENCIL_TEST);
 //	gl.enable(gl.STENCIL_TEST);
-//	gl.clearStencil(0xFF);
-//	gl.clear(gl.STENCIL_BUFFER_BIT);
-//	gl.stencilFunc(gl.EQUAL,0xFE,0xFE);
+	gl.clearStencil(0xFF);
+	gl.clear(gl.STENCIL_BUFFER_BIT);
+	gl.stencilFunc(gl.EQUAL,0xFE,0xFE);
 //	gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
-//	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);//trueの部分にOperationが加わり、ステンシルバッファが書き換えられる
-
-	/** DRAW **/
+	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);//trueの部分にOperationが加わり、ステンシルバッファが書き換えられる
+}//boolean
 	myShaders.camera.activate();
-	names = ["ring"];
-	drawPlanets(gl,names,angle);
+		names = ["ring"];
+		drawPlanets(gl,names,angle);
+}//boolean
 
 //:::::::::::::::::::::::::::::: 2. draw the shadow of the Saturn ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-if(false){
+if(true){
 
 	//レンダーバッファを深度バッファにして、シェーダー内でテクスチャーとして使えば、なんとかなるのか
 	//だから、2枚のテクスチャーを用意して、一枚は深度ステンシルバッファ、もう一枚はカラーバッファとして使えばいいのか
@@ -1076,66 +1019,32 @@ if(false){
 	myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
 	myInfo.main.framebufferstatus = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
 
-//:::::::::::::::::::: DRAW BUFFER ON CLIP SPACE ::::::::::::::::::::::::::
+//::::::::::::::::::::::::: frame buffer ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-//****************************************** 3 ***********************************************
-//********************************************************************************************
 	myFBOs.shadow.inactivate();
-	myTextures.member["sourceColorBuffer"].import(myFBOs.shadow.textureColorBuffer);
-	myTextures.member["sourceDepthBuffer"].import(myFBOs.shadow.textureDepthBuffer);
+//	myTextures.member["screen"].import(myFBOs.shadow.textureColorBuffer);
+	myTextures.member["screen"].import(myFBOs.shadow.textureDepthBuffer);
 
-//kkkあとでmyTexturesのmemberをはずして、直接のpropertyにする
-
-	var shaderName = "mixTwoTexturesWithDepthes";
-	var aTextureNames = ["sourceColorBuffer","sourceDepthBuffer","destinationColorBuffer","destinationDepthBuffer"];//order to shader
-//*********************************************************************************************
+//:::::::::::::::::::: draw frame buffer on clipping space on screen ::::::::::::::::::::::::::
 
 
-if(true){
-
-	/** BLEND この効果はalpha<1.0のときに現れます。**/
-	gl.disable(gl.BLEND);//https://stackoverflow.com/questions/11633950/opengl-blend-modes-vs-shader-blending
+	gl.disable(gl.BLEND);
 //	gl.enable(gl.BLEND);
-//	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);//テクスチャの黒は透過
-	gl.blendFunc(gl.SRC_COLOR,gl.ONE_MINUS_SRC_COLOR);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);//テクスチャの黒は透過
+//	gl.blendFunc(gl.ONE_MINUS_DST_ALPHA,gl.DST_ALPHA);
 
-	/** COLOR **/
-	gl.colorMask(true,true,true,true);
-
-
-	/** DEPTH **/
-//		gl.disable(gl.DEPTH_TEST);
-	gl.enable(gl.DEPTH_TEST);//shader内でgl_FragCoord.zを参照したいのだが
-	gl.clearDepth(c24(0xFFFFFF));
-	gl.clear(gl.DEPTH_BUFFER_BIT);
-	gl.depthFunc(gl.LEQUAL);
-
-//kkk shader内で新しいDEPTH BUFFER TEXTUREを作りたいよね!!!!gl_FragCoord.z = とすればよいのでしょうか?
-//	やって、テストしてみましょうcamera shaderのやつを0.0にして、どうなるかを観察しましょう
-
-	/** STENCIL **/
+	gl.enable(gl.DEPTH_TEST);
+	gl.disable(gl.DEPTH_TEST);
 	gl.disable(gl.STENCIL_TEST);
 
 	//https://qiita.com/ienaga/items/3263a752da3287a6c4b6
-	myShaders[shaderName].activate();
-	myShaders[shaderName].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
-	for(var N in aTextureNames){
-		myShaders[shaderName].uniform["uSampler"+N.toString()].sendInt(N);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-		myTextures.member[aTextureNames[N]].activate(N);
-	}
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-}//boolean
-
-
-//*****************************************
-	myFBOs.shadow.reset();//これ、なくても使用メモリ増えない
-	gl.deleteTexture(myTextures.member["sourceColorBuffer"].texture);
-	gl.deleteTexture(myTextures.member["sourceDepthBuffer"].texture);
-	gl.deleteTexture(myTextures.member["destinationColorBuffer"].texture);
-	gl.deleteTexture(myTextures.member["destinationDepthBuffer"].texture);
-//*****************************************
-
+//	myShaders.drawTextureOnClipSpace.activate();
+	myShaders.drawTextureDepthBufferOnClipSpace.activate();
+		/** To vertex shader **/
+		myShaders.drawTextureDepthBufferOnClipSpace.attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
+		myShaders.drawTextureDepthBufferOnClipSpace.uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member["screen"].activate();
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 	
 //:::::::::::::::::::::::::::::::::: GLSL STATUS ::::::::::::::::::::::::::::::::::::::::::
 
@@ -1211,9 +1120,8 @@ function start(){
 //	var gl=canvas.getContext("webgl2",{premultipliedAlpha:false});https://stackoverflow.com/questions/47216022/webgl-gl-fragcolor-alpha-behave-differently-in-chrome-with-firefox
 //	var gl=canvas.getContext("webgl2",{stencil:true});//https://wgld.org/d/webgl/w038.html
 //	var gl=canvas.getContext("webgl2",{antialias:true});//http://d.hatena.ne.jp/nakamura001/20120201/1328105898
-	var gl=canvas.getContext("webgl2",{antialias:false});
 //	var gl=canvas.getContext("webgl2",{preserveDrawingBuffer:false});//do not know how to use???//https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-//	var gl=canvas.getContext("webgl2");
+	var gl=canvas.getContext("webgl2");
 //	var gl=canvas.getContext("webgl");
 	if(!gl){
 		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
@@ -1255,16 +1163,6 @@ function start(){
 	gl[gl.FUNC_ADD]="BLEND_ADD";
 	gl[gl.FUNC_SUBTRACT]="BLEND_SUBSTRACT";
 	gl[gl.FUNC_REVERSE_SUBTRACT]="BLEND_REVERSE_SUBSTRUCT";
-	gl[gl.TEXTURE0]="TEXTURE0";
-	gl[gl.TEXTURE1]="TEXTURE1";
-	gl[gl.TEXTURE2]="TEXTURE2";
-	gl[gl.TEXTURE3]="TEXTURE3";
-	gl[gl.TEXTURE4]="TEXTURE4";
-	gl[gl.TEXTURE5]="TEXTURE5";
-	gl[gl.TEXTURE6]="TEXTURE6";
-	gl[gl.TEXTURE7]="TEXTURE7";
-	gl[gl.TEXTURE8]="TEXTURE8";
-	gl[gl.TEXTURE9]="TEXTURE9";
 //	gl[]="";
 
 console.log("gl=",gl);
@@ -1350,13 +1248,9 @@ console.log("gl=",gl);
 		myShaders.camera.getUniformLocation("uAlpha");
 		myShaders.camera.getUniformLocation("uCassiniFactor");
 		myShaders.camera.getUniformLocation("uManipulatedMatrix");
-	myShaders.create("mixTwoTexturesWithDepthes","mixTwoTexturesWithDepthes-vs","mixTwoTexturesWithDepthes-fs",gl);
-		myShaders.mixTwoTexturesWithDepthes.getAttribLocation("aVertexPosition");
-		myShaders.mixTwoTexturesWithDepthes.getUniformLocation("uSampler0");//color buffer of source
-		myShaders.mixTwoTexturesWithDepthes.getUniformLocation("uSampler1");//depth buffer of source
-		myShaders.mixTwoTexturesWithDepthes.getUniformLocation("uSampler2");//color buffer of destination
-		myShaders.mixTwoTexturesWithDepthes.getUniformLocation("uSampler3");//depth buffer of destination
-
+	myShaders.create("drawTextureOnClipSpace","drawTextureOnClipSpace-vs","drawTextureOnClipSpace-fs",gl);
+		myShaders.drawTextureOnClipSpace.getAttribLocation("aVertexPosition");
+		myShaders.drawTextureOnClipSpace.getUniformLocation("uSampler");
 	myShaders.create("drawTextureOnClipSpaceWithMakingBlackPartTransparentPart","drawTextureOnClipSpaceWithMakingBlackPartTransparentPart-vs","drawTextureOnClipSpaceWithMakingBlackPartTransparentPart-fs",gl);
 		myShaders.drawTextureOnClipSpaceWithMakingBlackPartTransparentPart.getAttribLocation("aVertexPosition");
 		myShaders.drawTextureOnClipSpaceWithMakingBlackPartTransparentPart.getUniformLocation("uSampler");
@@ -1370,7 +1264,6 @@ console.log("gl=",gl);
 	/** prepare frame buffer & render buffer **/
 	var wide = 512;
 	myFBOs.create("shadow",gl,wide,wide,wide,wide);//16384<-----MAX_RENDER_SIZE
-	myFBOs.shadow.reset();
 	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
 
 
@@ -1402,6 +1295,8 @@ console.log("gl=",gl);
 	myTextures.join(gl,nameTextureRing);
 	var nameTextureSaturn = "saturn";
 	myTextures.join(gl,nameTextureSaturn);
+	var nameTextureScreen = "screen";
+	myTextures.join(gl,nameTextureScreen);
 	var nameTextureObserve = "niku_stand2";
 	myTextures.join(gl,nameTextureObserve);
 	var nameTextureSaturn2 = "saturn2";
@@ -1410,14 +1305,6 @@ console.log("gl=",gl);
 	var nameTextureAtomosphere = "white";
 //issue	myTextures.create(gl,nameTextureAtomosphere,myColorName.white(0.5));//preserve alpha here
 	myTextures.join(gl,nameTextureAtomosphere);
-
-	//for mixing textures
-	myTextures.join(gl,"sourceColorBuffer");//the object be going to be drawn//こういうのが増えるといまのままでは意味もなくサーバーに負担をかけてしまうな
-	myTextures.join(gl,"sourceDepthBuffer");
-	myTextures.join(gl,"sourceStencilBuffer");
-	myTextures.join(gl,"destinationColorBuffer");//the base
-	myTextures.join(gl,"destinationDepthBuffer");
-	myTextures.join(gl,"destinationStencilBuffer");
 
 
 
@@ -1876,6 +1763,25 @@ console.log("gl=",gl);
 
 
 
+
+
+	/** screen to draw shadow **/
+
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0,90));
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0,90));
+	aAccumeUnits.push(AccumeMotions.rotate(0,0,1,0,180));
+
+//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+//	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeUnits.push(AccumeMotions.translate(0,0,-30));//seen from the distance
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,"screen",colorNameText);//kkk
+	var shape = myGLShape.rectangle(gl,20,20);
+	UnitsToDraw.join(gl,"screen",shape,aAccumeUnits,labels,nameTextureScreen,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+
+
+
 //********************************************** animation ****************************************************	
 	var timeBefore=0;
 	var span=0;
@@ -1977,6 +1883,206 @@ console.log("gl=",gl);
 
 
 })();//UnitsToDraw
+
+//******************************************** framebuffer & renderBuffer **************************************************
+/**
+ *make render buffer with frame buffer and texture of void
+*/
+(function(){
+//:myFBOs
+	myFBOs = { };
+	Object.defineProperty(myFBOs,'create',{value:create,writable:false,enumerable:true,configurable:false});
+	function create(sName,gl,tWidth,tHeight,vWidth,vHeight){
+		Object.defineProperty(myFBOs,sName,{value:new FBO(gl,tWidth,tHeight,vWidth,vHeight),writable:false,enumerable:true,configurable:true});
+	};
+
+
+	//reference
+	//https://wgld.org/d/webgl/w051.html
+	//http://www.chinedufn.com/webgl-shadow-mapping-tutorial/
+	//https://stackoverflow.com/questions/41824631/how-to-work-with-framebuffers-in-webgl/41832778#41832778
+	//http://www.wakayama-u.ac.jp/~tokoi/lecture/gg/ggnote13.pdf
+	//http://www.songho.ca/opengl/gl_fbo.html
+	/** inner class **/
+	  //Texture, Framebuffer and Renderbuffer are necessary at once.
+	var FBO = function(gl,tWidth,tHeight,vWidth,vHeight){
+		this.gl = gl;
+
+		this.tWidth = tWidth;
+		this.tHeight = tHeight;
+		this.vWidth = vWidth;//for viewport()
+		this.vHeight = vHeight;
+
+		var size = tWidth * tHeight;
+		if(size > gl.getParameter(gl.MAX_RENDERBUFFER_SIZE))myInfo.main.caution = "framebuffer size is too large "+size;
+
+		this.framebuffer = gl.createFramebuffer();
+		this.framebuffer._name = "framebuffer";
+		this.renderbuffer = gl.createRenderbuffer();
+		this.renderbuffer._name = "renderbuffer";
+
+		this.initialize();
+	};
+	FBO.prototype.initialize = function(){
+		/** prepare texture rendered into **/
+		var gl = this.gl;
+
+		this.textureColorBuffer = gl.createTexture();
+		this.textureColorBuffer._name = "ColorBufferTexture";
+			gl.bindTexture(gl.TEXTURE_2D,this.textureColorBuffer);//-->gl.TEXTURE[?]
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
+			gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.tWidth,this.tHeight,0,gl.RGBA,gl.UNSIGNED_SHORT_4_4_4_4,null);//pass no image into gl.TEXT[\d+]
+		//https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
+		this.textureDepthBuffer = gl.createTexture();
+		this.textureDepthBuffer._name = "DepthBufferTexture";
+			gl.bindTexture(gl.TEXTURE_2D,this.textureDepthBuffer);//-->gl.TEXTURE[?]
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
+			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT16,this.tWidth,this.tHeight,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);//pass no image into gl.TEXT[\d+]
+		//https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
+		this.textureStencilBuffer = gl.createTexture();
+		this.textureStencilBuffer._name = "StencilBufferTexture";
+			gl.bindTexture(gl.TEXTURE_2D,this.textureStencilBuffer);//-->gl.TEXTURE[?]
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
+			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
+			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH24_STENCIL8,this.tWidth,this.tHeight,0,gl.DEPTH_STENCIL,gl.UNSIGNED_INT_24_8,null);//pass no image into gl.TEXT[\d+]
+
+		this.colorMasks = void 0;
+		this.depthTest = void 0;
+		this.stencilTest = void 0;
+
+
+	};
+	FBO.prototype.activate = function(sMode){
+		var gl = this.gl;
+		gl.viewport(0,0,this.vWidth,this.vHeight);
+
+		//for resetting at the time of inactivation
+		this.colorMasks =  gl.getParameter(gl.COLOR_WRITEMASK);
+		this.depthTest =   gl.getParameter(gl.DEPTH_TEST);
+		this.stencilTest = gl.getParameter(gl.STENCIL_TEST);
+
+//console.log("viewport-FBO:",this.vWidth,this.vHeight);
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
+		var matches,nameBuff;
+		matches = sMode.match(/C[NTR]D[NTR]S[NTR]|C[NTR]S[NTR]D[NTR]|D[NTR]C[NTR]S[NTR]|D[NTR]S[NTR]C[NTR]|S[NTR]C[NTR]D[NTR]|S[NTR]D[NTR]C[NTR]/g);
+		if(matches == null){
+			myInfo.main.error = "FBO.*.activate('HERE') 's HERE is wrong strings";
+			return;
+		}
+		matches = sMode.match(/CR/);
+		if(matches != null){
+			matches = sMode.match(/DR|SR/);
+			if(matches != null){
+				myInfo.main.error = "FBO.*.activate('HERE') 's HERE contains CR and, DR, SR or both";
+				return;
+			}
+		}
+		matches = sMode.match(/R/);
+		if(matches != null){
+			gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
+		}else{
+			gl.bindRenderbuffer(gl.RENDERBUFFER,null);
+		}
+		nameBuff = "COLOR BUFFER ATTACHING TO :";
+		matches = sMode.match(/C(.)/);
+		var mode = matches[1];
+		switch(mode){
+			case "N":
+				gl.colorMask(false,false,false,false);
+				myInfo.main.colorbufferattach = nameBuff + "None";
+				break;
+			case "T":
+				gl.colorMask(true,true,true,true);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D, this.textureColorBuffer, 0);
+				myInfo.main.colorbufferattach = nameBuff + "Texture";
+				break;
+			case "R":
+				gl.colorMask(true,true,true,true);
+				gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA4,this.tWidth,this.tHeight);
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+				myInfo.main.colorbufferattach = nameBuff + "Renderbuffer";
+				break;
+			default:
+		}
+		matches = sMode.match(/DRSR|SRDR|DRC.SR|SRC.DR/g);
+		if(matches != null){
+			gl.enable(gl.DEPTH_TEST);
+			gl.enable(gl.STENCIL_TEST);
+			gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_STENCIL,this.tWidth,this.tHeight);
+			gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);
+			myInfo.main.depthbufferattach = "  DEPTH BUFFER ATTACHING TO : Renderbuffer";
+			myInfo.main.stencilbufferattach = "STENCIL BUFFER ATTACHING TO : Renderbuffer";
+			return;//*********** return ***************/
+		}
+		nameBuff = "DEPTH BUFFER ATTACHING TO : ";
+		matches = sMode.match(/D(.)/);
+		var mode = matches[1];
+		switch(mode){
+			case "N":
+				gl.disable(gl.DEPTH_TEST);
+				myInfo.main.depthbufferattach = nameBuff + "None";
+				break;
+			case "T":
+				gl.enable(gl.DEPTH_TEST);
+				//gl.bindTexture(gl.TEXTURE_2D, this.textureDepthBuffer);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D, this.textureDepthBuffer, 0);
+				myInfo.main.depthbufferattach = nameBuff + "Texture";
+				break;
+			case "R":
+				gl.enable(gl.DEPTH_TEST);
+				gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.tWidth,this.tHeight);
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+				myInfo.main.depthbufferattach = nameBuff + "Renderbuffer";
+				break;
+			default:
+		}
+		nameBuff = "STENCIL BUFFER ATTACHING TO :";
+		matches = sMode.match(/S(.)/);
+		var mode = matches[1];
+		switch(mode){
+			case "N":
+				gl.disable(gl.STENCIL_TEST);
+				myInfo.main.stencilbufferattach = nameBuff + "None";
+				break;
+			case "T":
+				gl.enable(gl.STENCIL_TEST);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.STENCIL_ATTACHMENT,gl.TEXTURE_2D, this.textureStencilBuffer, 0);
+				myInfo.main.stencilbufferattach = nameBuff + "Texture";
+				break;
+			case "R":
+				gl.enable(gl.STENCIL_TEST);
+				gl.renderbufferStorage(gl.RENDERBUFFER,gl.STENCIL_INDEX8,this.tWidth,this.tHeight);
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
+				myInfo.main.stencilbufferattach = nameBuff + "Renderbuffer";
+				break;
+			default:
+		}
+	};
+	FBO.prototype.inactivate = function(){
+		var gl=this.gl;
+		gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+//console.log("viewport-3:",gl.canvas.width,gl.canvas.height);
+		gl.bindTexture(gl.TEXTURE_2D,null);
+		gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+		gl.bindRenderbuffer(gl.RENDERBUFFER,null);
+
+		gl.colorMask(this.colorMasks[0],this.colorMasks[1],this.colorMasks[2],this.colorMasks[3]);
+		if(this.depthTest)gl.enable(gl.DEPTH_TEST);
+		else gl.disable(gl.DEPTH_TEST);
+		if(this.stencilTest)gl.enable(gl.STENCIL_TEST);
+		else gl.disable(gl.STENCIL_TEST);
+	};
+	FBO.prototype.reset = function(){
+		//https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/rendering/framebuffer-texture-clear.html
+		this.gl.deleteTexture(this.textureColorBuffer);
+		this.gl.deleteTexture(this.textureDepthBuffer);
+		this.gl.deleteTexture(this.textureStencilBuffer);
+		this.initialize();
+	};
+})();
 
 </script>
 

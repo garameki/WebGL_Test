@@ -363,8 +363,8 @@
 			SuperMember.call(this);
 			this.rxy = 1000*(Math.random()-0.5);
 			this.rz  = 1000*(Math.random()-0.5);
-			this.alpha = Math.random()*2*3.14;
-			this.gamma = Math.random()*2*3.14;
+			this.alpha = 2*3.14*Math.random();
+			this.gamma = 2*3.14*Math.random();
 		};
 		inherits(Member,SuperMember);
 		//@override
