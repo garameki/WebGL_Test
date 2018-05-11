@@ -68,8 +68,29 @@ function start(){
 	var aModels = [];
 	var oModel = { };
 
-	_MOVE_=false;
+	_MOVE_=true;
 
+/*
+{
+	//cylindrical calumn
+	var shape =myGLShape.cylindricalCalumn(gl,5,13);//{x:0,y:0,z:-0.01},{x:-10,y:0,z:-30},{x:10,y:0,z:-30},{r:1,g:1,b:1,a:1.0});
+	console.log("shape=",shape);
+
+	oModel.base = {
+		n:shape.n,
+		pos:shape.pos,
+		col:shape.col
+	};
+	console.log("base=",oModel.base);
+
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();
+	aModels.push(oModel);
+}
+*/
+
+/*
+{
 	//triangle
 	var shape =myGLShape.triangle(gl,{x:0,y:0,z:-0.01},{x:-10,y:0,z:-30},{x:10,y:0,z:-30},{r:1,g:1,b:1,a:1.0});
 	console.log("shape=",shape);
@@ -82,6 +103,8 @@ function start(){
 	oModel.buffers = setModelToBuffer(gl,oModel);
 	oModel.mvMat = new mvMat_random();
 	aModels.push(oModel);
+}
+*/
 
 
 /*
@@ -99,7 +122,7 @@ function start(){
 	aModels.push(oModel);
 */
 
-/*
+
 	//ring
 	var shape =myGLShape.ring(gl,5,30);
 	console.log("shape=",shape);
@@ -112,7 +135,7 @@ function start(){
 	oModel.buffers = setModelToBuffer(gl,oModel);
 	oModel.mvMat = new mvMat_random();
 	aModels.push(oModel);
-*/
+
 
 
 /*default

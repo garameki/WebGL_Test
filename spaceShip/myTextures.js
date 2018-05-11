@@ -39,9 +39,9 @@
 				//https://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
 //not necessary		gl.activeTexture(gl.TEXTURE0+myself.number);//https://stackoverflow.com/questions/11292599/how-to-use-multiple-textures-in-webgl toji answered
 			gl.bindTexture   (gl.TEXTURE_2D,myself.texture);
-			gl.texImage2D    (gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
 			gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
 			gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？gl.ACTIVE_TEXTURE
+			gl.texImage2D    (gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
 			gl.generateMipmap(gl.TEXTURE_2D);//gl.TEXTURE_2Dをmipmapに適用
 		};
 
@@ -61,13 +61,16 @@
 				//https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL				const texture = gl.createTexture();
 				//https://github.com/mrdoob/three.js/issues/386
 				var color = myColorName.blue(1.0);
-				var pixel = new Uint8Array([color.r,color.g,color.b,,color.a,color.r,color.g,color.b,,color.a,color.r,color.g,color.b,,color.a,color.r,color.g,color.b,,color.a]);
+				var pixel = new Uint8Array([color.r,color.g,color.b,color.a,color.r,color.g,color.b,color.a,color.r,color.g,color.b,color.a,color.r,color.g,color.b,color.a]);
 				//gl.activeTexture(gl.TEXTURE0);//kkk
 				//gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
+
+console.log("myself.texture=",myself.texture._name);
 				gl.bindTexture(gl.TEXTURE_2D,myself.texture);
-				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,2,2,0,gl.RGBA,gl.UNSIGNED_BYTE,pixel,0);
+
 				gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
 				gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
+				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,2,2,0,gl.RGBA,gl.UNSIGNED_SHORT_4_4_4_4,new Uint16Array(pixel),0);
  			}else{
 				reader.readAsDataURL(h.response);
 			}
