@@ -520,7 +520,7 @@ function drawScene(gl,angle){
 //***************************************************************************
 //******************************* 1 *****************************************
 //***************************************************************************
-	myFBOs.shadow.activate("CTDTSN");
+	myFBOs.shadow.activate("CTDTSN",myFBOs.colorBufferModeIsRGBA4444);
 //***************************************************************************
 
 	//draw opaque objects at first!! After this ,draw transparent objects
@@ -560,7 +560,7 @@ function drawScene(gl,angle){
 
 	//deleteTextureは参照をやめるだけではなく、なかみまでけしてしまうのではないだろうか
 
-	myFBOs.shadow.activate("CTDTSN");//ここをOFFにすると前の画像が上書きされてしまう
+	myFBOs.shadow.activate("CTDTSN",myFBOs.colorBufferModeIsRGBA4444);//ここをOFFにすると前の画像が上書きされてしまう
 	//dkfja;ldskfja;sldkjf;asldkfjadlgdflkjghsldfkjhglskdjhglkdjhaldkjhflakjfhaslkdjfhalskdjfhasldkjhfalkdjgh
 //******************************************************************************
 		//reference

@@ -9,9 +9,29 @@
 	myFBOs = { };
 	Object.defineProperty(myFBOs,'create',{value:create,writable:false,enumerable:true,configurable:false});
 	function create(sName,gl,tWidth,tHeight,vWidth,vHeight){
-		Object.defineProperty(myFBOs,sName,{value:new FBO(gl,tWidth,tHeight,vWidth,vHeight),writable:false,enumerable:true,configurable:true});
+		Object.defineProperty(myFBOs,sName,{value:new FBO(gl,tWidth,tHeight,vWidth,vHeight,sName),writable:false,enumerable:true,configurable:true});
 	};
 
+	/** the structure of color buffer mode using texImage2D **/
+	var obj1 = {
+		internalFormat:function(gl){return gl.RGBA;},
+		format:function(gl){return gl.RGBA;},
+		type:function(gl){return gl.UNSIGNED_SHORT_4_4_4_4;}
+	};
+	var obj2 = {
+		internalFormat:function(gl){return gl.RGBA;},
+		format:function(gl){return gl.RGBA;},
+		type:function(gl){gl.UNSIGNED_SHORT_5_5_5_1;}
+	};
+	var obj3 = {
+		internalFormat:function(gl){return gl.ALPHA;},
+		format:function(gl){return gl.ALPHA;},
+		type:function(gl){return gl.UNSIGNED_BYTE;}
+	};
+	Object.defineProperty(myFBOs,'colorBufferModeIsRGBA4444',{value:obj1,enumerable:false,configurable:false});
+	Object.defineProperty(myFBOs,'colorBufferModeIsRGBA5551',{value:obj2,enumerable:false,configurable:false});
+	Object.defineProperty(myFBOs,'colorBufferModeIsALPHA',{value:obj3,enumerable:false,configurable:false});
+	
 
 	//reference
 	//https://wgld.org/d/webgl/w051.html
@@ -21,8 +41,10 @@
 	//http://www.songho.ca/opengl/gl_fbo.html
 	/** inner class **/
 	  //Texture, Framebuffer and Renderbuffer are necessary at once.
-	var FBO = function(gl,tWidth,tHeight,vWidth,vHeight){
+	var FBO = function(gl,tWidth,tHeight,vWidth,vHeight,sName){
 		this.gl = gl;
+
+		this.name = sName;
 
 		this.tWidth = tWidth;
 		this.tHeight = tHeight;
@@ -61,9 +83,7 @@
 //	GL_CLAMP_TO_EDGE);
 //}
 
-
-
-	FBO.prototype.initializeTextureColorBuffer = function(){
+	FBO.prototype.initializeTextureColorBuffer = function(colorMode){
 		/** prepare texture rendered into **/
 		var gl = this.gl;
 
@@ -72,7 +92,8 @@
 			gl.bindTexture(gl.TEXTURE_2D,this.textureColorBuffer);//-->gl.TEXTURE[?]
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
-			gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.tWidth,this.tHeight,0,gl.RGBA,gl.UNSIGNED_SHORT_4_4_4_4,null);//pass no image into gl.TEXT[\d+]
+//unchangable is not convenient	gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.tWidth,this.tHeight,0,gl.RGBA,gl.UNSIGNED_SHORT_4_4_4_4,null);//pass no image into gl.TEXT[\d+]
+			gl.texImage2D(gl.TEXTURE_2D,0,colorMode.internalFormat(gl),this.tWidth,this.tHeight,0,colorMode.format(gl),colorMode.type(gl),null);//pass no image into gl.TEXT[\d+]
 	};
 	FBO.prototype.initializeTextureDepthBuffer = function(){
 		/** prepare texture rendered into **/
@@ -84,7 +105,7 @@
 			gl.bindTexture(gl.TEXTURE_2D,this.textureDepthBuffer);//-->gl.TEXTURE[?]
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
-//			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT16,this.tWidth,this.tHeight,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);//pass no image into gl.TEXT[\d+]
+//low quality to render	gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT16,this.tWidth,this.tHeight,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);//pass no image into gl.TEXT[\d+]
 			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH24_STENCIL8,this.tWidth,this.tHeight,0,gl.DEPTH_STENCIL,gl.UNSIGNED_INT_24_8,null);//pass no image into gl.TEXT[\d+]
 	};
 	FBO.prototype.initializeTextureStencilBuffer = function(){
@@ -99,7 +120,14 @@
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
 			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH24_STENCIL8,this.tWidth,this.tHeight,0,gl.DEPTH_STENCIL,gl.UNSIGNED_INT_24_8,null);//pass no image into gl.TEXT[\d+]
 	};
-	FBO.prototype.activate = function(sMode){
+	FBO.prototype.activate = function(){//(sMode,colorBufferMode)
+		var sMode = arguments[0];
+		var colorBufferMode;
+		if(arguments.length == 2){
+			colorBufferMode = arguments[1];
+		}else{
+			colorBufferMode = null;
+		}
 		var gl = this.gl;
 		gl.viewport(0,0,this.vWidth,this.vHeight);
 
@@ -141,8 +169,13 @@
 				myInfo.main.colorbufferattach = nameBuff + "None";
 				break;
 			case "T":
+				if(colorBufferMode==null){
+					myInfo.main.error = "Please specify the second argument of myFBOs."+this.name+".activate()";
+				}else if(colorBufferMode==void 0){
+					myInfo.main.error = "Please modify the second argument of myFBOs."+this.name+".activate(). The second argument is 'undefined'.";
+				}
 				gl.colorMask(true,true,true,true);
-				this.initializeTextureColorBuffer();
+				this.initializeTextureColorBuffer(colorBufferMode);
 				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D, this.textureColorBuffer, 0);
 				myInfo.main.colorbufferattach = nameBuff + "Texture";
 				break;
