@@ -18,8 +18,8 @@
 
 	/* customize below */
 
-	var sNameOfShader = "mixTwoTexturesWithDepthes";
-	var sModeOfFBO = "CNDNSN";//to turn of the frame buffer //C[NTR]D[NTR]S[NTR]
+	var sNameOfShader = "drawTextureOnClipSpace";
+	var sModeOfFBO = "CNDNSN";//to turn of the frame buffer //C[NTR]D[NTR]S[NTR]//使わない
 	var colorBufferModeOfFBO = myFBOs.none;//[none | colorBufferModeIsRGBA4444 | colorBufferModeIsRGBA5551 | colorBufferModeIsALPHA]
 	var controllColorDepthStencilOfFBO = function(gl){
 
@@ -52,32 +52,13 @@
 
 
 var fs = (function(){/*
-	uniform sampler2D uSampler0;//color buffer of source
-	uniform sampler2D uSampler1;//depth buffer of source
-	uniform sampler2D uSampler2;//color buffer of destination
-	uniform sampler2D uSampler3;//depth buffer of destination(地)
+	uniform sampler2D uSampler;//color buffer of source
 
 	varying mediump vec2 vCoord;
 	void main(void){
-//gl.DEPTH_COMPONENT16
-//gl.DEPTH24_STENCIL8 <===It's high quality for DEPTH_TESTing to draw objects which have z coordinate each other.
 
-		//.rだけに16bitすべてが入っています。g,b,aはゼロです;.r contains all 16 bit. g, b and a has zero value each other.
+		gl_FragColor = vec4(texture2D(uSampler,vCoord).rgb,1.0);
 
-		highp float depthSource = texture2D(uSampler1,vCoord).r * 16777216.0;
-		highp float depthDestination = texture2D(uSampler3,vCoord).r * 16777216.0;
-
-		//gl_FragCoord.zは現在渡されているrectangleのもの(aVertexPositionから計算したもの)だから、画面上のものとは別物。!!!!!!!!!
-		//だから、以前に描いたもののDEPTHと比べたいときには以前描いたもののDEPTH TEXTUREを用意して、それと比べなければならない
-
-		//16ビットなので、texelに65536を描けると整数になります probablement
-//		if(depthSource * 65536.0 > depthDestination * 65536.0){
-		if(depthSource < depthDestination){
-			gl_FragColor = vec4(texture2D(uSampler0,vCoord).rgb,1.0);
-		}else{
-			gl_FragColor = vec4(texture2D(uSampler2,vCoord).rgb,1.0);
-//			discard;
-		}
 	}
 */});
 
@@ -100,10 +81,7 @@ var aAttribs = [
 	"aVertexPosition"
 ];
 var aUniforms = [
-	"uSampler0",
-	"uSampler1",
-	"uSampler2",
-	"uSampler3"
+	"uSampler"
 ];
 var funcShader = function(){
 	myShaders.create(sNameOfShader,vs,fs,aAttribs,aUniforms);

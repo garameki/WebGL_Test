@@ -308,12 +308,9 @@
 
 
 </script>
-
-<!--*** shader programs, FBOs and controllers of CDF ***-->
-<script id="shader-spaceShip"			type="text/javascript"	src="./shaders/spaceShip.js"></script>
+<script id="shader-spaceShip"	type="text/javascript"	src="./shaders/spaceShip.js"></script>
 <script id="shader-mixTwoTexturesWithDepthes"	type="text/javascript"	src="./shaders/mixTwoTexturesWithDepthes.js"></script>
-<script id="shader-makeCassiniAlpha0"		type="text/javascript"	src="./shaders/makeCassiniAlpha0.js"></script>
-<script id="shader-drawTextureOnClipSpace"	type="text/javascript"	src="./shaders/drawTextureOnClipSpace.js"></script>
+
 
 <script type='text/javascript'>
 
@@ -417,26 +414,9 @@ var drawPlanets = function(gl,names,angle){
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
 	}//spaceShip
+
+
 };
-
-var drawCassini = function(gl,names,angle){
-	for(var num in names){//the last is the texture that is gotten by framebuffer
-		member = UnitsToDraw[names[num]];
-		/** To vertex shader **/
-		myShaders.makeCassiniAlpha0.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-		myShaders.makeCassiniAlpha0.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
-		member.buffers.bindElement();
-
-		sendPerspectiveMatrix(gl,myShaders.makeCassiniAlpha0.uniform.uPerspectiveMatrix);
-		sendAccumeratedMatrix(myShaders.makeCassiniAlpha0.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
-		/** Tofragment shader **/
-		myShaders.makeCassiniAlpha0.uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-		myTextures.member[member.nameTexture].activate(1);
-
-		member.draw();//in which texture activated is for use
-		member.labels.repos(gl,pmat,mvmat);
-	}
-};//drawCassini
 
 var drawShadows = function(gl,names,angle){
 
@@ -456,6 +436,12 @@ var drawShadows = function(gl,names,angle){
 	}
 };
 
+var stencil_status = function(gl){
+	myInfo.main.stencilwritemask = "stencil mask front:"+gl.getParameter(gl.STENCIL_WRITEMASK).toString(16);
+	myInfo.main.stencilbackwritemask = "stencil mask back:"+gl.getParameter(gl.STENCIL_BACK_WRITEMASK).toString(16);
+	myInfo.main.stencilbits = "stencil bit length: "+gl.getParameter(gl.STENCIL_BITS);
+	myInfo.main.stencilfunc = "stencilFunc("+gl[gl.getParameter(gl.STENCIL_FUNC)]+","+gl.getParameter(gl.STENCIL_REF).toString(2)+","+gl.getParameter(gl.STENCIL_VALUE_MASK).toString(2)+")";
+};
 
 
 var ccc8 = 1/0xFF;
@@ -475,8 +461,7 @@ function drawScene(gl,angle){
 	var member,mvmat,pmat;
 
 
-/*
- idea
+/** idea **
 
 	aAccumeUnits.push(dfsfdsfsfs);
 
@@ -531,104 +516,232 @@ function drawScene(gl,angle){
 //	gl.blendFunc(gl.ONE_MINUS_SRC_ALPHA,gl.SRC_ALPHA);
 //	gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
 //
-
-//************************* DRAW OPAQUE OBJECTS ****************************
+//:::::::::::::::::::::::::::::::::::::::::: DRAW OPAQUE OBJECTS ::::::::::::::::::::::::::::::::::::::::::
 //***************************************************************************
-if(true){
-	myFBOs.spaceShip.activate();//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
-	myShaders.spaceShip.activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
-		var names = ["earth","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
+//******************************* 1 *****************************************
+//***************************************************************************
+	myFBOs.shadow.activate("CTDTSN",myFBOs.colorBufferModeIsRGBA4444);
+//***************************************************************************
+
+	//draw opaque objects at first!! After this ,draw transparent objects
+
+	/** BLENDER **/
+	gl.disable(gl.BLEND);
+
+	/** COLOR **/
+	gl.colorMask(true,true,true,true);
+	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));
+	gl.clear(gl.COLOR_BUFFER_BIT);
+
+	/** DEPTH **/
+	gl.enable(gl.DEPTH_TEST);
+	gl.clearDepth(0xFFFFFF);
+	gl.clear(gl.DEPTH_BUFFER_BIT);
+	gl.depthFunc(gl.LEQUAL);
+
+	/** STENCIL **/
+	gl.disable(gl.STENCIL_TEST);
+
+//	var names = ["earth","plane","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
+	var names = ["earth","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
+//	var names = ["earth","saturn","up","right","back","uranus","moon","mars","venus","jupiter","mercury"];//<-----JUPITERからrenderされる
+	myShaders.spaceShip.activate();
 		drawPlanets(gl,names,angle);
-	myFBOs.spaceShip.inactivate();
-		myTextures.member["opaquesColorBuffer"].import(myFBOs.spaceShip.textureColorBuffer);//用意したtextureに保存
-		myTextures.member["opaquesDepthBuffer"].import(myFBOs.spaceShip.textureDepthBuffer);//用意したtextureに保存
-}//boolean
-//*************************** DRAW CASSINI STENCIL ****************************
-//*****************************************************************************
-if(false){
-	myFBOs.makeCassiniAlpha0.activate();//続投。使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
-	myShaders.makeCassiniAlpha0.activate();//続投。使い終わったらinactivate()すること。viewportを元に戻すために。
-		names = ["ring"];
-		drawCassini(gl,names,angle);
-	myFBOs.makeCassiniAlpha0.inactivate();
-//		myTextures.member["cassiniAlphaColorBuffer"].import(myFBOs.makeCassiniAlpha0.textureColorBuffer);//用意したtextureに保存
-		myTextures.member["ringColorBuffer"].import(myFBOs.makeCassiniAlpha0.textureColorBuffer);//用意したtextureに保存
-		myTextures.member["ringDepthBuffer"].import(myFBOs.makeCassiniAlpha0.textureDepthBuffer);//用意したtextureに保存
-		//不要myTextures.member["cassiniAlphaDepthBuffer"].import(myFBOs.makeCassiniAlpha0.textureDepthBuffer);//用意したtextureに保存
-}//boolean
 
-//*************************** DRAW TEXTURE ON CLIP SPACE ****************************
-//*****************************************************************************
-
-//	gl.clearColor(0.5,0.5,0.5,0.5);
-//	gl.clear(COLOR_BUFFER_BIT);
-
-	var shaderName = "drawTextureOnClipSpace";
-	myShaders[shaderName].activate();
-	myTextures.member["forDrawingClipSpace"].import(myFBOs.spaceShip.textureColorBuffer);//用意したtextureに保存
-	myShaders[shaderName].uniform["uSampler"].sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-	myTextures.member["forDrawingClipSpace"].activate(0);
-	myShaders[shaderName].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-
-
-
-
-
-
-
-
-//kkkあとでmyTexturesのmemberをはずして、直接のpropertyにする
+//:::::::::::::::::::::::::: DRAW CASSINI STENCIL :::::::::::::::::::::::::::::::::::
 
 //リングを遅延レンダリングして、screenに重ねて描画してみる.しかも、DEPTHありで。
 
+//***************************** 2 ***********************************************
+//*******************************************************************************
+	//myFBOs.shadow.inactivate();//frame buffer 続投
+	myTextures.member["destinationColorBuffer"].import(myFBOs.shadow.textureColorBuffer);
+	myTextures.member["destinationDepthBuffer"].import(myFBOs.shadow.textureDepthBuffer);
+
+	//deleteTextureは参照をやめるだけではなく、なかみまでけしてしまうのではないだろうか
+
+	myFBOs.shadow.activate("CTDTSN",myFBOs.colorBufferModeIsRGBA4444);//ここをOFFにすると前の画像が上書きされてしまう
+	//dkfja;ldskfja;sldkjf;asldkfjadlgdflkjghsldfkjhglskdjhglkdjhaldkjhflakjfhaslkdjfhalskdjfhasldkjhfalkdjgh
+//******************************************************************************
+		//reference
+		//Final Color = ObjectColor * SourceBlendFactor + PixelColor * DestinationBlendFactor //https://msdn.microsoft.com/ja-jp/library/cc324560.aspx
+		//ブレンディングは透過とは違う//https://sites.google.com/site/hackthewebgl/learning-webglhon-yaku/the-lessons/lesson-8
+	/** BLEND **/
+	gl.disable(gl.BLEND);
+
+	/** COLOR **/
+		gl.colorMask(false,false,false,true);
+	gl.colorMask(true,true,true,true);
+	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));//これだとscreenが透過する(blend時)
+//		gl.clearColor(c8(0xFF),c8(0xFF),c8(0xFF),c8(0xFF));//これだとscreenが真っ黒(blend時)
+	gl.clear(gl.COLOR_BUFFER_BIT);
+
+	/** DEPTH **/
+//		gl.disable(gl.DEPTH_TEST);
+	gl.enable(gl.DEPTH_TEST);
+	gl.clearDepth(c24(0xFFFFFF));
+	gl.clear(gl.DEPTH_BUFFER_BIT);
+	gl.depthFunc(gl.LEQUAL);
+
+	/** STENCIL **/
+		gl.disable(gl.STENCIL_TEST);
+//	gl.enable(gl.STENCIL_TEST);
+//	gl.clearStencil(0xFF);
+//	gl.clear(gl.STENCIL_BUFFER_BIT);
+//	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);//trueの部分にOperationが加わり、ステンシルバッファが書き換えられる
+
+	/** DRAW **/
+	myShaders.spaceShip.activate();
+	names = ["ring"];
+	drawPlanets(gl,names,angle);
+
+//:::::::::::::::::::::::::::::: 2. draw the shadow of the Saturn ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 if(false){
 
+	//レンダーバッファを深度バッファにして、シェーダー内でテクスチャーとして使えば、なんとかなるのか
+	//だから、2枚のテクスチャーを用意して、一枚は深度ステンシルバッファ、もう一枚はカラーバッファとして使えばいいのか
+if(true){
+
+	/** BLEND **/
+	gl.disable(gl.BLEND);
+//	gl.enable(gl.BLEND);//後に描かれたものが前に描かれたものとブレンドされる//https://sites.google.com/site/hackthewebgl/learning-webglhon-yaku/the-lessons/lesson-8
+				//---> ①奥の太陽②手前の輪---○　①手前の輪②奥の太陽---X
+//	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+//	gl.blendFunc(gl.ONE_MINUS_SRC_ALPHA,gl.SRC_ALPHA);
+//	gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+
+
+//●	gl.blendFunc(gl.,gl.);//destinationの黒い部分には黒色を付けない
+
+	/** COLOR **/
+//	gl.clearColor(0,0,0,0);
+//	gl.clear(gl.COLOR_BUFFER_BIT);
+
+	/** DEPTH **/
+	gl.disable(gl.DEPTH_TEST);
+//	gl.enable(gl.DEPTH_TEST);
+//	gl.clearDepth(c24(0x0));
+//	gl.clear(gl.DEPTH_BUFFER_BIT);
+	gl.depthFunc(gl.NOTEQUAL);
+
+	/** STENCIL **/
+//	gl.disable(gl.STENCIL_TEST);
+	gl.enable(gl.STENCIL_TEST);
+//	gl.clearStencil(0xFF);
+//	gl.clear(gl.STENCIL_BUFFER_BIT);
+	gl.stencilFunc(gl.EQUAL,0xFE,0xFF);
+	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);
+//	gl.stencilOp(gl.KEEP,gl.REPLACE,gl.KEEP);
+//	gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
+
+
+
+	stencil_status(gl);
+
+}//boolean
+
+
+	myShaders.drawShadowOnPlane.activate();
+		names = ["saturn2"];
+		drawShadows(gl,names,angle);
+}//boolean
+
+
+// ::::::::::::::::::::::::::::::::::: replace the contents of screen :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+	
+	myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
+	myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
+	myInfo.main.framebufferstatus = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
+
+//:::::::::::::::::::: DRAW BUFFER ON CLIP SPACE ::::::::::::::::::::::::::
+
+//****************************************** 3 ***********************************************
+//********************************************************************************************
+	myFBOs.shadow.inactivate();//次は画面に描くfor next drawing into screen
+	myTextures.member["sourceColorBuffer"].import(myFBOs.shadow.textureColorBuffer);
+	myTextures.member["sourceDepthBuffer"].import(myFBOs.shadow.textureDepthBuffer);
+
+//kkkあとでmyTexturesのmemberをはずして、直接のpropertyにする
+
 	var shaderName = "mixTwoTexturesWithDepthes";
-	var aTextureNames = ["ringColorBuffer","ringDepthBuffer","opaquesColorBuffer","opaquesDepthBuffer"];//order to shader
+	var aTextureNames = ["sourceColorBuffer","sourceDepthBuffer","destinationColorBuffer","destinationDepthBuffer"];//order to shader
+//*********************************************************************************************
+
+	//screen上にミックス
+
+if(true){
+
+	/** BLEND この効果はalpha<1.0のときに現れます。**/
+	gl.disable(gl.BLEND);//https://stackoverflow.com/questions/11633950/opengl-blend-modes-vs-shader-blending
+//	gl.enable(gl.BLEND);
+//	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);//テクスチャの黒は透過
+	gl.blendFunc(gl.SRC_COLOR,gl.ONE_MINUS_SRC_COLOR);
+
+	/** COLOR **/
+	gl.colorMask(true,true,true,true);
+
+
+	/** DEPTH **/
+//		gl.disable(gl.DEPTH_TEST);
+	gl.enable(gl.DEPTH_TEST);//shader内でgl_FragCoord.zを参照したいのだが===> 三角形のzが得られるだけ We can get z of this triangles
+	gl.clearDepth(c24(0xFFFFFF));
+//	gl.clearDepth(1.0);
+	gl.clear(gl.DEPTH_BUFFER_BIT);
+	gl.depthFunc(gl.LEQUAL);
+
+//kkk shader内で新しいDEPTH BUFFER TEXTUREを作りたいよね!!!!gl_FragCoord.z = とすればよいのでしょうか?
+//	やって、テストしてみましょうspaceShip shaderのやつを0.0にして、どうなるかを観察しましょう
+
+	/** STENCIL **/
+	gl.disable(gl.STENCIL_TEST);
+
 	//https://qiita.com/ienaga/items/3263a752da3287a6c4b6
 	myShaders[shaderName].activate();
-	//myFBOs[shaderName].activate();//画面に描くので使わない。
 	myShaders[shaderName].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
 	for(var N in aTextureNames){
 		myShaders[shaderName].uniform["uSampler"+N.toString()].sendInt(N);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 		myTextures.member[aTextureNames[N]].activate(N);
 	}
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-	//myFBOs[shaderName].inactivate();//使っていないので必要ない。
-}//boolen
+
+}//boolean
 
 
 //************** release memories ***************************
-//	myFBOs.free();//free up memories
-//	gl.deleteTexture(myTextures.member["opaquesColorBuffer"].texture);
-//	gl.deleteTexture(myTextures.member["opaquesDepthBuffer"].texture);
-//	gl.deleteTexture(myTextures.member["ringColorBuffer"].texture);
-//	gl.deleteTexture(myTextures.member["ringDepthBuffer"].texture);
+	myFBOs.shadow.reset();//free up memories
+	gl.deleteTexture(myTextures.member["sourceColorBuffer"].texture);
+	gl.deleteTexture(myTextures.member["sourceDepthBuffer"].texture);
+	gl.deleteTexture(myTextures.member["destinationColorBuffer"].texture);
+	gl.deleteTexture(myTextures.member["destinationDepthBuffer"].texture);
 //*****************************************
 
 	
+//:::::::::::::::::::::::::::::::::: GLSL STATUS ::::::::::::::::::::::::::::::::::::::::::
+
+	myInfo.main.glerror = "GL error:"+gl[gl.getError()];
+//●	myInfo.main.glstatus = "GL status:"+gl[gl.getParameter(gl.FRAGMENT_SHADER_DERIVATIVE_HINT)];
 
 
 //*********************************** END *****************************************************
 
-
-
-//:::::::::::::::::::::::::::::::::: GLSL STATUS ::::::::::::::::::::::::::::::::::::::::::
-
-	myInfo.main.glerror = "GL error:"+gl[gl.getError()];
-	myInfo.main.glstatus = "GL status:"+gl[gl.getParameter(gl.FRAGMENT_SHADER_DERIVATIVE_HINT)];
-	myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
-	myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
-	myInfo.main.framebufferstatus = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
-	myInfo.main.stencilwritemask = "stencil mask front:"+gl.getParameter(gl.STENCIL_WRITEMASK).toString(16);
-	myInfo.main.stencilbackwritemask = "stencil mask back:"+gl.getParameter(gl.STENCIL_BACK_WRITEMASK).toString(16);
-	myInfo.main.stencilbits = "stencil bit length: "+gl.getParameter(gl.STENCIL_BITS);
-	myInfo.main.stencilfunc = "stencilFunc("+gl[gl.getParameter(gl.STENCIL_FUNC)]+","+gl.getParameter(gl.STENCIL_REF).toString(2)+","+gl.getParameter(gl.STENCIL_VALUE_MASK).toString(2)+")";
-
+/** the way to use more Textures at once **/
+/*
+//pass image into gl.TEXTURE[\d+] 
+activeTexture(gl.TEXTURE0);
+bindTexture(gl.TEXTURE_2D,image0);
+activeTexture(gl.TEXTURE0 + 1);
+bindTexture(gl.TEXTURE_2D,image1);
+//pass into uSampler
+locSampler1 = gl.getUniformLocation(prog,"uSampler1");
+locSampler2 = gl.getUniformLocation(prog,"uSampler2");
+gl.uniform1i(locSampler1,0);
+gl.uniform1i(locSampler2,1);
+//definition in shader
+uniform sampler2D uSampler1;<--image0
+uniform sampler2D uSampler2;<--image1
+*/
 };
 
 
@@ -740,7 +853,7 @@ console.log("gl=",gl);
 
 	gl.viewport(0,0,gl.canvas.width,gl.canvas.height);//(kkk bad)クリップ空間の-1～1の値をcanvasの大きさに変換する
 
-console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.toString());
+//console.log("viewport:",gl.canvas.width,gl.canvas.height);
 
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
 //	gl.clearColor(1.0, 1.0, 1.0, 1.0);	//White out
@@ -766,32 +879,24 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 	//** rectangle test **
 	//{
 	//	gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
-	//	gl.enable(gl.SCISSOR_TEST);
-	//	gl.scissor(30, 10, 60, 60);//60x60の正方形
-	//	gl.clearColor(1.0, 1.0, 0.0, 1.0);
-	//	gl.clear(gl.COLOR_BUFFER_BIT);
+	//    gl.enable(gl.SCISSOR_TEST);
+	//   gl.scissor(30, 10, 60, 60);//60x60の正方形
+	//    gl.clearColor(1.0, 1.0, 0.0, 1.0);
+	//    gl.clear(gl.COLOR_BUFFER_BIT);
 	//};
 
-	//** prepare shaders and frame buffers **/
-	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
-	var wide = 512;
-	myShaders.spaceShip.attach(gl);//==>あとは.activate()で起動
-	myFBOs.spaceShip.initialize(gl,wide,wide);//==>あとは.activate()で起動
-
-	myShaders.drawTextureOnClipSpace.attach(gl);
-
+	//** prepare shaders and variables in it **/
+	myShaders.spaceShip.attach(gl);
 	myShaders.mixTwoTexturesWithDepthes.attach(gl);
-	myFBOs.mixTwoTexturesWithDepthes.initialize(gl,wide,wide);//このフレームバッファは今現在は必要ない。
-
-	myShaders.makeCassiniAlpha0.attach(gl);
-	myFBOs.makeCassiniAlpha0.initialize(gl,wide,wide);
 
 //HINT	var nn = gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_ATTRIBUTES);if(nn!=null)for(var ii=0;ii<nn;ii++){gl.disableVertexAttribArray(ii);};
 
-	console.log("myFBOs.spaceShip.sMode=",myFBOs.spaceShip.sMode);
-	console.log("myFBOs.spaceShip=",myFBOs.spaceShip);/////CTなのになんでnull???
-	console.log("myFBOs.spaceShip.framebuffer=",myFBOs.spaceShip.framebuffer);
 
+	/** prepare frame buffer & render buffer **/
+	var wide = 512;
+	myFBOs.create("shadow",gl,wide,wide,wide,wide);//16384<-----MAX_RENDER_SIZE
+	myFBOs.shadow.reset();
+	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
 
 
 
@@ -831,17 +936,13 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 //issue	myTextures.create(gl,nameTextureAtomosphere,myColorName.white(0.5));//preserve alpha here
 	myTextures.join(gl,nameTextureAtomosphere);
 
-	//void textures for mixing textures in shader of mixTwoTexturesWithDepthes
-	myTextures.join(gl,"ringColorBuffer");//the object be going to be drawn//こういうのが増えるといまのままでは意味もなくサーバーに負担をかけてしまうな
-	myTextures.join(gl,"ringDepthBuffer");
-	myTextures.join(gl,"ringStencilBuffer");
-	myTextures.join(gl,"opaquesColorBuffer");//the base
-	myTextures.join(gl,"opaquesDepthBuffer");
-	myTextures.join(gl,"opaquesStencilBuffer");
-	myTextures.join(gl,"cassiniAlphaColorBuffer");
-	//不要myTextures.join(gl,"cassiniAlphaDepthBuffer");
-	//不要myTextures.join(gl,"cassiniAlphaStencilBuffer");
-	myTextures.join(gl,"forDrawingClipSpace");
+	//for mixing textures
+	myTextures.join(gl,"sourceColorBuffer");//the object be going to be drawn//こういうのが増えるといまのままでは意味もなくサーバーに負担をかけてしまうな
+	myTextures.join(gl,"sourceDepthBuffer");
+	myTextures.join(gl,"sourceStencilBuffer");
+	myTextures.join(gl,"destinationColorBuffer");//the base
+	myTextures.join(gl,"destinationDepthBuffer");
+	myTextures.join(gl,"destinationStencilBuffer");
 
 
 

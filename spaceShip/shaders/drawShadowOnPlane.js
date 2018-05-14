@@ -3,6 +3,41 @@
  *	To make a object its shadow putting on a arbitrary plane 
 **/
 
+var temp = {
+
+	/** BLEND **/
+	gl.disable(gl.BLEND);
+//	gl.enable(gl.BLEND);//Œã‚É•`‚©‚ê‚½‚à‚Ì‚ª‘O‚É•`‚©‚ê‚½‚à‚Ì‚ÆƒuƒŒƒ“ƒh‚³‚ê‚é//https://sites.google.com/site/hackthewebgl/learning-webglhon-yaku/the-lessons/lesson-8
+				//---> ‡@‰œ‚Ì‘¾—z‡AŽè‘O‚Ì—Ö---›@‡@Žè‘O‚Ì—Ö‡A‰œ‚Ì‘¾—z---X
+//	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+//	gl.blendFunc(gl.ONE_MINUS_SRC_ALPHA,gl.SRC_ALPHA);
+//	gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+
+
+//œ	gl.blendFunc(gl.,gl.);//destination‚Ì•‚¢•”•ª‚É‚Í•F‚ð•t‚¯‚È‚¢
+
+	/** COLOR **/
+//	gl.clearColor(0,0,0,0);
+//	gl.clear(gl.COLOR_BUFFER_BIT);
+
+	/** DEPTH **/
+	gl.disable(gl.DEPTH_TEST);
+//	gl.enable(gl.DEPTH_TEST);
+//	gl.clearDepth(c24(0x0));
+//	gl.clear(gl.DEPTH_BUFFER_BIT);
+	gl.depthFunc(gl.NOTEQUAL);
+
+	/** STENCIL **/
+//	gl.disable(gl.STENCIL_TEST);
+	gl.enable(gl.STENCIL_TEST);
+//	gl.clearStencil(0xFF);
+//	gl.clear(gl.STENCIL_BUFFER_BIT);
+	gl.stencilFunc(gl.EQUAL,0xFE,0xFF);
+	gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE);
+//	gl.stencilOp(gl.KEEP,gl.REPLACE,gl.KEEP);
+//	gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
+
+};
 
 (function(){
 
@@ -43,10 +78,10 @@ var vs = (function(){/*
 
 //		highp vec4 mvmit = normalize(uModelViewMatrix[0].xyzw);
 
-		highp vec3 nn = normalize(((uModelViewMatrixInversedTransposed * vec4(0.0,0.0,-1.0,1.0))).xyz);//ƒŠƒ“ƒO‚Ì–@ü
-		highp vec3 pos0 = (uManipulatedMatrix * vec4(0.0,0.0,0.0,1.0)).xyz;//ˆÚ“®Œã‚ÌŒ´“_‚ÌˆÊ’u
-		highp vec3 pos1 = (uModelViewMatrix * vec4(aVertexPosition,1.0)).xyz;//‘ÎÛ‚Ì“_
-		highp vec3 pos3 = (uModelViewMatrix * vec4(0.0,0.0,0.0,1.0)).xyz;//ƒŠƒ“ƒO‚Ì’†S
+		highp vec3 nn = normalize(((uModelViewMatrixInversedTransposed * vec4(0.0,0.0,-1.0,1.0))).xyz);//Ž©“]‚ÆŒö“]‚Æ‰F’ˆ‘DˆÚ“®‚ÌŒã‚Ì  ƒŠƒ“ƒO‚Ì–@ü
+		highp vec3 pos0 = (uManipulatedMatrix * vec4(0.0,0.0,0.0,1.0)).xyz;//‰F’ˆ‘DˆÚ“®Œã‚ÌŒ´“_‚ÌˆÊ’u
+		highp vec3 pos1 = (uModelViewMatrix * vec4(aVertexPosition,1.0)).xyz;//Ž©“]‚ÆŒö“]‚Æ‰F’ˆ‘DˆÚ“®‚ÌŒã‚Ì  ‘ÎÛ‚Ì“_
+		highp vec3 pos3 = (uModelViewMatrix * vec4(0.0,0.0,0.0,1.0)).xyz;//Ž©“]‚ÆŒö“]‚Æ‰F’ˆ‘DˆÚ“®‚ÌŒã‚Ì  ƒŠƒ“ƒO‚Ì’†S
 
 		//ƒŠƒ“ƒO•½–Ê‚Ì–@ü‚Ì•ûŒü‚ðŒõŒ¹‘¤‚É‚·‚é
 		highp float ganma = dot(nn,pos3-pos0);
@@ -73,15 +108,35 @@ var vs = (function(){/*
 fs = fs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 fs = fs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 
-myShaders.createFromVariables(gl,sNameOfShader,vs,fs);
-		myShaders[sNameOfShader].getAttribLocation("aVertexPosition");
-		myShaders[sNameOfShader].getAttribLocation("aTextureCoord");
-		myShaders[sNameOfShader].getUniformLocation("uSampler");
-		myShaders[sNameOfShader].getUniformLocation("uModelViewMatrixInversedTransposed");
-		myShaders[sNameOfShader].getUniformLocation("uModelViewMatrix");
-		myShaders[sNameOfShader].getUniformLocation("uPerspectiveMatrix");
+var aAttribs = [
+	"aVertexPosition",
+	"aTextureCoord"
+];
 
-		myShaders[sNameOfShader].getUniformLocation("uManipulatedMatrix");
+var aUniforms = [
+	"uSampler",
+	"uModelViewMatrixInversedTransposed",
+	"uModelViewMatrix",
+	"uPerspectiveMatrix",
+	"uManipulatedMatrix"
+];
+if('myShaders' in window){
+	console.log(sNameOfShader + "---ok1---created in myShaders");
+	myShaders.create(sNameOfShader,vs,fs,aAttribs,aUniforms);
+}else{
+	var count = 0;
+	var hoge = setInterval(function(){
+		if(++count > 1000){
+			clearInterval(hoge);
+			console.error("Can't create myShaders."+sNameOfShader);
+		}
+		if('myShaders' in window){
+			clearInterval(hoge);
+			console.log(sNameOfShader + "---ok2---created in myShaders");
+			myShaders.create(sNameOfShader,vs,fs,aAttribs,aUniforms);
+		}
+	},1);
+}
 
 
 })();

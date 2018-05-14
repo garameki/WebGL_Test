@@ -6,13 +6,24 @@
 */
 (function(){
 //:myFBOs
+
+	//問題はmyShaderと一緒に定義するときにはまだglが決まっていないことである
+
 	myFBOs = { };
-	Object.defineProperty(myFBOs,'create',{value:create,writable:false,enumerable:true,configurable:false});
-	function create(sName,gl,tWidth,tHeight,vWidth,vHeight){
-		Object.defineProperty(myFBOs,sName,{value:new FBO(gl,tWidth,tHeight,vWidth,vHeight,sName),writable:false,enumerable:true,configurable:true});
+	Object.defineProperty(myFBOs,'create',{value:create,writable:false,enumerable:false,configurable:false});
+	function create(sName,sMode,oColorBufferMode,funcControlCDS){
+		Object.defineProperty(myFBOs,sName,{value:new FBO(sName,sMode,oColorBufferMode,funcControlCDS),writable:false,enumerable:true,configurable:true});
+	};
+	Object.defineProperty(myFBOs,'free',{value:free,enumerable:false,configurable:false});
+	function free(){
+		for(var name in myFBOs){
+			myFBOs[name].deleteTextures();
+			myFBOs[name].inactivate();
+		}
 	};
 
 	/** the structure of color buffer mode using texImage2D **/
+	var obj0 = null;
 	var obj1 = {
 		internalFormat:function(gl){return gl.RGBA;},
 		format:function(gl){return gl.RGBA;},
@@ -28,6 +39,7 @@
 		format:function(gl){return gl.ALPHA;},
 		type:function(gl){return gl.UNSIGNED_BYTE;}
 	};
+	Object.defineProperty(myFBOs,'none',{value:obj0,enumerable:false,configurable:false});
 	Object.defineProperty(myFBOs,'colorBufferModeIsRGBA4444',{value:obj1,enumerable:false,configurable:false});
 	Object.defineProperty(myFBOs,'colorBufferModeIsRGBA5551',{value:obj2,enumerable:false,configurable:false});
 	Object.defineProperty(myFBOs,'colorBufferModeIsALPHA',{value:obj3,enumerable:false,configurable:false});
@@ -41,23 +53,25 @@
 	//http://www.songho.ca/opengl/gl_fbo.html
 	/** inner class **/
 	  //Texture, Framebuffer and Renderbuffer are necessary at once.
-	var FBO = function(gl,tWidth,tHeight,vWidth,vHeight,sName){
-		this.gl = gl;
+	var FBO = function(sName,sMode,oColorBufferMode,funcControlCDS){
+		//context
+		this.gl = null;
 
+		//definition of characteristic of this instance
+		if(oColorBufferMode == null || oColorBufferMode == void 0)colorBufferMode = null;
 		this.name = sName;
+		this.sMode = sMode;
+		this.oColorBufferMode = oColorBufferMode;
+		this.funcControlCDS = funcControlCDS;
+	
 
-		this.tWidth = tWidth;
-		this.tHeight = tHeight;
-		this.vWidth = vWidth;//for viewport()
-		this.vHeight = vHeight;
+		//buffer
+		this.framebuffer = null;
+		this.renderbuffer = null;
 
-		var size = tWidth * tHeight;
-		if(size > gl.getParameter(gl.MAX_RENDERBUFFER_SIZE))myInfo.main.caution = "framebuffer size is too large "+size;
-
-		this.framebuffer = gl.createFramebuffer();
-		this.framebuffer._name = "framebuffer";
-		this.renderbuffer = gl.createRenderbuffer();
-		this.renderbuffer._name = "renderbuffer";
+		//buffer size
+		this.buffWidth = null;
+		this.buffHeight = null;
 
 		//the setting before activation calling
 		this.colorMasks = void 0;
@@ -65,99 +79,121 @@
 		this.stencilTest = void 0;
 
 		//the textures using as buffer
-		this.textureColorBuffer = void 0;
-		this.textureDepthBuffer = void 0;
-		this.textureStencilBuffer = void 0;
-
-//		this.initializeTextureColorBuffer();
-//		this.initializeTextureDepthBuffer();
-//		this.initializeTextureStencilBuffer();
+		this.textureColorBuffer = null;
+		this.textureDepthBuffer = null;
+		this.textureStencilBuffer = null;
+	};
+	FBO.prototype.initialize = function(gl,buffWidth,buffHeight){
+		if(this.gl!=null){
+			if(this.framebuffer)this.gl.deleteFramebuffer(this.framebuffer);
+			if(this.renderbuffer)this.gl.deleteRenderbuffer(this.renderbuffer);
+			if(this.textureColorBuffer)this.gl.deleteTexture(this.textureColorBuffer);
+			if(this.textureDepthBuffer)this.gl.deleteTexture(this.textureDepthBuffer);
+			if(this.textureStencilBuffer)this.gl.deleteTexture(this.textureStencilBuffer);
+		}
+		this.gl = gl;
+		this.framebuffer = gl.createFramebuffer();
+		this.framebuffer._name = "framebuffer";
+		this.renderbuffer = gl.createRenderbuffer();
+		this.renderbuffer._name = "renderbuffer";
+		var size = buffWidth * buffHeight;
+		if(size > gl.getParameter(gl.MAX_RENDERBUFFER_SIZE))myInfo.main.caution = "framebuffer size is too large "+size;
+		this.buffWidth = buffWidth;
+		this.buffHeight = buffHeight;
 	};
 
-//{
+//{kkk
 //	http://www.wakayama-u.ac.jp/~tokoi/lecture/gg/ggnote13.pdf
-//	これらを入れれば、viewportのサイズを画面と同じにしなくてもいいのではないだろうか？
+//	これらを入れれば、viewportのサイズを画面と同じにしなくてもいいのではないだろうか？==>どうやらちがうみたい。「繰り返ししない」ということみたいだ。https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter
 //	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
 //	GL_CLAMP_TO_EDGE);
 //	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
 //	GL_CLAMP_TO_EDGE);
 //}
 
-	FBO.prototype.initializeTextureColorBuffer = function(colorMode){
+	FBO.prototype.initializeTextureColorBuffer = function(){
 		/** prepare texture rendered into **/
 		var gl = this.gl;
-
+		if(this.textureColorBuffer)gl.deleteTexture(this.textureColorBuffer);
 		this.textureColorBuffer = gl.createTexture();
 		this.textureColorBuffer._name = "ColorBufferTexture";
 			gl.bindTexture(gl.TEXTURE_2D,this.textureColorBuffer);//-->gl.TEXTURE[?]
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
-//unchangable is not convenient	gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.tWidth,this.tHeight,0,gl.RGBA,gl.UNSIGNED_SHORT_4_4_4_4,null);//pass no image into gl.TEXT[\d+]
-			gl.texImage2D(gl.TEXTURE_2D,0,colorMode.internalFormat(gl),this.tWidth,this.tHeight,0,colorMode.format(gl),colorMode.type(gl),null);//pass no image into gl.TEXT[\d+]
+//unchangable is not convenient				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.buffWidth,this.buffHeight,0,gl.RGBA,gl.UNSIGNED_SHORT_4_4_4_4,null);//pass no image into gl.TEXT[\d+]
+			gl.texImage2D(gl.TEXTURE_2D,0,this.oColorBufferMode.internalFormat(gl),this.buffWidth,this.buffHeight,0,this.oColorBufferMode.format(gl),this.oColorBufferMode.type(gl),null);//pass no image into gl.TEXT[\d+]
 	};
+//reference of CAUTION 4.1.5 Framebuffer Object Attachments ------ https://www.khronos.org/registry/webgl/specs/latest/2.0/#TEXTURE_TYPES_FORMATS_FROM_DOM_ELEMENTS_TABLE
 	FBO.prototype.initializeTextureDepthBuffer = function(){
 		/** prepare texture rendered into **/
-		var gl = this.gl;
-
 		//https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
+		var gl = this.gl;
+		if(this.textureDepthBuffer)gl.deleteTexture(this.textureDepthBuffer);
 		this.textureDepthBuffer = gl.createTexture();
 		this.textureDepthBuffer._name = "DepthBufferTexture";
 			gl.bindTexture(gl.TEXTURE_2D,this.textureDepthBuffer);//-->gl.TEXTURE[?]
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
-//low quality to render	gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT16,this.tWidth,this.tHeight,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);//pass no image into gl.TEXT[\d+]
-			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH24_STENCIL8,this.tWidth,this.tHeight,0,gl.DEPTH_STENCIL,gl.UNSIGNED_INT_24_8,null);//pass no image into gl.TEXT[\d+]
+//low quality to render	gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT16,this.buffWidth,this.buffHeight,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);//pass no image into gl.TEXT[\d+]
+			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH24_STENCIL8,this.buffWidth,this.buffHeight,0,gl.DEPTH_STENCIL,gl.UNSIGNED_INT_24_8,null);//pass no image into gl.TEXT[\d+]
 	};
-	FBO.prototype.initializeTextureStencilBuffer = function(){
+	FBO.prototype.initializeTextureStencilBuffer = function(gl){
 		/** prepare texture rendered into **/
-		var gl = this.gl;
-
 		//https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
+		var gl = this.gl;
+		if(this.textureStencilBuffer)gl.deleteTexture(this.textureStencilBuffer);
 		this.textureStencilBuffer = gl.createTexture();
 		this.textureStencilBuffer._name = "StencilBufferTexture";
 			gl.bindTexture(gl.TEXTURE_2D,this.textureStencilBuffer);//-->gl.TEXTURE[?]
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
-			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH24_STENCIL8,this.tWidth,this.tHeight,0,gl.DEPTH_STENCIL,gl.UNSIGNED_INT_24_8,null);//pass no image into gl.TEXT[\d+]
+			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH24_STENCIL8,this.buffWidth,this.buffHeight,0,gl.DEPTH_STENCIL,gl.UNSIGNED_INT_24_8,null);//pass no image into gl.TEXT[\d+]
 	};
-	FBO.prototype.activate = function(){//(sMode,colorBufferMode)
-		var sMode = arguments[0];
-		var colorBufferMode;
-		if(arguments.length == 2){
-			colorBufferMode = arguments[1];
-		}else{
-			colorBufferMode = null;
-		}
-		var gl = this.gl;
-		gl.viewport(0,0,this.vWidth,this.vHeight);
+	FBO.prototype.activate = function(){
 
-		//for resetting at the time of inactivation
+		//注意CNDNSNでもviewportは変化しますので、使い終わったら.inactivate()を実行してください
+
+		var gl = this.gl;
+		var sMode = this.sMode;
+		//reference
+		//http://www.wakayama-u.ac.jp/~tokoi/lecture/gg/ggnote13.pdf
+		// ビューポートをフレームバッファオブジェクトのサイズに合わせる
+		//glViewport(0 --- x coord in canvas, 0 --- y coord in canvas, fboWidth, fboHeight);
+		gl.viewport(0,0,this.buffWidth,this.buffHeight);
+
+		//for resetting up at the time of inactivation()
 		this.colorMasks =  gl.getParameter(gl.COLOR_WRITEMASK);
 		this.depthTest =   gl.getParameter(gl.DEPTH_TEST);
-		this.stencilTest = gl.getParameter(gl.STENCIL_TEST);
+		this.stencilTest = gl.getParameter(gl.STENCIL_TEST);//kkk他にもいっぱい種類あるぞ...https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter
 
 //console.log("viewport-FBO:",this.vWidth,this.vHeight);
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
 		var matches,nameBuff;
 		matches = sMode.match(/C[NTR]D[NTR]S[NTR]|C[NTR]S[NTR]D[NTR]|D[NTR]C[NTR]S[NTR]|D[NTR]S[NTR]C[NTR]|S[NTR]C[NTR]D[NTR]|S[NTR]D[NTR]C[NTR]/g);
 		if(matches == null){
 			myInfo.main.error = "FBO.*.activate('HERE') 's HERE is wrong strings";
 			return;
 		}
+		matches = sMode.match(/CNDNSN/);
+		if(matches == null){
+			gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
+		} else {
+			gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+			return;//nothing to do
+		}
 		matches = sMode.match(/CR/);
 		if(matches != null){
 			matches = sMode.match(/DR|SR/);
 			if(matches != null){
-				myInfo.main.error = "FBO.*.activate('HERE') 's HERE contains CR and, DR, SR or both";
+				myInfo.main.error = "FBO.*.activate('HERE') 's HERE contains CR and, DR, SR or both";//レンダーバッファはカラーと他のものと一緒には使えない
 				return;
 			}
 		}
 		matches = sMode.match(/R/);
-		if(matches != null){
-			gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
-		}else{
+		if(matches == null){
 			gl.bindRenderbuffer(gl.RENDERBUFFER,null);
+		}else{
+			gl.bindRenderbuffer(gl.RENDERBUFFER,this.renderbuffer);
 		}
 
 		nameBuff = "COLOR BUFFER ATTACHING TO :";
@@ -169,19 +205,21 @@
 				myInfo.main.colorbufferattach = nameBuff + "None";
 				break;
 			case "T":
-				if(colorBufferMode==null){
-					myInfo.main.error = "Please specify the second argument of myFBOs."+this.name+".activate()";
-				}else if(colorBufferMode==void 0){
-					myInfo.main.error = "Please modify the second argument of myFBOs."+this.name+".activate(). The second argument is 'undefined'.";
+				if(this.oColorBufferMode==myFBOs.none){
+					myInfo.main.error = "Please specify the colorBufferMode of myFBOs."+this.name+".activate()";
+				}else if(this.oColorBufferMode==void 0){
+					myInfo.main.error = "Please check the colorBufferMode argument of myFBOs."+this.name+"which is 'undefined'.";
 				}
 				gl.colorMask(true,true,true,true);
-				this.initializeTextureColorBuffer(colorBufferMode);
+				this.initializeTextureColorBuffer();
 				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D, this.textureColorBuffer, 0);
+
+
 				myInfo.main.colorbufferattach = nameBuff + "Texture";
 				break;
 			case "R":
 				gl.colorMask(true,true,true,true);
-				gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA4,this.tWidth,this.tHeight);
+				gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA4,this.buffWidth,this.buffHeight);
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
 				myInfo.main.colorbufferattach = nameBuff + "Renderbuffer";
 				break;
@@ -191,7 +229,7 @@
 		if(matches != null){
 			gl.enable(gl.DEPTH_TEST);
 			gl.enable(gl.STENCIL_TEST);
-			gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_STENCIL,this.tWidth,this.tHeight);
+			gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_STENCIL,this.buffWidth,this.buffHeight);
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);
 			myInfo.main.depthbufferattach = "  DEPTH BUFFER ATTACHING TO : Renderbuffer";
 			myInfo.main.stencilbufferattach = "STENCIL BUFFER ATTACHING TO : Renderbuffer";
@@ -213,7 +251,7 @@
 				break;
 			case "R":
 				gl.enable(gl.DEPTH_TEST);
-				gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.tWidth,this.tHeight);
+				gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.buffWidth,this.buffHeight);
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
 				myInfo.main.depthbufferattach = nameBuff + "Renderbuffer";
 				break;
@@ -235,12 +273,13 @@
 				break;
 			case "R":
 				gl.enable(gl.STENCIL_TEST);
-				gl.renderbufferStorage(gl.RENDERBUFFER,gl.STENCIL_INDEX8,this.tWidth,this.tHeight);
+				gl.renderbufferStorage(gl.RENDERBUFFER,gl.STENCIL_INDEX8,this.buffWidth,this.buffHeight);
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
 				myInfo.main.stencilbufferattach = nameBuff + "Renderbuffer";
 				break;
 			default:
 		}
+		this.funcControlCDS(gl);//shaderフォルダの中で定義されたものがこのクラスに渡されているはず
 	};
 	FBO.prototype.inactivate = function(){
 		var gl=this.gl;
@@ -250,16 +289,16 @@
 		gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER,null);
 
-		gl.colorMask(this.colorMasks[0],this.colorMasks[1],this.colorMasks[2],this.colorMasks[3]);
+		if(this.colorMasks)gl.colorMask(this.colorMasks[0],this.colorMasks[1],this.colorMasks[2],this.colorMasks[3]);
 		if(this.depthTest)gl.enable(gl.DEPTH_TEST);
 		else gl.disable(gl.DEPTH_TEST);
 		if(this.stencilTest)gl.enable(gl.STENCIL_TEST);
 		else gl.disable(gl.STENCIL_TEST);
 	};
-	FBO.prototype.reset = function(){
-		//https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/rendering/framebuffer-texture-clear.html
-		this.gl.deleteTexture(this.textureColorBuffer);
-		this.gl.deleteTexture(this.textureDepthBuffer);
-		this.gl.deleteTexture(this.textureStencilBuffer);
+	FBO.prototype.deleteTextures = function(){//kkk名前変えた方がいいreleaseTextruesとか。でも、initializeで自動的に前のがdeleteされるから、いらないかも==>いや、最終的には使い終わったらメモリを解放するべきだ。
+	//lll	//https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/rendering/framebuffer-texture-clear.html
+	//lll	this.gl.deleteTexture(this.textureColorBuffer);
+	//lll	this.gl.deleteTexture(this.textureDepthBuffer);
+	//lll	this.gl.deleteTexture(this.textureStencilBuffer);
 	};
 })();
