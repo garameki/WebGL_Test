@@ -16,15 +16,16 @@
 
 /* customize below */
 
-var sNameOfShader = "spaceShip";
+var sNameOfShader = "drawPolygonOffStencil";
 var sModeOfFBO = "CTDTSN";//C[NTR]D[NTR]S[NTR]
 var colorBufferModeOfFBO = myFBOs.colorBufferModeIsRGBA4444;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551 or colorBufferModeIsALPHA
-var controllColorDepthStencilOfFBO = function(gl){
+var controllBlendColorDepthStencilOfFBO = function(gl){
 	/* ここにはgl.colorMask,gl.enable/disable(gl.DEPTH_TEST),gl.enable/disable(gl.STENCIL_TEST)を書かないでください。.activate()の中で定義済みです。 */
 
 	/** BLENDER **/
-	gl.disable(gl.BLEND);
-	//gl.enable(gl.BLEND);
+//	gl.disable(gl.BLEND);
+	gl.enable(gl.BLEND);
+	gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 
 	/** COLOR **/
 	gl.colorMask(true,true,true,true);
@@ -32,6 +33,7 @@ var controllColorDepthStencilOfFBO = function(gl){
 	gl.clear(gl.COLOR_BUFFER_BIT);
 
 	/** DEPTH **/
+//	gl.disable(gl.DEPTH_TEST);
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearDepth(c24(0xFFFFFF));
 	gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -56,28 +58,46 @@ var fs = (function(){/*
 	uniform mediump float uBrightness;
 	uniform mediump float uAlpha;
 	uniform mediump float uCassiniFactor;//if zero , not avairable,,if 1 , avairable
-	uniform sampler2D uSampler;//common variable between shader and js
+	uniform sampler2D uSamplerStencil;//stencil
+	uniform sampler2D uSampler;//texture of polygon
 
+	varying highp vec4 vStencilCoord;
+	uniform lowp int refStencil;//この上には描かない
+
+	//original AND function from https://gist.github.com/EliCDavis/f35a9e4afb8e1c9ae94cce8f3c2c9b9aint
+	lowp int AND(lowp int n1,lowp int n2){
+	    lowp float v1 = float(n1);
+	    lowp float v2 = float(n2);
+	    lowp int byteVal = 1;
+	    lowp int result = 0;
+	    for(int i = 0; i < 32; i++){
+	        bool keepGoing = v1>0.0 || v2 > 0.0;
+	        if(keepGoing){
+	            bool addOn = mod(v1, 2.0) > 0.0 && mod(v2, 2.0) > 0.0;
+	            if(addOn){
+	                result += byteVal;
+	            }
+	            v1 = floor(v1 / 2.0);
+	            v2 = floor(v2 / 2.0);
+	            byteVal *= 2;
+	        } else {
+	            return result;
+	        }
+	    }
+	    return result;
+	}
 	void main(void) {
 
-	//  method 1 
-//		gl_FragColor = texture2D(uSampler,vTextureCoord);//色が補完されて丸く見えるなるべくこれにしたい
-
-	//  method 2 
-//		gl_FragColor = vColor;
-
-		//uSamplerの数字とgl.TEXT0の数字は共通
-
-	 // method 3 
-	//	mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
-	//	mediump float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする
-	//	mediump float shadowFlag =1.0;
-	//	gl_FragColor = vec4(shadowFlag) * vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
-
-	 // method 4 
 		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
 		highp float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする
-		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
+
+		lowp float st8 = texture2D(uSamplerStencil,(vStencilCoord.xy / vStencilCoord.w) * 0.5 + 0.5).r;//この式は胆です
+
+		if(AND(int(st8*256.0),refStencil) == 0){//the result of bitwise ANDing isn't zero shows Don't write color.
+			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,1.0);
+		}else{
+			discard;
+		};
 	}
 */});
 
@@ -110,10 +130,13 @@ var vs = (function(){/*
 	varying lowp vec2 vTextureCoord;
 	varying lowp vec3 vNTimesEachRGB;
 
+	varying highp vec4 vStencilCoord;//ステンシルテクスチャの座標
 
 	void main(void) {
 //●kkk
-		gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
+
+		vStencilCoord = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
+		gl_Position = vStencilCoord;//uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
 
 		gl_PointSize = uPointSizeFloat;
 		vColor = aVertexColor;
@@ -188,14 +211,16 @@ var aUniforms = [
 		"uPerspectiveMatrix",
 		"uModelViewMatrix",
 		"uPointSizeFloat",
-		"uSampler",
 		"uModelViewMatrixInversedTransposed",
 		"uBaseLight",
 //		"uManipulatedRotationMatrix",
 		"uBrightness",
 		"uAlpha",
 		"uCassiniFactor",
-		"uManipulatedMatrix"
+		"uManipulatedMatrix",
+		"uSamplerStencil",
+		"uSampler",
+		"refStencil"//描かないステンシル番号のビット和
 ];
 
 
@@ -223,7 +248,7 @@ var aUniforms = [
 /* */	},1);
 /* */}
 /* */var funcFBO = function(){
-/* */	myFBOs.create(sNameOfShader,sModeOfFBO,colorBufferModeOfFBO,controllColorDepthStencilOfFBO);//null---Color buffer is not to use.
+/* */	myFBOs.create(sNameOfShader,sModeOfFBO,colorBufferModeOfFBO,controllBlendColorDepthStencilOfFBO);//null---Color buffer is not to use.
 /* */};
 /* */if('myFBOs' in window){
 /* */	console.log(sNameOfShader + "---ok1---created in myShaders");

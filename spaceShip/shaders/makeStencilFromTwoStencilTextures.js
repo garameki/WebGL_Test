@@ -17,16 +17,18 @@
 
 
 /* customize below */
-var sNameOfShader = "drawTextureOnClipSpace";
-var sModeOfFBO = "CNDNSN";//to turn of the frame buffer //C[NTR]D[NTR]S[NTR]//Žg‚í‚È‚¢
-var colorBufferModeOfFBO = myFBOs.none;//[none | colorBufferModeIsRGBA4444 | colorBufferModeIsRGBA5551 | colorBufferModeIsALPHA]
+var sNameOfShader = "makeStencilFromTwoStencilTextures";
+var sModeOfFBO = "CTDNSN";//to turn of the frame buffer //C[NTR]D[NTR]S[NTR]//Žg‚í‚È‚¢
+var colorBufferModeOfFBO = myFBOs.colorBufferModeIsR8ForStencil;//[none | colorBufferModeIsRGBA4444 | colorBufferModeIsRGBA5551 | colorBufferModeIsALPHA | colorBufferModeIsR8ForStencil]
 var controllColorDepthStencilOfFBO = function(gl){
 
 	/** BLEND ‚±‚ÌŒø‰Ê‚Íalpha<1.0‚Ì‚Æ‚«‚ÉŒ»‚ê‚Ü‚·B**/
 	gl.disable(gl.BLEND);
 
 	/** COLOR **/
-	gl.colorMask(true,true,true,true);
+	gl.colorMask(true,false,false,false);
+	gl.clearColor(c8(0xFF),c8(0x00),c8(0x00),c8(0x00));
+	gl.clear(gl.COLOR_BUFFER_BIT);
 
 	/** DEPTH **/
 	gl.disable(gl.DEPTH_TEST);
@@ -38,13 +40,59 @@ var controllColorDepthStencilOfFBO = function(gl){
 
 
 var fs = (function(){/*
-	uniform sampler2D uSampler;//color buffer of source
-
+	uniform sampler2D uSampler0;//stencil buffer of source
+	uniform sampler2D uSampler1;//stencil buffer of source
 	varying mediump vec2 vCoord;
+
+	//original AND function from https://gist.github.com/EliCDavis/f35a9e4afb8e1c9ae94cce8f3c2c9b9aint
+	lowp int AND(lowp float n1,lowp float n2){
+	    lowp float v1 = float(n1);
+	    lowp float v2 = float(n2);
+	    lowp int byteVal = 1;
+	    lowp int result = 0;
+	    for(int i = 0; i < 32; i++){
+	        bool keepGoing = v1>0.0 || v2 > 0.0;
+	        if(keepGoing){
+	            bool addOn = mod(v1, 2.0) > 0.0 && mod(v2, 2.0) > 0.0;
+	            if(addOn){
+	                result += byteVal;
+	            }
+	            v1 = floor(v1 / 2.0);
+	            v2 = floor(v2 / 2.0);
+	            byteVal *= 2;
+	        } else {
+	            return result;
+	        }
+	    }
+	    return result;
+	}
+	lowp int OR(lowp int n1, lowp int n2){
+	    lowp float v1 = float(n1);
+	    lowp float v2 = float(n2);
+	    lowp int byteVal = 1;
+	    lowp int result = 0;
+	    for(int i = 0; i < 32; i++){
+	        bool keepGoing = v1>0.0 || v2 > 0.0;
+	        if(keepGoing){
+	            bool addOn = mod(v1, 2.0) > 0.0 || mod(v2, 2.0) > 0.0;
+	            if(addOn){
+	                result += byteVal;
+	            }
+	            v1 = floor(v1 / 2.0);
+	            v2 = floor(v2 / 2.0);
+	            byteVal *= 2;
+	        } else {
+	            return result;
+	        }
+	    }
+	    return result;	
+	}
 	void main(void){
 
-		gl_FragColor = vec4(texture2D(uSampler,vCoord).rgb,1.0);
+		lowp int ref0 = int(texture2D(uSampler0,vCoord).r * 256.0);
+		lowp int ref1 = int(texture2D(uSampler1,vCoord).r * 256.0);
 
+		gl_FragColor = vec4(float(OR(ref0,ref1)) / 256.0,0.0,0.0,0.0);//because of using gl.R8 as INTERNALFORMAT 
 	}
 */});
 
@@ -67,7 +115,8 @@ var aAttribs = [
 	"aVertexPosition"
 ];
 var aUniforms = [
-	"uSampler"
+	"uSampler0",
+	"uSampler1"
 ];
 
 /* */var funcShader = function(){

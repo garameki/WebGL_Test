@@ -16,8 +16,8 @@
 
 /* customize below */
 
-var sNameOfShader = "makeCassiniAlpha0";
-var sModeOfFBO = "CTDTSN";//C[NTR]D[NTR]S[NTR]
+var sNameOfShader = "makeCassiniWhite";
+var sModeOfFBO = "CTDNSN";//C[NTR]D[NTR]S[NTR]
 var colorBufferModeOfFBO = myFBOs.colorBufferModeIsRGBA4444;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551 or colorBufferModeIsALPHA
 var controllColorDepthStencilOfFBO = function(gl){
 if(true){
@@ -34,9 +34,9 @@ if(true){
 	gl.clear(gl.COLOR_BUFFER_BIT);//Åú
 
 	/** DEPTH **/
-	gl.clearDepth(c24(0xFFFFFF));
-	gl.clear(gl.DEPTH_BUFFER_BIT);
-	gl.depthFunc(gl.LEQUAL);
+//	gl.clearDepth(c24(0xFFFFFF));
+//	gl.clear(gl.DEPTH_BUFFER_BIT);
+//	gl.depthFunc(gl.LEQUAL);
 
 	/** STENCIL **/
 	//É_ÉÅgl.disable(gl.STENCIL_TEST);
@@ -54,7 +54,12 @@ var fs = (function(){/*
 
 		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);
 		mediump float gg = pow(max(min(dot(texelColor.rgb,texelColor.rgb),1.0),0.0001),1.2);//à√Ç¢Ç‡ÇÃÇŸÇ«ìßñæÇ…Ç∑ÇÈ
-		gl_FragColor = vec4(texelColor.rgb,gg);//gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA)ÇÕïKê{
+		if(gg > 0.5){
+			gg = 1.0;
+		}else{
+			gg = 0.0;
+		}
+		gl_FragColor = vec4(1.0-gg,1.0-gg,1.0-gg,1.0);//gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA)ÇÕïKê{
 	}
 */});
 

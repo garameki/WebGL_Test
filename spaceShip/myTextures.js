@@ -55,7 +55,7 @@
 		h.onloadend = function(){
 			//https://stackoverflow.com/questions/30426277/catch-a-404-error-for-xhr
 			if(h.status == 404){
-				myInfo.main.caution="404 error occured in myTextures.js at '"+this.name+"'";
+//				myInfo.main.caution="404 error occured in myTextures.js at '"+this.name+"'";
 
 				//https://webglfundamentals.org/webgl/lessons/webgl-data-textures.html
 				//https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL				const texture = gl.createTexture();

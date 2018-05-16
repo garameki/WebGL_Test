@@ -16,27 +16,28 @@
 
 /* customize below */
 
-var sNameOfShader = "makeCassiniAlpha0";
-var sModeOfFBO = "CTDTSN";//C[NTR]D[NTR]S[NTR]
-var colorBufferModeOfFBO = myFBOs.colorBufferModeIsRGBA4444;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551 or colorBufferModeIsALPHA
-var controllColorDepthStencilOfFBO = function(gl){
+var sNameOfShader = "makeStencilFromTextureOnBlack";
+var sModeOfFBO = "CTDNSN";//C[NTR]D[NTR]S[NTR]
+var colorBufferModeOfFBO = myFBOs.colorBufferModeIsR8ForStencil;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551, colorBufferModeIsALPHA or colorBufferModeIsR8ForStencil
+var controllBlendColorDepthStencilOfFBO = function(gl){
 if(true){
 	/* ここにはgl.colorMask,gl.enable/disable(gl.DEPTH_TEST),gl.enable/disable(gl.STENCIL_TEST)を書かないでください。.activate()の中で定義済みです。 */
 
 	/** BLENDER **/
 	//color(RGBA) = (sourceColor * sfactor) + (destinationColor * dfactor)
-	gl.enable(gl.BLEND);//●
-	gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);//●
+	gl.disable(gl.BLEND);
+	//gl.enable(gl.BLEND);
+	//gl.blendFunc(gl.SRC_ALPHA,gl.ZERO);//ONE_MINUS_SRC_ALPHA);
 
-	/** COLOR **/
-	gl.colorMask(true,true,true,true);
+	/** COLOR --> for stencil use as gl.R8 **/
+	gl.colorMask(true,false,false,false);
 	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));//●
 	gl.clear(gl.COLOR_BUFFER_BIT);//●
 
 	/** DEPTH **/
-	gl.clearDepth(c24(0xFFFFFF));
-	gl.clear(gl.DEPTH_BUFFER_BIT);
-	gl.depthFunc(gl.LEQUAL);
+//	gl.clearDepth(c24(0xFFFFFF));
+//	gl.clear(gl.DEPTH_BUFFER_BIT);
+//	gl.depthFunc(gl.LEQUAL);
 
 	/** STENCIL **/
 	//ダメgl.disable(gl.STENCIL_TEST);
@@ -49,12 +50,19 @@ var fs = (function(){/*
 	varying highp vec2 vTextureCoord;
 
 	uniform sampler2D uSampler;
+	uniform lowp float refStencil;//this will be changed to 8bit for 1.0~0.0//precisionを他のものと統一しないと==がうまく働きません!!
 
 	void main(void) {
 
 		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);
 		mediump float gg = pow(max(min(dot(texelColor.rgb,texelColor.rgb),1.0),0.0001),1.2);//暗いものほど透明にする
-		gl_FragColor = vec4(texelColor.rgb,gg);//gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA)は必須
+		if(gg > 0.5){
+			gl_FragColor = vec4(0.0,0.0,0.0,0.0);//gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA)は必須
+		}else{
+			gl_FragColor = vec4(refStencil,0.0,0.0,0.0);//gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA)は必須
+			//discard;
+			//gl_FragColor = vec4(refStencil,0.0,0.0,0.0);//gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA)は必須
+		}
 	}
 */});
 
@@ -77,7 +85,7 @@ var vs = (function(){/*
 */});
 
 var aAttribs = ["aVertexPosition","aTextureCoord"];
-var aUniforms = ["uSampler","uModelViewMatrix","uPerspectiveMatrix"];
+var aUniforms = ["uModelViewMatrix","uPerspectiveMatrix","uSampler","refStencil"];
 
 
 
@@ -105,7 +113,7 @@ var aUniforms = ["uSampler","uModelViewMatrix","uPerspectiveMatrix"];
 /* */	},1);
 /* */}
 /* */var funcFBO = function(){
-/* */	myFBOs.create(sNameOfShader,sModeOfFBO,colorBufferModeOfFBO,controllColorDepthStencilOfFBO);//null---Color buffer is not to use.
+/* */	myFBOs.create(sNameOfShader,sModeOfFBO,colorBufferModeOfFBO,controllBlendColorDepthStencilOfFBO);//null---Color buffer is not to use.
 /* */};
 /* */if('myFBOs' in window){
 /* */	console.log(sNameOfShader + "---ok1---created in myShaders");

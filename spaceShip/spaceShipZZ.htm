@@ -304,6 +304,9 @@
 	UniformVariable.prototype.sendFloat = function(value){
 		this.gl.uniform1f(this.loc,value);
 	};
+	UniformVariable.prototype.sendFloat8 = function(num8){
+		this.gl.uniform1f(this.loc,num8 / 255.0);//  (num8) ÷ (0xFF)
+	};
 })();
 
 
@@ -313,6 +316,12 @@
 <script id="shader-spaceShip"			type="text/javascript"	src="./shaders/spaceShip.js"></script>
 <script id="shader-mixTwoTexturesWithDepthes"	type="text/javascript"	src="./shaders/mixTwoTexturesWithDepthes.js"></script>
 <script id="shader-makeCassiniAlpha0"		type="text/javascript"	src="./shaders/makeCassiniAlpha0.js"></script>
+<script id="shader-makeCassiniWhite"		type="text/javascript"	src="./shaders/makeCassiniWhite.js"></script>
+<script id="shader-makeStencilFromTextureOnBlack"		type="text/javascript"	src="./shaders/makeStencilFromTextureOnBlack.js"></script>
+<script id="shader-makeStencilFromShadowUsingSaturnAndRing"	type="text/javascript"	src="./shaders/makeStencilFromShadowUsingSaturnAndRing.js"></script>
+<script id="shader-makeStencilFromTwoStencilTextures"		type="text/javascript"	src="./shaders/makeStencilFromTwoStencilTextures.js"></script>
+<script id="shader-drawPolygonOffStencil"	type="text/javascript"	src="./shaders/drawPolygonOffStencil.js"></script>
+<script id="shader-drawPolygonMoreTransparentlyOnStencil"	type="text/javascript"	src="./shaders/drawPolygonMoreTransparentlyOnStencil.js"></script>
 <script id="shader-drawTextureOnClipSpace"	type="text/javascript"	src="./shaders/drawTextureOnClipSpace.js"></script>
 
 <script type='text/javascript'>
@@ -387,7 +396,9 @@ function sendAccumeratedMatrix(vari,arrAccumelateToMyMat4,timeSpan){//to get a m
 };
 
 //************************************** DRAW SCENE *************************************************
-var drawPlanets = function(gl,names,angle){
+//:myDraw ここでshaderにデータを送り、描く
+var myDraw = {
+drawPlanets:function(gl,names,angle){
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
 		/** To vertex shader **/
@@ -416,29 +427,79 @@ var drawPlanets = function(gl,names,angle){
 
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
-	}//spaceShip
-};
+	}
+},
 
-var drawCassini = function(gl,names,angle){
+drawCassini:function(gl,sNamePolygon,angle,sNameShader){
+	for(var num in sNamePolygon){
+		member = UnitsToDraw[sNamePolygon[num]];
+		/** To vertex shader **/
+		myShaders[sNameShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
+
+		sendPerspectiveMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveMatrix);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		/** Tofragment shader **/
+		myShaders[sNameShader].uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member[member.nameTexture].activate(1);
+
+		member.draw();//in which texture activated is for use
+	}
+},
+
+makeStencilFromTextureOnBlack:function(gl,names,angle,sNameShader){
+	for(var num in names){
+		member = UnitsToDraw[names[num]];
+		/** To vertex shader **/
+		myShaders[sNameShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
+
+		sendPerspectiveMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveMatrix);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		/** Tofragment shader **/
+		myShaders[sNameShader].uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member[member.nameTexture].activate(1);
+
+
+		member.draw();//in which texture activated is for use
+	}
+},
+
+drawPolygonOffStencil:function(gl,names,angle,sNameShader){
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
 		/** To vertex shader **/
-		myShaders.makeCassiniAlpha0.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-		myShaders.makeCassiniAlpha0.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		myShaders[sNameShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameShader].attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
+		myShaders[sNameShader].attrib.aVertexColor.assignBuffer(member.buffers.color,4);
+		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
 		member.buffers.bindElement();
 
-		sendPerspectiveMatrix(gl,myShaders.makeCassiniAlpha0.uniform.uPerspectiveMatrix);
-		sendAccumeratedMatrix(myShaders.makeCassiniAlpha0.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		sendPerspectiveMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveMatrix);
+		pmat = myMat4.arr;//sended data above
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		mvmat = myMat4.arr;//sended data above
+		sendModelViewMatrixInversedTransposed(myShaders[sNameShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
+//		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+		myShaders[sNameShader].uniform.uBaseLight.sendFloat(member.baseLight);
+		myShaders[sNameShader].uniform.uPointSizeFloat.sendFloat(3.0);
 		/** Tofragment shader **/
-		myShaders.makeCassiniAlpha0.uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-		myTextures.member[member.nameTexture].activate(1);
+		myShaders[sNameShader].uniform.uBrightness.sendFloat(member.brightness);
+		myShaders[sNameShader].uniform.uAlpha.sendFloat(member.alpha);
+		myShaders[sNameShader].uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+
+		myShaders[sNameShader].uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member[member.nameTexture].activate(0);
 
 		member.draw();//in which texture activated is for use
 		member.labels.repos(gl,pmat,mvmat);
 	}
-};//drawCassini
+},
 
-var drawShadows = function(gl,names,angle){
+drawShadows:function(gl,names,angle){
 
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
@@ -454,7 +515,26 @@ var drawShadows = function(gl,names,angle){
 			myShaders.drawShadowOnPlane.uniform.uSampler.sendInt(0);
 		member.draw();
 	}
-};
+},
+makeStencilFromShadowUsingSaturnAndRing:function(gl,names,angle,sNameShader){
+	for(var num in names){//the last is the texture that is gotten by framebuffer
+		member = UnitsToDraw[names[num]];
+		/** To vertex shader **/
+		myShaders[sNameShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		member.buffers.bindElement();
+
+		sendPerspectiveMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveMatrix);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		mvmat = myMat4.arr;//sended data above
+		sendModelViewMatrixInversedTransposed(myShaders[sNameShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+		/** Tofragment shader **/
+//		myShaders[sNameShader].uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+
+		member.draw();//in which texture activated is for use
+	}
+}
+/* */}
 
 
 
@@ -532,48 +612,158 @@ function drawScene(gl,angle){
 //	gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
 //
 
+
+
 //************************* DRAW OPAQUE OBJECTS ****************************
 //***************************************************************************
 if(true){
-	myFBOs.spaceShip.activate();//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
-	myShaders.spaceShip.activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
+	var shaderName = "spaceShip";
+	myFBOs[shaderName].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
+	myShaders[shaderName].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
 		var names = ["earth","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
-		drawPlanets(gl,names,angle);
-	myFBOs.spaceShip.inactivate();
-		myTextures.member["opaquesColorBuffer"].import(myFBOs.spaceShip.textureColorBuffer);//用意したtextureに保存
-		myTextures.member["opaquesDepthBuffer"].import(myFBOs.spaceShip.textureDepthBuffer);//用意したtextureに保存
+		myDraw.drawPlanets(gl,names,angle);
+	myFBOs[shaderName].inactivate();
+	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[shaderName].textureColorBuffer);//用意したtextureに保存
+	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[shaderName].textureDepthBuffer);//用意したtextureに保存
 }//boolean
-//*************************** DRAW CASSINI STENCIL ****************************
+//*************************** DRAW RING MAKING CASSINI TRANSPARENT ************
 //*****************************************************************************
 if(false){
-	myFBOs.makeCassiniAlpha0.activate();//続投。使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
-	myShaders.makeCassiniAlpha0.activate();//続投。使い終わったらinactivate()すること。viewportを元に戻すために。
-		names = ["ring"];
-		drawCassini(gl,names,angle);
-	myFBOs.makeCassiniAlpha0.inactivate();
-//		myTextures.member["cassiniAlphaColorBuffer"].import(myFBOs.makeCassiniAlpha0.textureColorBuffer);//用意したtextureに保存
-		myTextures.member["ringColorBuffer"].import(myFBOs.makeCassiniAlpha0.textureColorBuffer);//用意したtextureに保存
-		myTextures.member["ringDepthBuffer"].import(myFBOs.makeCassiniAlpha0.textureDepthBuffer);//用意したtextureに保存
-		//不要myTextures.member["cassiniAlphaDepthBuffer"].import(myFBOs.makeCassiniAlpha0.textureDepthBuffer);//用意したtextureに保存
-}//boolean
-
-//*************************** DRAW TEXTURE ON CLIP SPACE ****************************
-//*****************************************************************************
-
-//	gl.clearColor(0.5,0.5,0.5,0.5);
-//	gl.clear(COLOR_BUFFER_BIT);
-
-	var shaderName = "drawTextureOnClipSpace";
+	var shaderName = "makeCassiniAlpha0";
+	myFBOs[shaderName].activate("CTDNSN");
 	myShaders[shaderName].activate();
-	myTextures.member["forDrawingClipSpace"].import(myFBOs.spaceShip.textureColorBuffer);//用意したtextureに保存
-	myShaders[shaderName].uniform["uSampler"].sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-	myTextures.member["forDrawingClipSpace"].activate(0);
-	myShaders[shaderName].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
+		names = ["ring"];
+		myDraw.drawCassini(gl,names,angle,shaderName);
+	myFBOs[shaderName].inactivate();
+		myTextures.member["forDrawingClipSpace"].import(myFBOs[shaderName].textureColorBuffer);//用意したtextureに保存
+}//boolean
+//*************************** DRAW RING MAKING CASSINI WHITE ******************
+//*****************************************************************************
+if(false){
+	var shaderName = "makeCassiniWhite";
+	myFBOs[shaderName].activate("CTDNSN");
+	myShaders[shaderName].activate();
+		names = ["ring"];
+		myDraw.drawCassini(gl,names,angle,shaderName);
+	myFBOs[shaderName].inactivate();
+		myTextures.member["forDrawingClipSpace"].import(myFBOs[shaderName].textureColorBuffer);//用意したtextureに保存
+}//boolean
+//*************************** MAKE STENCIL FROM TEXTURE ON BLACK *****************
+//*****************************************************************************
+//テクスチャの黒い部分からSTENCILを作成します。
+//ステンシル番号は0xEF(the cassini of the ring of the Saturn)
+//***********************************************************************************
+if(true){
+	var sNameShader = "makeStencilFromTextureOnBlack";
+	myFBOs[sNameShader].activate("CTDNSN");//Stencil Textureをshaderから作成するにはcolor buffer textureをgl.R8,gl.RED,gl.UNSIGNED_BYTEを使ってgl_FragColorに代入することで作成します。
+	myShaders[sNameShader].activate();
+		var nRefStencilCassini  = 0x40;//作成するステンシルの値the value of stencil being making
+		myShaders[sNameShader].uniform.refStencil.sendFloat8(nRefStencilCassini);
+		names = ["ring"];
+		myDraw[sNameShader](gl,names,angle,sNameShader);
+
+	myFBOs[sNameShader].inactivate();
+		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+		myTextures.member["stencilCassini_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+}//boolean
+//*************************** MAKE STENCIL FROM SHADOW ON PLANE. SHADOW IS MADE FROM 3D-SHAPE  *****************
+//**************************************************************************************************************
+//任意の平面に影を作り、それをステンシルとします。影は任意の立体から作成可能です。
+//ステンシル番号は0xBF(the shadow of the Saturn on its ring plane)
+//**************************************************************************************************************
+if(true){
+	var sNameShader = "makeStencilFromShadowUsingSaturnAndRing";//this means making stencil form a 3D shaped bulge polygon and the 3D shaped flat polygon
+	myFBOs[sNameShader].activate("CTDNSN");//Stencil Textureをshaderから作成するにはcolor buffer textureをgl.R8,gl.RED,gl.UNSIGNED_BYTEを使ってgl_FragColorに代入することで作成します。
+	myShaders[sNameShader].activate();
+		var nRefStencilShadowOfSaturn = 0x80;//作成するステンシルの値the value of stencil being making
+		myShaders[sNameShader].uniform.refStencil.sendFloat8(nRefStencilShadowOfSaturn);
+		names = ["saturn"];
+		myDraw[sNameShader](gl,names,angle,sNameShader);
+	myFBOs[sNameShader].inactivate();
+		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+		myTextures.member["stencilShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+
+}//boolean
+//*************************** MAKE TEXTURE COMLICATED STENCIL ***********************
+//***********************************************************************************
+//二つのステンシルテクスチャのbitwise ORをとって新しいテクスチャとして作成
+//ステンシル番号は二つのreference numberのbitwise和です
+//***********************************************************************************
+if(true){
+	var sNameShader = "makeStencilFromTwoStencilTextures";
+	myFBOs[sNameShader].activate("CTDNSN");
+	myShaders[sNameShader].activate();
+		myShaders[sNameShader].uniform["uSampler0"].sendInt(0);
+		myTextures.member["stencilCassini_R8"].activate(0);
+		myShaders[sNameShader].uniform["uSampler1"].sendInt(1);
+		myTextures.member["stencilShadowOfSaturn_R8"].activate(1);
+	myShaders[sNameShader].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+	myFBOs[sNameShader].inactivate();
+		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+		myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+}
+//*************************** DRAW TEXTURE ON CLIP SPACE NORMAL **********************************************
+//************************************************************************************************************
+//テクスチャをそのままクリップスペースに描く。作成したテクスチャが適正なものかどうかを確かめるために使います。
+//************************************************************************************************************
+if(false){
+	var sNameShader = "drawTextureOnClipSpace";
+	myFBOs[sNameShader].activate("CNDNSN");
+	myShaders[sNameShader].activate();
+	myShaders[sNameShader].uniform["uSampler"].sendInt(0);
+	myTextures.member["forDrawingClipSpace"].activate(0);
+	myShaders[sNameShader].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+	myFBOs[sNameShader].inactivate();
+}
+//*************************** DRAW POLYGON MORE TRANSPARENTLY ON STENCIL *****************************
+//***********************************************************************************
+//ポリゴンを画面に描きます。ステンシルのかかっている部分(指定のステンシル番号)はさらに透明度を増します。
+//On screen rendering
+//***********************************************************************************
+if(true){
+	var sNameShader = "drawPolygonMoreTransparentlyOnStencil";
+	//myFBOs[sNameShader].activate("CNDNSN");//引数を省略すると.initialize()で指定した値が使われます
+	myShaders[sNameShader].activate();
+		myShaders[sNameShader].uniform.uSamplerStencil.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].activate(1);
+gl.enable(gl.DEPTH_TEST);
+gl.depthFunc(gl.LEQUAL);
+gl.enable(gl.BLEND);
+gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+		var nIgnoreStencil;//このビット上には描かない
+		nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
+		console.log("nIgnoreStencil=",nIgnoreStencil.toString());
+		myShaders[sNameShader].uniform.refStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが扱えます//描かないステンシルの番号
+		var names = ["ring"];
+		myDraw.drawPolygonOffStencil(gl,names,angle,sNameShader);//共用です
+	//myFBOs[sNameShader].inactivate();
+}
+//*************************** DRAW POLYGON OFF STENCIL *****************************
+//***********************************************************************************
+//ポリゴンを画面に描きます。ステンシルのかかっている部分(指定のステンシル番号)には描きません。
+//On screen rendering
+//***********************************************************************************
+if(false){
+	var sNameShader = "drawPolygonOffStencil";
+	//myFBOs[sNameShader].activate("CNDNSN");//引数を省略すると.initialize()で指定した値が使われます
+	myShaders[sNameShader].activate();
+		myShaders[sNameShader].uniform.uSamplerStencil.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].activate(1);
+gl.enable(gl.DEPTH_TEST);
+gl.depthFunc(gl.LEQUAL);
+		var nIgnoreStencil;//このビット上には描かない
+		nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
+		console.log("nIgnoreStencil=",nIgnoreStencil.toString());
+		myShaders[sNameShader].uniform.refStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが扱えます//描かないステンシルの番号
+		var names = ["ring"];
+		myDraw[sNameShader](gl,names,angle,sNameShader);
+	//myFBOs[sNameShader].inactivate();
+}
 
 
-
-
+//うえのやつにDEPTHを加味した描画をさせる
 
 
 
@@ -619,15 +809,15 @@ if(false){
 
 //:::::::::::::::::::::::::::::::::: GLSL STATUS ::::::::::::::::::::::::::::::::::::::::::
 
-	myInfo.main.glerror = "GL error:"+gl[gl.getError()];
-	myInfo.main.glstatus = "GL status:"+gl[gl.getParameter(gl.FRAGMENT_SHADER_DERIVATIVE_HINT)];
-	myInfo.main.framebuffer = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
-	myInfo.main.renderbuffer = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
-	myInfo.main.framebufferstatus = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
-	myInfo.main.stencilwritemask = "stencil mask front:"+gl.getParameter(gl.STENCIL_WRITEMASK).toString(16);
+	myInfo.main.glerror 		 = "GL error:"+gl[gl.getError()];
+	myInfo.main.glstatus 		 = "GL status:"+gl[gl.getParameter(gl.FRAGMENT_SHADER_DERIVATIVE_HINT)];
+	myInfo.main.framebuffer 	 = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
+	myInfo.main.renderbuffer 	 = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
+	myInfo.main.framebufferstatus 	 = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
+	myInfo.main.stencilwritemask 	 = "stencil mask front:"+gl.getParameter(gl.STENCIL_WRITEMASK).toString(16);
 	myInfo.main.stencilbackwritemask = "stencil mask back:"+gl.getParameter(gl.STENCIL_BACK_WRITEMASK).toString(16);
-	myInfo.main.stencilbits = "stencil bit length: "+gl.getParameter(gl.STENCIL_BITS);
-	myInfo.main.stencilfunc = "stencilFunc("+gl[gl.getParameter(gl.STENCIL_FUNC)]+","+gl.getParameter(gl.STENCIL_REF).toString(2)+","+gl.getParameter(gl.STENCIL_VALUE_MASK).toString(2)+")";
+	myInfo.main.stencilbits 	 = "stencil bit length: "+gl.getParameter(gl.STENCIL_BITS);
+	myInfo.main.stencilfunc 	 = "stencilFunc("+gl[gl.getParameter(gl.STENCIL_FUNC)]+","+gl.getParameter(gl.STENCIL_REF).toString(2)+","+gl.getParameter(gl.STENCIL_VALUE_MASK).toString(2)+")";
 
 };
 
@@ -773,18 +963,28 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 	//};
 
 	//** prepare shaders and frame buffers **/
+	//note
+	//+Did you make shader and FBO set in shader folda?
+	//+Did you read it using script tag?
 	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
 	var wide = 512;
-	myShaders.spaceShip.attach(gl);//==>あとは.activate()で起動
-	myFBOs.spaceShip.initialize(gl,wide,wide);//==>あとは.activate()で起動
+	var aNameShader = [
+		"spaceShip",
+		"drawTextureOnClipSpace",
+		"mixTwoTexturesWithDepthes",
+		"makeCassiniAlpha0",
+		"makeCassiniWhite",
+		"makeStencilFromTextureOnBlack",
+		"drawPolygonOffStencil",
+		"makeStencilFromShadowUsingSaturnAndRing",
+		"makeStencilFromTwoStencilTextures",
+		"drawPolygonMoreTransparentlyOnStencil"
+	];
+	for(var ii in aNameShader){
+		myShaders[aNameShader[ii]].attach(gl);
+		myFBOs[aNameShader[ii]].initialize(gl,wide,wide);
+	}
 
-	myShaders.drawTextureOnClipSpace.attach(gl);
-
-	myShaders.mixTwoTexturesWithDepthes.attach(gl);
-	myFBOs.mixTwoTexturesWithDepthes.initialize(gl,wide,wide);//このフレームバッファは今現在は必要ない。
-
-	myShaders.makeCassiniAlpha0.attach(gl);
-	myFBOs.makeCassiniAlpha0.initialize(gl,wide,wide);
 
 //HINT	var nn = gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_ATTRIBUTES);if(nn!=null)for(var ii=0;ii<nn;ii++){gl.disableVertexAttribArray(ii);};
 
@@ -795,6 +995,8 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 
 
 
+console.log("gl.DEPTH_STENCIL=",gl.DEPTH_STENCIL);
+console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 
@@ -843,6 +1045,9 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 	//不要myTextures.join(gl,"cassiniAlphaStencilBuffer");
 	myTextures.join(gl,"forDrawingClipSpace");
 
+	myTextures.join(gl,"stencilCassini_R8");//the stencil of cassini(see also the variable 'refStencilCassini')
+	myTextures.join(gl,"stencilShadowOfSaturn_R8");//the stencil of cassini(see also the variable 'refStencilShadowOfSaturn')
+	myTextures.join(gl,"stencil_Cassini_ShadowOfSaturn_R8");//the stencil of cassini(see also the variable 'refStencilShadowOfSaturn')
 
 
 

@@ -39,10 +39,17 @@
 		format:function(gl){return gl.ALPHA;},
 		type:function(gl){return gl.UNSIGNED_BYTE;}
 	};
+	var obj4 = {
+		internalFormat:function(gl){return gl.R8;},
+		format:function(gl){return gl.RED;},
+		type:function(gl){return gl.UNSIGNED_BYTE;}
+	};
+	
 	Object.defineProperty(myFBOs,'none',{value:obj0,enumerable:false,configurable:false});
 	Object.defineProperty(myFBOs,'colorBufferModeIsRGBA4444',{value:obj1,enumerable:false,configurable:false});
 	Object.defineProperty(myFBOs,'colorBufferModeIsRGBA5551',{value:obj2,enumerable:false,configurable:false});
-	Object.defineProperty(myFBOs,'colorBufferModeIsALPHA',{value:obj3,enumerable:false,configurable:false});
+	Object.defineProperty(myFBOs,'colorBufferModeIsALPHA'	,{value:obj3,enumerable:false,configurable:false});
+	Object.defineProperty(myFBOs,'colorBufferModeIsR8ForStencil',{value:obj4,enumerable:false,configurable:false});
 	
 
 	//reference
@@ -53,7 +60,7 @@
 	//http://www.songho.ca/opengl/gl_fbo.html
 	/** inner class **/
 	  //Texture, Framebuffer and Renderbuffer are necessary at once.
-	var FBO = function(sName,sMode,oColorBufferMode,funcControlCDS){
+	var FBO = function(sName,sMode,oColorBufferMode,funcControlBCDS){
 		//context
 		this.gl = null;
 
@@ -62,7 +69,7 @@
 		this.name = sName;
 		this.sMode = sMode;
 		this.oColorBufferMode = oColorBufferMode;
-		this.funcControlCDS = funcControlCDS;
+		this.funcControlBCDS = funcControlBCDS;
 	
 
 		//buffer
@@ -116,12 +123,16 @@
 		var gl = this.gl;
 		if(this.textureColorBuffer)gl.deleteTexture(this.textureColorBuffer);
 		this.textureColorBuffer = gl.createTexture();
-		this.textureColorBuffer._name = "ColorBufferTexture";
+		this.textureColorBuffer._name = "FramebufferColor";
 			gl.bindTexture(gl.TEXTURE_2D,this.textureColorBuffer);//-->gl.TEXTURE[?]
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
-//unchangable is not convenient				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,this.buffWidth,this.buffHeight,0,gl.RGBA,gl.UNSIGNED_SHORT_4_4_4_4,null);//pass no image into gl.TEXT[\d+]
-			gl.texImage2D(gl.TEXTURE_2D,0,this.oColorBufferMode.internalFormat(gl),this.buffWidth,this.buffHeight,0,this.oColorBufferMode.format(gl),this.oColorBufferMode.type(gl),null);//pass no image into gl.TEXT[\d+]
+//unchangable is not convenient				
+//gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA ,this.buffWidth,this.buffHeight,0,gl.RGBA ,gl.UNSIGNED_SHORT_4_4_4_4,null);//pass no image into gl.TEXT[\d+]
+//gl.texImage2D(  gl.TEXTURE_2D,0,gl.ALPHA,this.buffWidth,this.buffHeight,0,gl.ALPHA,gl.UNSIGNED_BYTE         ,null);//pass no image into gl.TEXT[\d+]
+		gl.texImage2D(gl.TEXTURE_2D,0,this.oColorBufferMode.internalFormat(gl),this.buffWidth,this.buffHeight,0,this.oColorBufferMode.format(gl),this.oColorBufferMode.type(gl),null);//pass no image into gl.TEXT[\d+]
+
+
 	};
 //reference of CAUTION 4.1.5 Framebuffer Object Attachments ------ https://www.khronos.org/registry/webgl/specs/latest/2.0/#TEXTURE_TYPES_FORMATS_FROM_DOM_ELEMENTS_TABLE
 	FBO.prototype.initializeTextureDepthBuffer = function(){
@@ -130,7 +141,7 @@
 		var gl = this.gl;
 		if(this.textureDepthBuffer)gl.deleteTexture(this.textureDepthBuffer);
 		this.textureDepthBuffer = gl.createTexture();
-		this.textureDepthBuffer._name = "DepthBufferTexture";
+		this.textureDepthBuffer._name = "FramebufferDepth";
 			gl.bindTexture(gl.TEXTURE_2D,this.textureDepthBuffer);//-->gl.TEXTURE[?]
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
@@ -143,18 +154,25 @@
 		var gl = this.gl;
 		if(this.textureStencilBuffer)gl.deleteTexture(this.textureStencilBuffer);
 		this.textureStencilBuffer = gl.createTexture();
-		this.textureStencilBuffer._name = "StencilBufferTexture";
+		this.textureStencilBuffer._name = "FramebufferStencil";
 			gl.bindTexture(gl.TEXTURE_2D,this.textureStencilBuffer);//-->gl.TEXTURE[?]
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);//kkk
 			gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);//kkk
 			gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH24_STENCIL8,this.buffWidth,this.buffHeight,0,gl.DEPTH_STENCIL,gl.UNSIGNED_INT_24_8,null);//pass no image into gl.TEXT[\d+]
 	};
-	FBO.prototype.activate = function(){
+	FBO.prototype.activate = function(mode){
 
 		//注意CNDNSNでもviewportは変化しますので、使い終わったら.inactivate()を実行してください
 
+		var sMode;
+		if(mode == null || mode == void 0){
+			sMode = this.sMode;
+		}else{
+			sMode = mode;
+		}
+
 		var gl = this.gl;
-		var sMode = this.sMode;
+
 		//reference
 		//http://www.wakayama-u.ac.jp/~tokoi/lecture/gg/ggnote13.pdf
 		// ビューポートをフレームバッファオブジェクトのサイズに合わせる
@@ -179,7 +197,8 @@
 			gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
 		} else {
 			gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-			return;//nothing to do
+			this.funcControlBCDS(gl);//shaderフォルダの中で定義されたものがこのクラスに渡されているはず
+			return;//******** return ************
 		}
 		matches = sMode.match(/CR/);
 		if(matches != null){
@@ -233,7 +252,8 @@
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);
 			myInfo.main.depthbufferattach = "  DEPTH BUFFER ATTACHING TO : Renderbuffer";
 			myInfo.main.stencilbufferattach = "STENCIL BUFFER ATTACHING TO : Renderbuffer";
-			return;//*********** return ***************/
+			this.funcControlBCDS(gl);//shaderフォルダの中で定義されたものがこのクラスに渡されているはず
+			return;// *********** return **************
 		}
 		nameBuff = "DEPTH BUFFER ATTACHING TO : ";
 		matches = sMode.match(/D(.)/);
@@ -279,7 +299,7 @@
 				break;
 			default:
 		}
-		this.funcControlCDS(gl);//shaderフォルダの中で定義されたものがこのクラスに渡されているはず
+		this.funcControlBCDS(gl);//shaderフォルダの中で定義されたものがこのクラスに渡されているはず
 	};
 	FBO.prototype.inactivate = function(){
 		var gl=this.gl;
