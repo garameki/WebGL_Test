@@ -314,6 +314,7 @@
 
 <!--*** shader programs, FBOs and controllers of CDF ***-->
 <script id="shader-spaceShip"			type="text/javascript"	src="./shaders/spaceShip.js"></script>
+<script id="shader-lightPointOfView"			type="text/javascript"	src="./shaders/lightPointOfView.js"></script>
 <script id="shader-mixTwoTexturesWithDepthes"	type="text/javascript"	src="./shaders/mixTwoTexturesWithDepthes.js"></script>
 <script id="shader-makeCassiniAlpha0"		type="text/javascript"	src="./shaders/makeCassiniAlpha0.js"></script>
 <script id="shader-makeCassiniWhite"		type="text/javascript"	src="./shaders/makeCassiniWhite.js"></script>
@@ -340,12 +341,12 @@ function sendOrthographicMatrix(gl,vari){
 
 		//https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix		from cite site:
 		//orthographic matrix...myMat4 already has a property defined
-	var right = 2500.0;
-	var left = -2500.0;
-	var top = 2500.0;
-	var bottom = -2500.0;
-	var far = 2500.0;
-	var near = -2500.0;
+	var right	=  70.0;
+	var left	= -70.0;
+	var top		=  70.0;
+	var bottom	= -70.0;
+	var far		=  3500.0;
+	var near	= -3500.0;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 
 	myMat4.loadOrthography(left,right,top,bottom,near,far,aspect);
@@ -398,31 +399,31 @@ function sendAccumeratedMatrix(vari,arrAccumelateToMyMat4,timeSpan){//to get a m
 //************************************** DRAW SCENE *************************************************
 //:myDraw ここでshaderにデータを送り、描く
 var myDraw = {
-drawPlanets:function(gl,names,angle){
+drawPlanets:function(gl,names,angle,sNameShader){
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
 		/** To vertex shader **/
-		myShaders.spaceShip.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-		myShaders.spaceShip.attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
-		myShaders.spaceShip.attrib.aVertexColor.assignBuffer(member.buffers.color,4);
-		myShaders.spaceShip.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		myShaders[sNameShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameShader].attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
+		myShaders[sNameShader].attrib.aVertexColor.assignBuffer(member.buffers.color,4);
+		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
 		member.buffers.bindElement();
 
-		sendPerspectiveMatrix(gl,myShaders.spaceShip.uniform.uPerspectiveMatrix);
+		sendPerspectiveMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveMatrix);
 		pmat = myMat4.arr;//sended data above
-		sendAccumeratedMatrix(myShaders.spaceShip.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
 		mvmat = myMat4.arr;//sended data above
-		sendModelViewMatrixInversedTransposed(myShaders.spaceShip.uniform.uModelViewMatrixInversedTransposed,mvmat);
-//		sendAccumeratedMatrix(myShaders.spaceShip.uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
-		sendAccumeratedMatrix(myShaders.spaceShip.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
-		myShaders.spaceShip.uniform.uBaseLight.sendFloat(member.baseLight);
-		myShaders.spaceShip.uniform.uPointSizeFloat.sendFloat(3.0);
+		sendModelViewMatrixInversedTransposed(myShaders[sNameShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
+//		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+		myShaders[sNameShader].uniform.uBaseLight.sendFloat(member.baseLight);
+		myShaders[sNameShader].uniform.uPointSizeFloat.sendFloat(3.0);
 		/** Tofragment shader **/
-		myShaders.spaceShip.uniform.uBrightness.sendFloat(member.brightness);
-		myShaders.spaceShip.uniform.uAlpha.sendFloat(member.alpha);
-		myShaders.spaceShip.uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+		myShaders[sNameShader].uniform.uBrightness.sendFloat(member.brightness);
+		myShaders[sNameShader].uniform.uAlpha.sendFloat(member.alpha);
+		myShaders[sNameShader].uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
 
-		myShaders.spaceShip.uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myShaders[sNameShader].uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 		myTextures.member[member.nameTexture].activate(1);
 
 		member.draw();//in which texture activated is for use
@@ -533,7 +534,30 @@ makeStencilFromShadowUsingSaturnAndRing:function(gl,names,angle,sNameShader){
 
 		member.draw();//in which texture activated is for use
 	}
+},
+lightPointOfView:function(gl,names,angle,sNameShader){
+	for(var num in names){//the last is the texture that is gotten by framebuffer
+		member = UnitsToDraw[names[num]];
+
+		// To vertex shader
+		myShaders[sNameShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
+
+		sendOrthographicMatrix(gl,myShaders[sNameShader].uniform.uOrthographicMatrix);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
+
+		// To fragment shader
+		myShaders[sNameShader].uniform.uBrightness.sendFloat(member.brightness);
+		myShaders[sNameShader].uniform.uAlpha.sendFloat(member.alpha);
+		myShaders[sNameShader].uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+		myShaders[sNameShader].uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member[member.nameTexture].activate(0);
+
+		member.draw();//in which texture activated is for use
+	}//shadow
 }
+
 /* */}
 
 
@@ -612,49 +636,64 @@ function drawScene(gl,angle){
 //	gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
 //
 
+var xx=myShaderBIT;
+//normal
+//var bitRun = xx.spaceShip | xx.makeStencilFromTextureOnBlack | xx.makeStencilFromShadowUsingSaturnAndRing | xx.makeStencilFromTwoStencilTextures | xx.drawPolygonMoreTransparentlyOnStencil;
+//test
+var bitRun = xx.lightPointOfView | xx.drawTextureOnClipSpace;
 
+if("flagName" in window){
+	flagName = false;
+}else{
+	flagName = true;
+	var iiShader = 0;
+};
 
 //************************* DRAW OPAQUE OBJECTS ****************************
 //***************************************************************************
-if(true){
-	var shaderName = "spaceShip";
-	myFBOs[shaderName].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
-	myShaders[shaderName].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
+var sNameShader = "spaceShip";
+if((bitRun & myShaderBIT[sNameShader]) != 0){
+if(flagName)console.log(++iiShader+"."+sNameShader);
+	myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
+	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
 		var names = ["earth","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
-		myDraw.drawPlanets(gl,names,angle);
-	myFBOs[shaderName].inactivate();
-	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[shaderName].textureColorBuffer);//用意したtextureに保存
-	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[shaderName].textureDepthBuffer);//用意したtextureに保存
+		myDraw.drawPlanets(gl,names,angle,sNameShader);
+	myFBOs[sNameShader].inactivate();
+	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
 }//boolean
 //*************************** DRAW RING MAKING CASSINI TRANSPARENT ************
 //*****************************************************************************
-if(false){
-	var shaderName = "makeCassiniAlpha0";
-	myFBOs[shaderName].activate("CTDNSN");
-	myShaders[shaderName].activate();
+var sNameShader = "makeCassiniAlpha0";
+if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+if(flagName)console.log(++iiShader+"."+sNameShader);
+	myFBOs[sNameShader].activate("CTDNSN");
+	myShaders[sNameShader].activate();
 		names = ["ring"];
-		myDraw.drawCassini(gl,names,angle,shaderName);
-	myFBOs[shaderName].inactivate();
-		myTextures.member["forDrawingClipSpace"].import(myFBOs[shaderName].textureColorBuffer);//用意したtextureに保存
+		myDraw.drawCassini(gl,names,angle,sNameShader);
+	myFBOs[sNameShader].inactivate();
+		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 }//boolean
 //*************************** DRAW RING MAKING CASSINI WHITE ******************
 //*****************************************************************************
-if(false){
-	var shaderName = "makeCassiniWhite";
-	myFBOs[shaderName].activate("CTDNSN");
-	myShaders[shaderName].activate();
+var sNameShader = "makeCassiniWhite";
+if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+if(flagName)console.log(++iiShader+"."+sNameShader);
+	myFBOs[sNameShader].activate("CTDNSN");
+	myShaders[sNameShader].activate();
 		names = ["ring"];
-		myDraw.drawCassini(gl,names,angle,shaderName);
-	myFBOs[shaderName].inactivate();
-		myTextures.member["forDrawingClipSpace"].import(myFBOs[shaderName].textureColorBuffer);//用意したtextureに保存
+		myDraw.drawCassini(gl,names,angle,sNameShader);
+	myFBOs[sNameShader].inactivate();
+		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 }//boolean
 //*************************** MAKE STENCIL FROM TEXTURE ON BLACK *****************
 //*****************************************************************************
 //テクスチャの黒い部分からSTENCILを作成します。
-//ステンシル番号は0xEF(the cassini of the ring of the Saturn)
+//ステンシル番号は0x40(the cassini of the ring of the Saturn)
 //***********************************************************************************
-if(true){
-	var sNameShader = "makeStencilFromTextureOnBlack";
+var sNameShader = "makeStencilFromTextureOnBlack";
+if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].activate("CTDNSN");//Stencil Textureをshaderから作成するにはcolor buffer textureをgl.R8,gl.RED,gl.UNSIGNED_BYTEを使ってgl_FragColorに代入することで作成します。
 	myShaders[sNameShader].activate();
 		var nRefStencilCassini  = 0x40;//作成するステンシルの値the value of stencil being making
@@ -669,10 +708,11 @@ if(true){
 //*************************** MAKE STENCIL FROM SHADOW ON PLANE. SHADOW IS MADE FROM 3D-SHAPE  *****************
 //**************************************************************************************************************
 //任意の平面に影を作り、それをステンシルとします。影は任意の立体から作成可能です。
-//ステンシル番号は0xBF(the shadow of the Saturn on its ring plane)
+//ステンシル番号は0x80(the shadow of the Saturn on its ring plane)
 //**************************************************************************************************************
-if(true){
-	var sNameShader = "makeStencilFromShadowUsingSaturnAndRing";//this means making stencil form a 3D shaped bulge polygon and the 3D shaped flat polygon
+var sNameShader = "makeStencilFromShadowUsingSaturnAndRing";//this means making stencil form a 3D shaped bulge polygon and the 3D shaped flat polygon
+if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].activate("CTDNSN");//Stencil Textureをshaderから作成するにはcolor buffer textureをgl.R8,gl.RED,gl.UNSIGNED_BYTEを使ってgl_FragColorに代入することで作成します。
 	myShaders[sNameShader].activate();
 		var nRefStencilShadowOfSaturn = 0x80;//作成するステンシルの値the value of stencil being making
@@ -684,13 +724,14 @@ if(true){
 		myTextures.member["stencilShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 
 }//boolean
-//*************************** MAKE TEXTURE COMLICATED STENCIL ***********************
+//*************************** MAKE TEXTURE CONPLEXED STENCIL ***********************
 //***********************************************************************************
 //二つのステンシルテクスチャのbitwise ORをとって新しいテクスチャとして作成
-//ステンシル番号は二つのreference numberのbitwise和です
+//ステンシル番号はそれぞれのステンシル番号のbitwise和です
 //***********************************************************************************
-if(true){
-	var sNameShader = "makeStencilFromTwoStencilTextures";
+var sNameShader = "makeStencilFromTwoStencilTextures";
+if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].activate("CTDNSN");
 	myShaders[sNameShader].activate();
 		myShaders[sNameShader].uniform["uSampler0"].sendInt(0);
@@ -703,12 +744,37 @@ if(true){
 		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 		myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 }
+//************************* MAKE TEXTURE OF SATURN AND ITS RING FROM THE POINT OF VIEW OF THE LIGHT ****************************
+//*******************************************************************************************************************
+//光源から見た景色を描く
+//*******************************************************************************************************************
+var sNameShader = "lightPointOfView";
+if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+if(flagName)console.log(++iiShader+"."+sNameShader);
+	myFBOs[sNameShader].activate("CTDRSN");//使い終わったらinactivate()すること。viewportを元に戻す。メモリを解放し、frame bufferを切り離す。
+	myShaders[sNameShader].activate();
+		var names = ["saturn","ring"];
+		myDraw[sNameShader](gl,names,angle,sNameShader);
+	myFBOs[sNameShader].inactivate();
+		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+		myTextures.member["perspectFromLightColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+}//boolean
+
+
+次は円形のテクスチャを立体の任意の位置に張り付けることを考える
+
+
+
+
 //*************************** DRAW TEXTURE ON CLIP SPACE NORMAL **********************************************
 //************************************************************************************************************
-//テクスチャをそのままクリップスペースに描く。作成したテクスチャが適正なものかどうかを確かめるために使います。
+//1枚のテクスチャをそのままクリップスペースに描きます。作成したテクスチャが適正なものかどうかを確かめるために使います。
+//テクスチャ名"forDrawingClipSpace"
+//を表示します
 //************************************************************************************************************
-if(false){
-	var sNameShader = "drawTextureOnClipSpace";
+var sNameShader = "drawTextureOnClipSpace";
+if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].activate("CNDNSN");
 	myShaders[sNameShader].activate();
 	myShaders[sNameShader].uniform["uSampler"].sendInt(0);
@@ -722,8 +788,9 @@ if(false){
 //ポリゴンを画面に描きます。ステンシルのかかっている部分(指定のステンシル番号)はさらに透明度を増します。
 //On screen rendering
 //***********************************************************************************
-if(true){
-	var sNameShader = "drawPolygonMoreTransparentlyOnStencil";
+var sNameShader = "drawPolygonMoreTransparentlyOnStencil";
+if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+if(flagName)console.log(++iiShader+"."+sNameShader);
 	//myFBOs[sNameShader].activate("CNDNSN");//引数を省略すると.initialize()で指定した値が使われます
 	myShaders[sNameShader].activate();
 		myShaders[sNameShader].uniform.uSamplerStencil.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
@@ -734,7 +801,7 @@ gl.enable(gl.BLEND);
 gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 		var nIgnoreStencil;//このビット上には描かない
 		nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
-		console.log("nIgnoreStencil=",nIgnoreStencil.toString());
+		//console.log("nIgnoreStencil=",nIgnoreStencil.toString());
 		myShaders[sNameShader].uniform.refStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが扱えます//描かないステンシルの番号
 		var names = ["ring"];
 		myDraw.drawPolygonOffStencil(gl,names,angle,sNameShader);//共用です
@@ -745,8 +812,9 @@ gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 //ポリゴンを画面に描きます。ステンシルのかかっている部分(指定のステンシル番号)には描きません。
 //On screen rendering
 //***********************************************************************************
-if(false){
-	var sNameShader = "drawPolygonOffStencil";
+var sNameShader = "drawPolygonOffStencil";
+if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+if(flagName)console.log(++iiShader+"."+sNameShader);
 	//myFBOs[sNameShader].activate("CNDNSN");//引数を省略すると.initialize()で指定した値が使われます
 	myShaders[sNameShader].activate();
 		myShaders[sNameShader].uniform.uSamplerStencil.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
@@ -755,7 +823,7 @@ gl.enable(gl.DEPTH_TEST);
 gl.depthFunc(gl.LEQUAL);
 		var nIgnoreStencil;//このビット上には描かない
 		nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
-		console.log("nIgnoreStencil=",nIgnoreStencil.toString());
+		//console.log("nIgnoreStencil=",nIgnoreStencil.toString());
 		myShaders[sNameShader].uniform.refStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが扱えます//描かないステンシルの番号
 		var names = ["ring"];
 		myDraw[sNameShader](gl,names,angle,sNameShader);
@@ -793,11 +861,11 @@ if(false){
 
 
 //************** release memories ***************************
-//	myFBOs.free();//free up memories
-//	gl.deleteTexture(myTextures.member["opaquesColorBuffer"].texture);
-//	gl.deleteTexture(myTextures.member["opaquesDepthBuffer"].texture);
-//	gl.deleteTexture(myTextures.member["ringColorBuffer"].texture);
-//	gl.deleteTexture(myTextures.member["ringDepthBuffer"].texture);
+	myFBOs.free();//free up memories
+	gl.deleteTexture(myTextures.member["opaquesColorBuffer"].texture);
+	gl.deleteTexture(myTextures.member["opaquesDepthBuffer"].texture);
+	gl.deleteTexture(myTextures.member["ringColorBuffer"].texture);
+	gl.deleteTexture(myTextures.member["ringDepthBuffer"].texture);
 //*****************************************
 
 	
@@ -942,7 +1010,7 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 //	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 };
 {
-//	//not available
+//	//not available in webgl2
 //	//https://stackoverflow.com/questions/24499321/using-gl-fragdepth-in-webgl
 //	//https://www.khronos.org/registry/webgl/sdk/tests/conformance/extensions/ext-frag-depth.html
 //	gl.getExtension("EXT_frag_depth");
@@ -963,9 +1031,9 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 	//};
 
 	//** prepare shaders and frame buffers **/
-	//note
-	//+Did you make shader and FBO set in shader folda?
-	//+Did you read it using script tag?
+	//note:
+	//+Did you make shader and FBO setting file in 'shader' folda?
+	//+Did you read it using ＜script＞ tag?
 	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
 	var wide = 512;
 	var aNameShader = [
@@ -978,14 +1046,19 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 		"drawPolygonOffStencil",
 		"makeStencilFromShadowUsingSaturnAndRing",
 		"makeStencilFromTwoStencilTextures",
-		"drawPolygonMoreTransparentlyOnStencil"
+		"drawPolygonMoreTransparentlyOnStencil",
+		"lightPointOfView"
 	];
 	for(var ii in aNameShader){
 		myShaders[aNameShader[ii]].attach(gl);
 		myFBOs[aNameShader[ii]].initialize(gl,wide,wide);
 	}
-
-
+	myShaderBIT = { };
+	var n = 1;
+	for(var ii in aNameShader){
+		Object.defineProperty(myShaderBIT,aNameShader[ii],{value:n,writable:false,enumerable:true,configurable:false});
+		n *= 2;
+	}
 //HINT	var nn = gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_ATTRIBUTES);if(nn!=null)for(var ii=0;ii<nn;ii++){gl.disableVertexAttribArray(ii);};
 
 	console.log("myFBOs.spaceShip.sMode=",myFBOs.spaceShip.sMode);
@@ -1026,8 +1099,6 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myTextures.join(gl,nameTextureSaturn);
 	var nameTextureObserve = "niku_stand2";
 	myTextures.join(gl,nameTextureObserve);
-	var nameTextureSaturn2 = "saturn2";
-	myTextures.join(gl,nameTextureSaturn2);
 	var nameTextureWhite = "white";
 	var nameTextureAtomosphere = "white";
 //issue	myTextures.create(gl,nameTextureAtomosphere,myColorName.white(0.5));//preserve alpha here
@@ -1043,6 +1114,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myTextures.join(gl,"cassiniAlphaColorBuffer");
 	//不要myTextures.join(gl,"cassiniAlphaDepthBuffer");
 	//不要myTextures.join(gl,"cassiniAlphaStencilBuffer");
+	myTextures.join(gl,"perspectFromLightColorBuffer");//光源からの眺め
 	myTextures.join(gl,"forDrawingClipSpace");
 
 	myTextures.join(gl,"stencilCassini_R8");//the stencil of cassini(see also the variable 'refStencilCassini')
@@ -1107,7 +1179,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var cassiniFactorCommon = 0.0;
 	var cassiniFactorRing = 1.0;
 
-	var baseLight = 0.0;
+	var baseLightCommon = 0.0;
 	var baseLightSun = 1.0;
 
 	var colorNameText = myColorName.white(0.5);
@@ -1129,15 +1201,15 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 		labels.addText(0,-5,0,"",colorNameText);
 	};
 	var shape = myGLShape.hexa(gl);
-	UnitsToDraw.join(gl,"plane",shape,aAccumeUnits,labels,nameTextureBase,[],[],brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"plane",shape,aAccumeUnits,labels,nameTextureBase,[],[],brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 
 
 	/** for Sun **/
-	var aAccumeLightingDirectionalSun = [];
+	var aAccumeLightingDirectionalSun = [];//平行光源
 	aAccumeLightingDirectionalSun.push(AccumeMotions.gotoOrigin());
-	var aAccumeLightingPointSun = [];
+	var aAccumeLightingPointSun = [];//点光源
 	aAccumeLightingPointSun.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 
 
@@ -1162,9 +1234,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	UnitsToDraw.join(gl,"sun",shape,aAccumeUnits,labels,nameTextureSun,aAccumeLightingDirectionalSun,aAccumeLightingPointSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 	/** common **/
-	var aAccumeLightingDirectional = [];
-	aAccumeLightingDirectional.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
-	var aAccumeLightingPoint = [];
+	var aAccumeLightingDirectional = [];//平行光源
+	aAccumeLightingDirectional.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));//視点を置き換える行列の中で、translationを含まない行列
+	var aAccumeLightingPoint = [];//点光源
 	aAccumeLightingPoint.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 
 		//Earth
@@ -1185,7 +1257,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	labels.addText(0,-5,0,"Earth",colorNameText);
 //	var shape = myGLShape.hexa(gl);
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"earth",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"earth",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 
@@ -1232,7 +1304,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,"Jupitor",colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"jupiter",shape,aAccumeUnits,labels,nameTextureJupiter,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedJupiter);
+	UnitsToDraw.join(gl,"jupiter",shape,aAccumeUnits,labels,nameTextureJupiter,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedJupiter);
 
 
 	var aMatricesNotManipulatedCommon = [];
@@ -1256,7 +1328,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureMoon,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"moon",shape,aAccumeUnits,labels,nameTextureMoon,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"moon",shape,aAccumeUnits,labels,nameTextureMoon,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 	/** Uranus **/
@@ -1274,7 +1346,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureUranus,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"uranus",shape,aAccumeUnits,labels,nameTextureUranus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"uranus",shape,aAccumeUnits,labels,nameTextureUranus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 	/** Venus **/
@@ -1292,7 +1364,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureVenus,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"venus",shape,aAccumeUnits,labels,nameTextureVenus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"venus",shape,aAccumeUnits,labels,nameTextureVenus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 	/** Mars **/
@@ -1310,7 +1382,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureMars,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"mars",shape,aAccumeUnits,labels,nameTextureMars,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"mars",shape,aAccumeUnits,labels,nameTextureMars,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 	/** Neptune **/
@@ -1328,7 +1400,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureNeptune,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"neptune",shape,aAccumeUnits,labels,nameTextureNeptune,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"neptune",shape,aAccumeUnits,labels,nameTextureNeptune,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 	/** Mercury **/
@@ -1346,7 +1418,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureMercury,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"mercury",shape,aAccumeUnits,labels,nameTextureMercury,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"mercury",shape,aAccumeUnits,labels,nameTextureMercury,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 
@@ -1377,7 +1449,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureSaturn,colorNameText);//kkk
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"saturn",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
+	UnitsToDraw.join(gl,"saturn",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
 
 	/** Ring **/
 	var rOut = myBall.saturn.radius*2.327;
@@ -1390,11 +1462,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	UnitsToDraw.join(gl,"ring",shape,aAccumeUnitsRing,labels,nameTextureRing,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaRing,baseLightSun,cassiniFactorRing,aMatricesNotManipulatedRing);
 
 
-	/** Saturn2 **/
+	/** Saturn2    this is for gettin' the texture of the shadow of the ring on the surface of the Saturn **/
 	var r = myBall.saturn.radius;
 	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"saturn2",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn2,[],aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
-//	UnitsToDraw.join(gl,"saturn2",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn,[],aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
+	UnitsToDraw.join(gl,"saturn2",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn,[],aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
 
 
 
@@ -1414,7 +1485,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 		var labels = new myClass.Labels();
 		labels.addText(0,0,0,hh.toString(),colorNameText);//kkk
 		var shape = myGLShape.sphere(gl,r);
-		UnitsToDraw.join(gl,"st"+hh.toString(),shape,aAccumeUnits,labels,nameTextureAsteroid,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+		UnitsToDraw.join(gl,"st"+hh.toString(),shape,aAccumeUnits,labels,nameTextureAsteroid,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 	};
 
 */
@@ -1444,7 +1515,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 		r2 = r1*Math.cos(t2);
 		p1 = new myClass.Point(r2*Math.cos(t1),r2*Math.sin(t1),r1*Math.sin(t2));
 		var shape = myGLShape.point(gl,p1,myColorName.purple(1));
-		UnitsToDraw.join(gl,"star"+hh.toString(),shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLight,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+		UnitsToDraw.join(gl,"star"+hh.toString(),shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 	}
 */
 
@@ -1609,7 +1680,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 </script>
 
-</head><body style="overflow:hidden;" onload="prestart();">
+</head>
+<body style="overflow:hidden;" onload="prestart();">
+<!--body onload="prestart();"-->
 <div>
 <div id="canvasContainer">
 	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:512px;height:512px;"></canvas>

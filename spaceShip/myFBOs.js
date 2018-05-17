@@ -32,7 +32,7 @@
 	var obj2 = {
 		internalFormat:function(gl){return gl.RGBA;},
 		format:function(gl){return gl.RGBA;},
-		type:function(gl){gl.UNSIGNED_SHORT_5_5_5_1;}
+		type:function(gl){return gl.UNSIGNED_SHORT_5_5_5_1;}
 	};
 	var obj3 = {
 		internalFormat:function(gl){return gl.ALPHA;},

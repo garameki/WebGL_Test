@@ -19,7 +19,7 @@
 var sNameOfShader = "spaceShip";
 var sModeOfFBO = "CTDTSN";//C[NTR]D[NTR]S[NTR]
 var colorBufferModeOfFBO = myFBOs.colorBufferModeIsRGBA4444;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551 or colorBufferModeIsALPHA
-var controllColorDepthStencilOfFBO = function(gl){
+var controllBlendColorDepthStencilOfFBO = function(gl){
 	/* Ç±Ç±Ç…ÇÕgl.colorMask,gl.enable/disable(gl.DEPTH_TEST),gl.enable/disable(gl.STENCIL_TEST)ÇèëÇ©Ç»Ç¢Ç≈Ç≠ÇæÇ≥Ç¢ÅB.activate()ÇÃíÜÇ≈íËã`çœÇ›Ç≈Ç∑ÅB */
 
 	/** BLENDER **/
@@ -223,7 +223,7 @@ var aUniforms = [
 /* */	},1);
 /* */}
 /* */var funcFBO = function(){
-/* */	myFBOs.create(sNameOfShader,sModeOfFBO,colorBufferModeOfFBO,controllColorDepthStencilOfFBO);//null---Color buffer is not to use.
+/* */	myFBOs.create(sNameOfShader,sModeOfFBO,colorBufferModeOfFBO,controllBlendColorDepthStencilOfFBO);//null---Color buffer is not to use.
 /* */};
 /* */if('myFBOs' in window){
 /* */	console.log(sNameOfShader + "---ok1---created in myShaders");
