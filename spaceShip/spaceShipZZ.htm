@@ -337,6 +337,34 @@ var prestart = function(){
 
 //********************************** VALUES FOR SHADER ****************************************
 
+/**
+ * @param {mvMatrix} model view matrix
+*/
+function sendPerspectiveForShadowMatrix(gl,vari,radius,notManipulatedMatrix){
+	myMat4.load(notManipulatedMatrix);
+	var aXYZ = myMat4.get2D(0,0,0);
+	var length = Math.sqrt(aXYZ[0]*aXYZ[0]+aXYZ[1]*aXYZ[1]+aXYZ[2]*aXYZ[2]);
+
+	var theta = Math.asin(radius/length);
+	var fieldOfView = 2.0 * theta;
+	var zNear = 0.01;//equals to perspective matrix
+	var zFar = length * Math.cos(theta) * Math.cos(theta);
+	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+
+
+//	var radius = myBall["saturn"].radius;
+////	var fieldOfView = 70 * Math.PI / 180;	//in radian;
+//	var fieldOfView = 70 * Math.PI / 180;	//in radian;
+//	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+//	var zNear = 0.01;
+//	var zFar = 10000000.0;
+
+	myMat4.loadPerspective(fieldOfView,aspect,zNear,zFar);
+	vari.sendFloat32Array(myMat4.arr);
+
+};
+
+
 function sendOrthographicMatrix(gl,vari){
 
 		//https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix		from cite site:
@@ -393,7 +421,9 @@ function sendAccumeratedMatrix(vari,arrAccumelateToMyMat4,timeSpan){//to get a m
 	for(var ii=0,len=arrAccumelateToMyMat4.length;ii<len;ii++){
 		arrAccumelateToMyMat4[ii](timeSpan);
 	}
-	vari.sendFloat32Array(myMat4.arr);
+	var ret = myMat4.arr;
+	vari.sendFloat32Array(ret);
+	return ret;//kkkコールした側に変数を用意しないとメモリ的にはどうなのかな？
 };
 
 //************************************** DRAW SCENE *************************************************
@@ -499,7 +529,6 @@ drawPolygonOffStencil:function(gl,names,angle,sNameShader){
 		member.labels.repos(gl,pmat,mvmat);
 	}
 },
-
 drawShadows:function(gl,names,angle){
 
 	for(var num in names){//the last is the texture that is gotten by framebuffer
@@ -535,18 +564,19 @@ makeStencilFromShadowUsingSaturnAndRing:function(gl,names,angle,sNameShader){
 		member.draw();//in which texture activated is for use
 	}
 },
-lightPointOfView:function(gl,names,angle,sNameShader){
-	for(var num in names){//the last is the texture that is gotten by framebuffer
-		member = UnitsToDraw[names[num]];
+lightPointOfView:function(gl,sNameSaturn,aNames,angle,sNameShader){
+	var nmm;
+
+		//For the Saturn
+		member = UnitsToDraw[sNameSaturn];
 
 		// To vertex shader
 		myShaders[sNameShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
 		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
 		member.buffers.bindElement();
 
-		sendOrthographicMatrix(gl,myShaders[sNameShader].uniform.uOrthographicMatrix);
-		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
-
+		nmm = sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
+		sendPerspectiveForShadowMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveForShadowMatrix,myBall[sNameSaturn].radius,nmm);
 		// To fragment shader
 		myShaders[sNameShader].uniform.uBrightness.sendFloat(member.brightness);
 		myShaders[sNameShader].uniform.uAlpha.sendFloat(member.alpha);
@@ -555,7 +585,26 @@ lightPointOfView:function(gl,names,angle,sNameShader){
 		myTextures.member[member.nameTexture].activate(0);
 
 		member.draw();//in which texture activated is for use
-	}//shadow
+
+		// For other objects
+	for(var ii in aNames){
+		member = UnitsToDraw[aNames[ii]];
+
+		// To vertex shader
+		myShaders[sNameShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
+
+		// To fragment shader
+		nmm = sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
+		myShaders[sNameShader].uniform.uBrightness.sendFloat(member.brightness);
+		myShaders[sNameShader].uniform.uAlpha.sendFloat(member.alpha);
+		myShaders[sNameShader].uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+		myShaders[sNameShader].uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member[member.nameTexture].activate(0);
+
+		member.draw();//in which texture activated is for use
+	}
 }
 
 /* */}
@@ -753,16 +802,16 @@ if((bitRun & myShaderBIT[sNameShader]) != 0){
 if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].activate("CTDRSN");//使い終わったらinactivate()すること。viewportを元に戻す。メモリを解放し、frame bufferを切り離す。
 	myShaders[sNameShader].activate();
-		var names = ["saturn","ring"];
-		myDraw[sNameShader](gl,names,angle,sNameShader);
+		var aNames = ["ring"];
+		myDraw[sNameShader](gl,"saturn",aNames,angle,sNameShader);
 	myFBOs[sNameShader].inactivate();
 		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 		myTextures.member["perspectFromLightColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 }//boolean
 
-
-次は円形のテクスチャを立体の任意の位置に張り付けることを考える
-
+var 次は円形のテクスチャを立体の任意の位置に張り付けることを考える
+var カッシーニを透明に描く
+var リングを黒く描く
 
 
 

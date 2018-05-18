@@ -67,22 +67,27 @@ var vs = (function(){/*
 	varying highp vec2 vTextureCoord;
 	varying highp vec3 vNTimesEachRGB;
 
-	uniform mat4 uOrthographicMatrix;
+	uniform mat4 uPerspectiveForShadowMatrix;
 	uniform mat4 uNotManipulatedMatrix;
 
 
 
 	void main(void) {
 
-		highp vec3 directional = normalize((uNotManipulatedMatrix * vec4(0.0,0.0,0.0,1.0) - vec4(0.0,0.0,0.0,1.0)).xyz);//原点から見た土星の方向ベクトルmeans PosSaturn - PosMovedOrigin
+		//平行光源
+		//遠くなら平行光源positionVectorSaturnでいいけど、近くなると点光源の影響がでるよ。例えば、部屋を照らしている電球のすぐ近くに手をかざすと、大きな影ができるということ。平行光源では影の大きさは一定。
+		highp vec3 positionVectorSaturn = normalize((uNotManipulatedMatrix * vec4(0.0,0.0,0.0,1.0) - vec4(0.0,0.0,0.0,1.0)).xyz);//原点から見た土星の方向ベクトルmeans PosSaturn - PosMovedOrigin
 
-		//ここでdirectionalとorthographicMatrixを使って平行光源から見た物体のgl_Possitionを求め、そのgl_Colorを求め、shadowFactorをセットしたのち、perspectiveMatrixを使って新たにgl_Positionを設定しなおし、gl_Colorを設定する。
+		//点光源
+//		highp vec3 positionVectorSaturn = normalize((uNotManipulatedMatrix * vec4(aVertexPosition,1.0) - vec4(0.0,0.0,0.0,1.0)).xyz);//原点から見た土星の方向ベクトルmeans PosSaturn - PosMovedOrigin
+
+		//ここでpositionVectorSaturnとorthographicMatrixを使って平行光源から見た物体のgl_Possitionを求め、そのgl_Colorを求め、shadowFactorをセットしたのち、perspectiveMatrixを使って新たにgl_Positionを設定しなおし、gl_Colorを設定する。
 		//影は、色は黒、alphaは   変化なし  ですからね。
 
 
-		highp vec3 centerVector = normalize(cross(directional,vec3(0.0,0.0,-1.0)));//視線を土星に向ける It make observer's gaze to be in direction to the Saturn.
-		highp float theta = acos(dot(directional,vec3(0.0,0.0,-1.0)));
-//●		highp float theta = acos(dot(directional,vec3(0.0,0.0,1.0)));
+		highp vec3 centerVector = normalize(cross(positionVectorSaturn,vec3(0.0,0.0,-1.0)));//視線を土星に向ける It make observer's gaze to be in direction to the Saturn.
+		highp float theta = acos(dot(positionVectorSaturn,vec3(0.0,0.0,-1.0)));
+//●		highp float theta = acos(dot(positionVectorSaturn,vec3(0.0,0.0,1.0)));
 		//quaternion
 		highp float ncos = cos(-theta*0.5);
 		highp float nsin = sin(-theta*0.5);
@@ -111,7 +116,10 @@ var vs = (function(){/*
 		//mat4 rotateLightDirection= mat4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44);//元と同じ
 		//mat4 rotateLightDirection= mat4(a11,a21,a31,a41,a12,a22,a32,a42,a13,a23,a33,a43,a14,a24,a34,a44);//元の転置
 
-		gl_Position = uOrthographicMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
+//		gl_Position = uOrthographicMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
+		gl_Position = uPerspectiveForShadowMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
+
+
 		vTextureCoord = aTextureCoord;
 
 
@@ -128,8 +136,8 @@ var aUniforms = [
 		"uBrightness",
 		"uAlpha",
 		"uCassiniFactor",
-		"uOrthographicMatrix",
-		"uNotManipulatedMatrix"
+		"uNotManipulatedMatrix",
+		"uPerspectiveForShadowMatrix"
 ];
 /* */vs = vs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 /* */fs = fs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");

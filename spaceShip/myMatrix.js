@@ -24,7 +24,6 @@
 	Object.defineProperty(myMat4,'loadIdentity'	,{value:prepareAM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'loadZero'		,{value:clearToZeroAM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'loadPerspective'	,{value:preparePM,writable:false,enumerable:true,configurable:false});
-//●
 	Object.defineProperty(myMat4,'loadOrthography'	,{value:prepareOM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'trans'		,{value:translateAM,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myMat4,'rot'		,{value:rotateAM,writable:false,enumerable:true,configurable:false});
