@@ -15,7 +15,7 @@
 
 /* customize below */
 
-var sNameOfShader = "lightPointOfView";
+var sNameOfShader = "makeTextureOfSaturnFromLightPointOfViewForSaturn";
 var sModeOfFBO = "CTDRSN";//C[NTR]D[NTR]S[NTR]
 var colorBufferModeOfFBO = myFBOs.colorBufferModeIsRGBA5551;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551 or colorBufferModeIsALPHA
 var controllBlendColorDepthStencilOfFBO = function(gl){
@@ -27,6 +27,7 @@ var controllBlendColorDepthStencilOfFBO = function(gl){
 
 	/** COLOR **/
 	gl.colorMask(true,true,true,true);
+//	gl.clearColor(c8(0xFF),c8(0xFF),c8(0xFF),c8(0xFF));
 	gl.clearColor(c8(0x00),c8(0x00),c8(0x00),c8(0x00));
 	gl.clear(gl.COLOR_BUFFER_BIT);
 

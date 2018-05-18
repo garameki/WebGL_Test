@@ -314,7 +314,8 @@
 
 <!--*** shader programs, FBOs and controllers of CDF ***-->
 <script id="shader-spaceShip"			type="text/javascript"	src="./shaders/spaceShip.js"></script>
-<script id="shader-lightPointOfView"			type="text/javascript"	src="./shaders/lightPointOfView.js"></script>
+<script id="shader-makeTextureOfSaturnFromLightPointOfViewForSaturn"	type="text/javascript"	src="./shaders/makeTextureOfSaturnFromLightPointOfViewForSaturn.js"></script>
+<script id="shader-makeTextureOfSaturnFromLightPointOfViewForShadow"	type="text/javascript"	src="./shaders/makeTextureOfSaturnFromLightPointOfViewForShadow.js"></script>
 <script id="shader-mixTwoTexturesWithDepthes"	type="text/javascript"	src="./shaders/mixTwoTexturesWithDepthes.js"></script>
 <script id="shader-makeCassiniAlpha0"		type="text/javascript"	src="./shaders/makeCassiniAlpha0.js"></script>
 <script id="shader-makeCassiniWhite"		type="text/javascript"	src="./shaders/makeCassiniWhite.js"></script>
@@ -324,6 +325,8 @@
 <script id="shader-drawPolygonOffStencil"	type="text/javascript"	src="./shaders/drawPolygonOffStencil.js"></script>
 <script id="shader-drawPolygonMoreTransparentlyOnStencil"	type="text/javascript"	src="./shaders/drawPolygonMoreTransparentlyOnStencil.js"></script>
 <script id="shader-drawTextureOnClipSpace"	type="text/javascript"	src="./shaders/drawTextureOnClipSpace.js"></script>
+
+
 
 <script type='text/javascript'>
 
@@ -421,15 +424,14 @@ function sendAccumeratedMatrix(vari,arrAccumelateToMyMat4,timeSpan){//to get a m
 	for(var ii=0,len=arrAccumelateToMyMat4.length;ii<len;ii++){
 		arrAccumelateToMyMat4[ii](timeSpan);
 	}
-	var ret = myMat4.arr;
-	vari.sendFloat32Array(ret);
-	return ret;//kkkコールした側に変数を用意しないとメモリ的にはどうなのかな？
+	vari.sendFloat32Array(myMat4.arr);
 };
 
 //************************************** DRAW SCENE *************************************************
 //:myDraw ここでshaderにデータを送り、描く
 var myDraw = {
 drawPlanets:function(gl,names,angle,sNameShader){
+	var member,pmat,mvmat;
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
 		/** To vertex shader **/
@@ -462,6 +464,7 @@ drawPlanets:function(gl,names,angle,sNameShader){
 },
 
 drawCassini:function(gl,sNamePolygon,angle,sNameShader){
+	var member;
 	for(var num in sNamePolygon){
 		member = UnitsToDraw[sNamePolygon[num]];
 		/** To vertex shader **/
@@ -480,6 +483,7 @@ drawCassini:function(gl,sNamePolygon,angle,sNameShader){
 },
 
 makeStencilFromTextureOnBlack:function(gl,names,angle,sNameShader){
+	var member;
 	for(var num in names){
 		member = UnitsToDraw[names[num]];
 		/** To vertex shader **/
@@ -499,6 +503,7 @@ makeStencilFromTextureOnBlack:function(gl,names,angle,sNameShader){
 },
 
 drawPolygonOffStencil:function(gl,names,angle,sNameShader){
+	var member,pmat,mvmat;
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
 		/** To vertex shader **/
@@ -529,24 +534,26 @@ drawPolygonOffStencil:function(gl,names,angle,sNameShader){
 		member.labels.repos(gl,pmat,mvmat);
 	}
 },
-drawShadows:function(gl,names,angle){
-
-	for(var num in names){//the last is the texture that is gotten by framebuffer
-		member = UnitsToDraw[names[num]];
-			myShaders.drawShadowOnPlane.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-			myShaders.drawShadowOnPlane.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
-			member.buffers.bindElement();
-			sendPerspectiveMatrix(gl,myShaders.drawShadowOnPlane.uniform.uPerspectiveMatrix);
-			sendAccumeratedMatrix(myShaders.drawShadowOnPlane.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
-			sendAccumeratedMatrix(myShaders.drawShadowOnPlane.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
-			mvmat = myMat4.arr;//sended data above
-			sendModelViewMatrixInversedTransposed(myShaders.drawShadowOnPlane.uniform.uModelViewMatrixInversedTransposed,mvmat);
-			myTextures.member[member.nameTexture].activate(0);
-			myShaders.drawShadowOnPlane.uniform.uSampler.sendInt(0);
-		member.draw();
-	}
-},
+// to delete ,not use
+//drawShadows:function(gl,names,angle){
+//	var member,mvmat;
+//	for(var num in names){//the last is the texture that is gotten by framebuffer
+//		member = UnitsToDraw[names[num]];
+//			myShaders.drawShadowOnPlane.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+//			myShaders.drawShadowOnPlane.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+//			member.buffers.bindElement();
+//			sendPerspectiveMatrix(gl,myShaders.drawShadowOnPlane.uniform.uPerspectiveMatrix);
+//			sendAccumeratedMatrix(myShaders.drawShadowOnPlane.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+//			sendAccumeratedMatrix(myShaders.drawShadowOnPlane.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+//			mvmat = myMat4.arr;//sended data above
+//			sendModelViewMatrixInversedTransposed(myShaders.drawShadowOnPlane.uniform.uModelViewMatrixInversedTransposed,mvmat);
+//			myTextures.member[member.nameTexture].activate(0);
+//			myShaders.drawShadowOnPlane.uniform.uSampler.sendInt(0);
+//		member.draw();
+//	}
+//},
 makeStencilFromShadowUsingSaturnAndRing:function(gl,names,angle,sNameShader){
+	var member;
 	for(var num in names){//the last is the texture that is gotten by framebuffer
 		member = UnitsToDraw[names[num]];
 		/** To vertex shader **/
@@ -564,8 +571,9 @@ makeStencilFromShadowUsingSaturnAndRing:function(gl,names,angle,sNameShader){
 		member.draw();//in which texture activated is for use
 	}
 },
-lightPointOfView:function(gl,sNameSaturn,aNames,angle,sNameShader){
-	var nmm;
+makeTextureOfSaturnFromLightPointOfViewForSaturn:function(gl,sNameSaturn,angle,sNameShader){
+	var nmm,psm;
+	var member;
 
 		//For the Saturn
 		member = UnitsToDraw[sNameSaturn];
@@ -575,8 +583,10 @@ lightPointOfView:function(gl,sNameSaturn,aNames,angle,sNameShader){
 		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
 		member.buffers.bindElement();
 
-		nmm = sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
+		nmm = myMat4.arr;
 		sendPerspectiveForShadowMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveForShadowMatrix,myBall[sNameSaturn].radius,nmm);
+		psm = myMat4.arr
 		// To fragment shader
 		myShaders[sNameShader].uniform.uBrightness.sendFloat(member.brightness);
 		myShaders[sNameShader].uniform.uAlpha.sendFloat(member.alpha);
@@ -585,6 +595,11 @@ lightPointOfView:function(gl,sNameSaturn,aNames,angle,sNameShader){
 		myTextures.member[member.nameTexture].activate(0);
 
 		member.draw();//in which texture activated is for use
+
+		return {nmm:nmm,psm:psm};
+},
+makeTextureOfSaturnFromLightPointOfViewForShadow:function(gl,aNames,angle,sNameShader,nmm,psm){
+	var member;
 
 		// For other objects
 	for(var ii in aNames){
@@ -595,8 +610,9 @@ lightPointOfView:function(gl,sNameSaturn,aNames,angle,sNameShader){
 		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
 		member.buffers.bindElement();
 
+		myShaders[sNameShader].uniform.uNotManipulatedMatrix.sendFloat32Array(nmm);
+		myShaders[sNameShader].uniform.uPerspectiveForShadowMatrix.sendFloat32Array(psm);
 		// To fragment shader
-		nmm = sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
 		myShaders[sNameShader].uniform.uBrightness.sendFloat(member.brightness);
 		myShaders[sNameShader].uniform.uAlpha.sendFloat(member.alpha);
 		myShaders[sNameShader].uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
@@ -604,6 +620,7 @@ lightPointOfView:function(gl,sNameSaturn,aNames,angle,sNameShader){
 		myTextures.member[member.nameTexture].activate(0);
 
 		member.draw();//in which texture activated is for use
+
 	}
 }
 
@@ -689,7 +706,7 @@ var xx=myShaderBIT;
 //normal
 //var bitRun = xx.spaceShip | xx.makeStencilFromTextureOnBlack | xx.makeStencilFromShadowUsingSaturnAndRing | xx.makeStencilFromTwoStencilTextures | xx.drawPolygonMoreTransparentlyOnStencil;
 //test
-var bitRun = xx.lightPointOfView | xx.drawTextureOnClipSpace;
+var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawTextureOnClipSpace;
 
 if("flagName" in window){
 	flagName = false;
@@ -795,18 +812,26 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 }
 //************************* MAKE TEXTURE OF SATURN AND ITS RING FROM THE POINT OF VIEW OF THE LIGHT ****************************
 //*******************************************************************************************************************
-//光源から見た景色を描く
+//光源から見た影入りの景色を描く
+//FBOはそのままで、シェーダーを変えて同じFBOに書き込んでいく!!
 //*******************************************************************************************************************
-var sNameShader = "lightPointOfView";
-if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+var sNameShader = "lightPointOfView";//旧old
+var sNameShaderSaturn = "makeTextureOfSaturnFromLightPointOfViewForSaturn";
+var sNameShaderShadow = "makeTextureOfSaturnFromLightPointOfViewForShadow";
+if((bitRun & myShaderBIT[sNameShaderSaturn]) != 0){ 
 if(flagName)console.log(++iiShader+"."+sNameShader);
-	myFBOs[sNameShader].activate("CTDRSN");//使い終わったらinactivate()すること。viewportを元に戻す。メモリを解放し、frame bufferを切り離す。
-	myShaders[sNameShader].activate();
-		var aNames = ["ring"];
-		myDraw[sNameShader](gl,"saturn",aNames,angle,sNameShader);
-	myFBOs[sNameShader].inactivate();
-		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-		myTextures.member["perspectFromLightColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+	myFBOs[sNameShaderSaturn].activate("CTDRSN");//使い終わったらinactivate()すること。viewportを元に戻す。メモリを解放し、frame bufferを切り離す。
+	myShaders[sNameShaderSaturn].activate();
+		var sNameTarget = "saturn";//表面に影を落としたいアイテムの名前
+		var mats = myDraw[sNameShaderSaturn](gl,sNameTarget,angle,sNameShaderSaturn);
+	gl.enable(gl.BLEND);
+	gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+	myShaders[sNameShaderShadow].activate();
+		var aNames = ["ring"];//,"ミマス","エンケラドス","カロン"];//影にしたいアイテムの名前
+		myDraw[sNameShaderShadow](gl,aNames,angle,sNameShaderShadow,mats.nmm,mats.psm);
+	myFBOs[sNameShaderSaturn].inactivate();
+		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
+		myTextures.member["roundedTextureWithShadow"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
 }//boolean
 
 var 次は円形のテクスチャを立体の任意の位置に張り付けることを考える
@@ -1096,7 +1121,8 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 		"makeStencilFromShadowUsingSaturnAndRing",
 		"makeStencilFromTwoStencilTextures",
 		"drawPolygonMoreTransparentlyOnStencil",
-		"lightPointOfView"
+		"makeTextureOfSaturnFromLightPointOfViewForSaturn",
+		"makeTextureOfSaturnFromLightPointOfViewForShadow"
 	];
 	for(var ii in aNameShader){
 		myShaders[aNameShader[ii]].attach(gl);
@@ -1163,14 +1189,14 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myTextures.join(gl,"cassiniAlphaColorBuffer");
 	//不要myTextures.join(gl,"cassiniAlphaDepthBuffer");
 	//不要myTextures.join(gl,"cassiniAlphaStencilBuffer");
-	myTextures.join(gl,"perspectFromLightColorBuffer");//光源からの眺め
+	myTextures.join(gl,"roundedTextureWithShadow");//光源からの眺め
 	myTextures.join(gl,"forDrawingClipSpace");
 
 	myTextures.join(gl,"stencilCassini_R8");//the stencil of cassini(see also the variable 'refStencilCassini')
 	myTextures.join(gl,"stencilShadowOfSaturn_R8");//the stencil of cassini(see also the variable 'refStencilShadowOfSaturn')
 	myTextures.join(gl,"stencil_Cassini_ShadowOfSaturn_R8");//the stencil of cassini(see also the variable 'refStencilShadowOfSaturn')
 
-
+	//エラー対策しておかないとどこをどう修正/追加すればよいのかわからず、後で使えなくなる恐れがある
 
 	var _front_=false;
 	var _frontLength_ = 60;
