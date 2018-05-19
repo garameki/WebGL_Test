@@ -63,8 +63,9 @@ var fs = (function(){/*
 
 	void main(void) {
 //		highp vec4 texelColor = texture2D(uSamplerRectangle,vTextureCoord);//ja version
+//		gl_FragColor =texelColor;
 		highp vec4 texelColor = texture2D(uSamplerRounded,vTextureCoordinateRounded);
-		highp float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする
+		highp float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする-->いつもどうりに描く。テクスチャが変わっただけなので。
 		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
 	}
 */});
@@ -214,7 +215,10 @@ var vs = (function(){/*
 		//mat4 rotateLightDirection= mat4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44);//元と同じ
 		//mat4 rotateLightDirection= mat4(a11,a21,a31,a41,a12,a22,a32,a42,a13,a23,a33,a43,a14,a24,a34,a44);//元の転置
 
-		vTextureCoordinateRounded = 0.5 + 0.002 *(uPerspectiveForShadowMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0)).xy;
+		vec4 xyzw = uPerspectiveForShadowMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
+
+		vTextureCoordinateRounded = 0.5 + 0.5 *(xyzw.xy / xyzw.w);
+		//gl_Position = xyzw;//vec4((uPerspectiveForShadowMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0)).xy,-0.0,5.0);//zw;
 
 // ************************************************************************************************************************************************
 

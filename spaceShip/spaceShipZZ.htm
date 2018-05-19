@@ -351,16 +351,8 @@ function sendPerspectiveForShadowMatrix(gl,vari,radius,notManipulatedMatrix){
 	var theta = Math.asin(radius/length);
 	var fieldOfView = 2.0 * theta;
 	var zNear = 0.01;//equals to perspective matrix
-	var zFar = length * Math.cos(theta) * Math.cos(theta);
+	var zFar = length * Math.cos(theta) * Math.cos(theta);//the distance from the point of light to the plane P1
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-
-
-//	var radius = myBall["saturn"].radius;
-////	var fieldOfView = 70 * Math.PI / 180;	//in radian;
-//	var fieldOfView = 70 * Math.PI / 180;	//in radian;
-//	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-//	var zNear = 0.01;
-//	var zFar = 10000000.0;
 
 	myMat4.loadPerspective(fieldOfView,aspect,zNear,zFar);
 	vari.sendFloat32Array(myMat4.arr);
@@ -740,10 +732,10 @@ function drawScene(gl,angle){
 
 var xx=myShaderBIT;
 //normal
-//var bitRun = xx.spaceShip | xx.makeStencilFromTextureOnBlack | xx.makeStencilFromShadowUsingSaturnAndRing | xx.makeStencilFromTwoStencilTextures | xx.drawPolygonMoreTransparentlyOnStencil;
+var bitRun = xx.spaceShip | xx.makeStencilFromTextureOnBlack | xx.makeStencilFromShadowUsingSaturnAndRing | xx.makeStencilFromTwoStencilTextures | xx.drawPolygonMoreTransparentlyOnStencil | xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawSaturnWithRoundedTexture;
 //test
 //var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawTextureOnClipSpace;
-var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawSaturnWithRoundedTexture;
+//var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawSaturnWithRoundedTexture;
 
 if("flagName" in window){
 	flagName = false;
@@ -759,7 +751,7 @@ if((bitRun & myShaderBIT[sNameShader]) != 0){
 if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
 	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
-		var names = ["earth","saturn","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
+		var names = ["earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
 		myDraw.drawPlanets(gl,names,angle,sNameShader);
 	myFBOs[sNameShader].inactivate();
 	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
@@ -864,7 +856,7 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 //
 
 
-var sNameShader = "lightPointOfView";//旧old
+//var sNameShader = "lightPointOfView";//旧old
 var sNameShaderSaturn = "makeTextureOfSaturnFromLightPointOfViewForSaturn";
 var sNameShaderShadow = "makeTextureOfSaturnFromLightPointOfViewForShadow";
 if((bitRun & myShaderBIT[sNameShaderSaturn]) != 0){ 
@@ -894,16 +886,18 @@ myBall.saturn.aSattelites = ["ring","ミマス","エンケラドス","カロン"
 var sNameShader = "drawSaturnWithRoundedTexture";
 if((bitRun & myShaderBIT[sNameShader]) != 0){
 if(flagName)console.log(++iiShader+"."+sNameShader);
-	myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
+	//myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
 	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
 		var sName = "saturn";
 		myShaders[sNameShader].uniform.uSamplerRectangle.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 		myTextures.member[sName].activate(0);
 		myShaders[sNameShader].uniform.uSamplerRounded.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 		myTextures.member["roundedTextureWithShadow"].activate(1);
+	gl.enable(gl.DEPTH_TEST);
+
 
 		myDraw[sNameShader](gl,sName,angle,sNameShader);
-	myFBOs[sNameShader].inactivate();
+	//myFBOs[sNameShader].inactivate();
 	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
 }//boolean
@@ -1226,6 +1220,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myInfo.main.info = "max texture size ="+gl.MAX_TEXTURE_SIZE;flagMaxTexture=true;
 	var nameTextureSun = "sun";
 	myTextures.join(gl,nameTextureSun);
+
 	var nameTextureBase = "earth";
 	myTextures.join(gl,nameTextureBase);
 	var nameTextureMoon = "moon";
@@ -1301,7 +1296,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	})();
 
 	
-	myBall.join("sun",695508);
+//	myBall.join("sun",695508);
+	myBall.join("sun",69550);//dummy
+
 	myBall.join("jupiter",71492);
 	myBall.join("saturn",60268);
 	myBall.join("uranus",25559);
@@ -1830,8 +1827,8 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 </script>
 
 </head>
-<!--body style="overflow:hidden;" onload="prestart();"-->
-<body onload="prestart();">
+<body style="overflow:hidden;" onload="prestart();">
+<!--body onload="prestart();"-->
 <div>
 <div id="canvasContainer">
 	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:512px;height:512px;"></canvas>
