@@ -317,6 +317,7 @@
 <script id="shader-makeTextureOfSaturnFromLightPointOfViewForSaturn"	type="text/javascript"	src="./shaders/makeTextureOfSaturnFromLightPointOfViewForSaturn.js"></script>
 <script id="shader-makeTextureOfSaturnFromLightPointOfViewForShadow"	type="text/javascript"	src="./shaders/makeTextureOfSaturnFromLightPointOfViewForShadow.js"></script>
 <script id="shader-mixTwoTexturesWithDepthes"	type="text/javascript"	src="./shaders/mixTwoTexturesWithDepthes.js"></script>
+<script id="shader-drawSaturnWithRoundedTexture"			type="text/javascript"	src="./shaders/drawSaturnWithRoundedTexture.js"></script>
 <script id="shader-makeCassiniAlpha0"		type="text/javascript"	src="./shaders/makeCassiniAlpha0.js"></script>
 <script id="shader-makeCassiniWhite"		type="text/javascript"	src="./shaders/makeCassiniWhite.js"></script>
 <script id="shader-makeStencilFromTextureOnBlack"		type="text/javascript"	src="./shaders/makeStencilFromTextureOnBlack.js"></script>
@@ -325,7 +326,6 @@
 <script id="shader-drawPolygonOffStencil"	type="text/javascript"	src="./shaders/drawPolygonOffStencil.js"></script>
 <script id="shader-drawPolygonMoreTransparentlyOnStencil"	type="text/javascript"	src="./shaders/drawPolygonMoreTransparentlyOnStencil.js"></script>
 <script id="shader-drawTextureOnClipSpace"	type="text/javascript"	src="./shaders/drawTextureOnClipSpace.js"></script>
-
 
 
 <script type='text/javascript'>
@@ -622,8 +622,44 @@ makeTextureOfSaturnFromLightPointOfViewForShadow:function(gl,aNames,angle,sNameS
 		member.draw();//in which texture activated is for use
 
 	}
-}
+},
+drawSaturnWithRoundedTexture:function(gl,sNameSaturn,angle,sNameShader){
+	var member,pmat,mvmat,nmmat;
+		member = UnitsToDraw[sNameSaturn];
+		/** To vertex shader **/
+		myShaders[sNameShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameShader].attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
+		myShaders[sNameShader].attrib.aVertexColor.assignBuffer(member.buffers.color,4);
+		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
 
+		sendPerspectiveMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveMatrix);
+		pmat = myMat4.arr;//sended data above
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		mvmat = myMat4.arr;//sended data above
+		sendModelViewMatrixInversedTransposed(myShaders[sNameShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
+		nmmat = myMat4.arr;
+		sendPerspectiveForShadowMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveForShadowMatrix,myBall[sNameSaturn].radius,nmmat);
+
+//sendPerspectiveForShadowMatrix(gl,vari,radius,notManipulatedMatrix)
+
+
+
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+		myShaders[sNameShader].uniform.uBaseLight.sendFloat(member.baseLight);
+		myShaders[sNameShader].uniform.uPointSizeFloat.sendFloat(3.0);
+		/** Tofragment shader **/
+		myShaders[sNameShader].uniform.uBrightness.sendFloat(member.brightness);
+		myShaders[sNameShader].uniform.uAlpha.sendFloat(member.alpha);
+		myShaders[sNameShader].uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+
+		myShaders[sNameShader].uniform.uRadiusOfSaturn.sendFloat(myBall[sNameSaturn].radius);//kkk to check
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
+
+		member.draw();//in which texture activated is for use
+		member.labels.repos(gl,pmat,mvmat);
+}
 /* */}
 
 
@@ -706,7 +742,8 @@ var xx=myShaderBIT;
 //normal
 //var bitRun = xx.spaceShip | xx.makeStencilFromTextureOnBlack | xx.makeStencilFromShadowUsingSaturnAndRing | xx.makeStencilFromTwoStencilTextures | xx.drawPolygonMoreTransparentlyOnStencil;
 //test
-var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawTextureOnClipSpace;
+//var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawTextureOnClipSpace;
+var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawSaturnWithRoundedTexture;
 
 if("flagName" in window){
 	flagName = false;
@@ -815,6 +852,18 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 //光源から見た影入りの景色を描く
 //FBOはそのままで、シェーダーを変えて同じFBOに書き込んでいく!!
 //*******************************************************************************************************************
+
+//あとで、土星だけではなく影を落としたい惑星全てについてできるように改造する
+//var aNamesSatellite = {
+//	saturn:["titan","enceladus","tethys","mimas"],
+//	jupitor:["europa","ganymede","io","calisto"],
+//	neptune:["triton","proteus","larissa"],
+//	uranus:["ariel","titania","","umbriel"]
+//};
+//
+//
+
+
 var sNameShader = "lightPointOfView";//旧old
 var sNameShaderSaturn = "makeTextureOfSaturnFromLightPointOfViewForSaturn";
 var sNameShaderShadow = "makeTextureOfSaturnFromLightPointOfViewForShadow";
@@ -834,11 +883,30 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 		myTextures.member["roundedTextureWithShadow"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
 }//boolean
 
-var 次は円形のテクスチャを立体の任意の位置に張り付けることを考える
-var カッシーニを透明に描く
-var リングを黒く描く
+var 円形のテクスチャを光が当たっている面に張り付ける
+myBall.saturn.aSattelites = ["ring","ミマス","エンケラドス","カロン","イオ"];
 
+//************************* DRAW SATURN WITH SHADOW ****************************
+//*************************************************************************************
 
+//あとで上のシェーダーとくっつける
+
+var sNameShader = "drawSaturnWithRoundedTexture";
+if((bitRun & myShaderBIT[sNameShader]) != 0){
+if(flagName)console.log(++iiShader+"."+sNameShader);
+	myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
+	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
+		var sName = "saturn";
+		myShaders[sNameShader].uniform.uSamplerRectangle.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member[sName].activate(0);
+		myShaders[sNameShader].uniform.uSamplerRounded.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member["roundedTextureWithShadow"].activate(1);
+
+		myDraw[sNameShader](gl,sName,angle,sNameShader);
+	myFBOs[sNameShader].inactivate();
+	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
+}//boolean
 
 //*************************** DRAW TEXTURE ON CLIP SPACE NORMAL **********************************************
 //************************************************************************************************************
@@ -1105,9 +1173,14 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 	//};
 
 	//** prepare shaders and frame buffers **/
-	//note:
-	//+Did you make shader and FBO setting file in 'shader' folda?
-	//+Did you read it using ＜script＞ tag?
+
+	// caution // caution // caution // caution // caution // caution // caution // caution // caution // caution
+	// caution // caution									// caution // caution
+	// caution // caution   +Did you make shader and FBO setting file in 'shader' folda?    // caution // caution
+	// caution // caution   +Did you read it using ＜script＞ tag?                          // caution // caution
+	// caution // caution									// caution // caution
+	// caution // caution // caution // caution // caution // caution // caution // caution // caution // caution
+
 	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
 	var wide = 512;
 	var aNameShader = [
@@ -1122,7 +1195,8 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 		"makeStencilFromTwoStencilTextures",
 		"drawPolygonMoreTransparentlyOnStencil",
 		"makeTextureOfSaturnFromLightPointOfViewForSaturn",
-		"makeTextureOfSaturnFromLightPointOfViewForShadow"
+		"makeTextureOfSaturnFromLightPointOfViewForShadow",
+		"drawSaturnWithRoundedTexture"
 	];
 	for(var ii in aNameShader){
 		myShaders[aNameShader[ii]].attach(gl);
@@ -1756,8 +1830,8 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 </script>
 
 </head>
-<body style="overflow:hidden;" onload="prestart();">
-<!--body onload="prestart();"-->
+<!--body style="overflow:hidden;" onload="prestart();"-->
+<body onload="prestart();">
 <div>
 <div id="canvasContainer">
 	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:512px;height:512px;"></canvas>
