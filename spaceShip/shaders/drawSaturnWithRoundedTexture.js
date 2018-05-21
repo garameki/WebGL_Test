@@ -46,14 +46,13 @@ var controllBlendColorDepthStencilOfFBO = function(gl){
 var fs = (function(){/*
 
 //hint
-//	varying lowp vec4 vColor;	//as same as vertex shader
-//	varying lowp vec2 vTextureCoord;//as same as vertex shader
 //	varying lowp vec3 vNTimesEachRGB;//as same as vertex shader
-	varying highp vec4 vColor;//●	//as same as vertex shader
-	varying highp vec2 vTextureCoord;//as same as vertex shader
 	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
 
-	varying lowp vec2 vTextureCoordinateRounded;
+	varying lowp vec2 vTextureCoordRectangle;
+	varying lowp vec2 vTextureCoordRounded;
+	varying lowp float vZZ;
+	varying lowp vec4 vPosition;
 
 	uniform mediump float uBrightness;
 	uniform mediump float uAlpha;
@@ -61,12 +60,26 @@ var fs = (function(){/*
 	uniform sampler2D uSamplerRectangle;
 	uniform sampler2D uSamplerRounded;
 
+	mediump float norm(vec2 vv){
+		return sqrt(vv.x * vv.x + vv.y * vv.y);
+	}
 	void main(void) {
-//		highp vec4 texelColor = texture2D(uSamplerRectangle,vTextureCoord);//ja version
-//		gl_FragColor =texelColor;
-		highp vec4 texelColor = texture2D(uSamplerRounded,vTextureCoordinateRounded);
-		highp float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする-->いつもどうりに描く。テクスチャが変わっただけなので。
-		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
+		highp vec4 texelColor;
+//		if(vZZ < -1.0){
+//			texelColor = texture2D(uSamplerRectangle,vTextureCoordRectangle);//ja version
+//		}else{
+			
+			texelColor = texture2D(uSamplerRounded,vTextureCoordRounded);
+//		}
+			highp float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする-->いつもどうりに描く。テクスチャが変わっただけなので。
+		//	gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
+		//	gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*0.0)*uAlpha);
+			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,1.0);
+		//	gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb,1.0);
+			
+
+
+		//	gl_FragColor = vPosition;//座標がわかる良い方法
 	}
 */});
 
@@ -95,23 +108,15 @@ var vs = (function(){/*
 	uniform float uRadiusOfSaturn;
 	uniform mat4 uPerspectiveForShadowMatrix;
 
-//hint
-//	varying lowp vec4 vColor;
-//	varying lowp vec2 vTextureCoord;
-//	varying lowp vec3 vNTimesEachRGB;
-	varying lowp vec4 vColor;
-	varying lowp vec2 vTextureCoord;
 	varying lowp vec3 vNTimesEachRGB;
-
-	varying lowp vec2 vTextureCoordinateRounded;
-
+	
+	varying lowp vec2 vTextureCoordRectangle;
+	varying lowp vec2 vTextureCoordRounded;
+	varying lowp float vZZ;
+	varying lowp vec4 vPosition;
 
 	void main(void) {
-		gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
-
-		gl_PointSize = uPointSizeFloat;
-		vColor = aVertexColor;
-		vTextureCoord = aTextureCoord;
+//		vTextureCoord = aTextureCoord;
 
 		//分ける　位置ベクトル　と　方向ベクトル
 		//位置ベクトル....移動できる　回転できる
@@ -136,51 +141,6 @@ var vs = (function(){/*
 
 		vNTimesEachRGB = ambientLight + (directionalLightColor * quantity);
 
-// **********************************************************************************************************************
-//
-//
-//	vec3 nL0 = normalize((uNotManipulatedMatrix * vec4(0.0,0.0,0.0,1.0)).xyz);//the position of the Saturn's center before manipulating
-//	vec3 OPl = (uNotManipulatedMatrix * vec4(0.0,0.0,0.0,1.0)).xyz;
-//	float l = sqrt(OPl.x * OPl.x + OPl.y * OPl.y + OPl.z * OPl.z);//distance between origin and the center of the Saturn
-//	float theta = asin(uRadiusOfSaturn / l);
-//	vec3 OPc = OPl + l * cos(theta) * cos(theta) * nL0;	//the center of Plane1 which is the far plane of perspective space
-//	vec3 OPp = (uNotManipulatedMatrix * vec4(aVertexPosition,1.0)).xyz;	//the arbitrary point on the sphere to draw
-//	float alpha = dot(nL0,OPc - OPp);			//the coefficient of the line equation which is the vertical line from the point Pp to the plane P1
-//	vec3 OPq = alpha * nL0 + OPp;//the point of intersection of P1 and the vertical line from pp to P1
-//	vec3 OPs = vec3(0.0,0.0,-1.0);//the norm forward to the gaze
-//
-//	vec3 axisVector = normalize(cross(nL0,OPs));
-//	float gamma = acos(dot(nL0,OPs));
-//
-//		//quaternion function : Q(axisVector,gamma)=>rotateMatrix
-//		highp float ncos = cos(-gamma*0.5);
-//		highp float nsin = sin(-gamma*0.5);
-//
-//		highp float q0=ncos;
-//		highp float q1=axisVector.x*nsin;
-//		highp float q2=axisVector.y*nsin;
-//		highp float q3=axisVector.z*nsin;
-//
-//
-//		highp float qq0 = q0*q0;
-//		highp float qq1 = q1*q1;
-//		highp float qq2 = q2*q2;
-//		highp float qq3 = q3*q3;
-//
-//		highp float qq12 = q1*q2*2.0;
-//		highp float qq03 = q0*q3*2.0;
-//		highp float qq13 = q1*q3*2.0;
-//		highp float qq02 = q0*q2*2.0;
-//		highp float qq23 = q2*q3*2.0;
-//		highp float qq01 = q0*q1*2.0;
-//
-//		highp mat4 rotateMatrix= mat4(qq0+qq1-qq2-qq3,qq12-qq03,qq13+qq02,0,qq12+qq03,qq0-qq1+qq2-qq3,qq23-qq01,0,qq13-qq02,qq23+qq01,qq0-qq1-qq2+qq3,0,0,0,0,1);
-//
-//		vec3 OPt = (rotateMatrix * vec4(OPq,1.0)).xyz;
-//
-//		vTextureCoordinateRounded = OPt.xy;//(uPerspectiveForShadowMatrix * vec4(OPt,1.0)).xy;
-//
-// **********************************************************************************************************************
 
 	//テクスチャを描いた時と同じポジションに持っていく
 
@@ -216,9 +176,14 @@ var vs = (function(){/*
 		//mat4 rotateLightDirection= mat4(a11,a21,a31,a41,a12,a22,a32,a42,a13,a23,a33,a43,a14,a24,a34,a44);//元の転置
 
 		vec4 xyzw = uPerspectiveForShadowMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
-
-		vTextureCoordinateRounded = 0.5 + 0.5 *(xyzw.xy / xyzw.w);
+		vTextureCoordRectangle = aTextureCoord;
+		vTextureCoordRounded   = 0.5 + 0.5 * (xyzw.xy / xyzw.w);
+		vZZ = xyzw.z / xyzw.w;	
+		vPosition = vec4(0.0,0.0,(xyzw.z / xyzw.w)-0.5,1.0);//xyzw.z == xyzw.w
 		//gl_Position = xyzw;//vec4((uPerspectiveForShadowMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0)).xy,-0.0,5.0);//zw;
+
+		gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
+		gl_PointSize = uPointSizeFloat;
 
 // ************************************************************************************************************************************************
 

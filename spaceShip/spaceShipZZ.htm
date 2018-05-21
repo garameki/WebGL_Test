@@ -171,7 +171,7 @@
 
 		//alert in case of falure
 		if(!gl.getProgramParameter(shaderProgram,gl.LINK_STATUS)){
-			alert("can't link both of the shaders vs:'"+sIdVertex+"',fs:'"+sIdFragment+"'");
+			alert("can't link both of the shaders vs:'"+this.programName + "- vertex shader"+"',fs:'"+this.programName + "- fragment shader"+"'");
 			this.program = null;
 		}else{
 			this.program = shaderProgram;
@@ -998,10 +998,10 @@ if(false){
 
 //************** release memories ***************************
 	myFBOs.free();//free up memories
-	gl.deleteTexture(myTextures.member["opaquesColorBuffer"].texture);
-	gl.deleteTexture(myTextures.member["opaquesDepthBuffer"].texture);
-	gl.deleteTexture(myTextures.member["ringColorBuffer"].texture);
-	gl.deleteTexture(myTextures.member["ringDepthBuffer"].texture);
+//	gl.deleteTexture(myTextures.member["opaquesColorBuffer"].texture);
+//	gl.deleteTexture(myTextures.member["opaquesDepthBuffer"].texture);
+//	gl.deleteTexture(myTextures.member["ringColorBuffer"].texture);
+//	gl.deleteTexture(myTextures.member["ringDepthBuffer"].texture);
 //*****************************************
 
 	
@@ -1297,7 +1297,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	
 //	myBall.join("sun",695508);
-	myBall.join("sun",69550);//dummy
+	myBall.join("sun",695508);//dummy
 
 	myBall.join("jupiter",71492);
 	myBall.join("saturn",60268);

@@ -26,6 +26,14 @@
 //console.log("myTextures.js:activeTexture=",this.gl[this.gl.getParameter(this.gl.ACTIVE_TEXTURE)]);
 //console.log("myTextures.js:this.texture=",this.texture,"name=",this.name);
 	};
+//https://stackoverflow.com/questions/46931351/how-to-add-interpolation-using-webgl-vertex-and-fragment-shaders-to-the-image
+function nearestGreaterOrEqualPowerOf2(v) {
+  return Math.pow(2, Math.ceil(Math.log2(v)));
+}
+
+
+
+
 	Texture.prototype.read = function(){
 		var gl = this.gl;
 		var image = new Image();
@@ -39,10 +47,35 @@
 				//https://webglfundamentals.org/webgl/lessons/webgl-2-textures.html
 //not necessary		gl.activeTexture(gl.TEXTURE0+myself.number);//https://stackoverflow.com/questions/11292599/how-to-use-multiple-textures-in-webgl toji answered
 			gl.bindTexture   (gl.TEXTURE_2D,myself.texture);
-			gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-			gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？gl.ACTIVE_TEXTURE
-			gl.texImage2D    (gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
-			gl.generateMipmap(gl.TEXTURE_2D);//gl.TEXTURE_2Dをmipmapに適用
+//●test		gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+//●test		gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？gl.ACTIVE_TEXTURE
+//●test		gl.texImage2D    (gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+//●test		gl.generateMipmap(gl.TEXTURE_2D);//gl.TEXTURE_2Dをmipmapに適用
+
+
+
+
+
+////●test
+const newWidth = nearestGreaterOrEqualPowerOf2(image.width);
+const newHeight = nearestGreaterOrEqualPowerOf2(image.height);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, newWidth, newHeight, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
+gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, image);
+gl.generateMipmap(gl.TEXTURE_2D);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);			//gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);			//gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+
+
+
+
+
+
+
+
+
 		};
 
 		var reader = new FileReader();
@@ -71,7 +104,7 @@ console.log("myself.texture=",myself.texture._name);
 				gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
 				gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
 				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,2,2,0,gl.RGBA,gl.UNSIGNED_SHORT_4_4_4_4,new Uint16Array(pixel),0);
- 			}else{
+			}else{
 				reader.readAsDataURL(h.response);
 			}
 		};

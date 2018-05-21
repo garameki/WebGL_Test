@@ -48,6 +48,12 @@ console.log("myClass.js");
 		this.y=this.y*len;
 		this.z=this.z*len;
 	};
+	Vector.prototype.normalize = function(){
+		var len = 1/this.calcLength();
+		this.x=this.x*len;
+		this.y=this.y*len;
+		this.z=this.z*len;
+	};
 
 
 

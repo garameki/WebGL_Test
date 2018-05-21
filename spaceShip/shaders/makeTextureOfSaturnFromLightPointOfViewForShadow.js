@@ -37,7 +37,7 @@ var fs = (function(){/*
 	void main(void) {
 		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
 //		highp float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//ˆÃ‚¢‚à‚Ì‚Ù‚Ç“§–¾‚É‚·‚é
-		mediump float gg = pow(max(min(dot(texelColor.rgb,texelColor.rgb),1.0),0.0001),3.0);//ˆÃ‚¢‚à‚Ì‚Ù‚Ç“§–¾‚É‚·‚é
+		mediump float gg = pow(max(min(dot(texelColor.rgb,texelColor.rgb),1.0),0.0001),5.0);//ˆÃ‚¢‚à‚Ì‚Ù‚Ç“§–¾‚É‚·‚é
 
 		gl_FragColor = vec4(uBrightness)*vec4(0.0,0.0,0.0,(gg+0.5)/2.0);
 

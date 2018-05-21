@@ -550,91 +550,26 @@ if(alphaB==180){
 				countRectangle++;
 				n1=kk * nLatitude + ii;
 				positions = positions.concat(points[n1].arr);
-			//	positions.push(px[n1]);
-			//	positions.push(py[n1]);
-			//	positions.push(pz[n1]);
 
 				n2 = kk * nLatitude + ii + 1;
 				positions = positions.concat(points[n2].arr);
-			//	positions.push(px[n2]);
-			//	positions.push(py[n2]);
-			//	positions.push(pz[n2]);
 
 				n3 = kk * nLatitude + ii + nLatitude;
 				positions = positions.concat(points[n3].arr);
-			//	positions.push(px[n3]);
-			//	positions.push(py[n3]);
-			//	positions.push(pz[n3]);
 
 				n4 = kk * nLatitude + ii + nLatitude + 1;
 				positions = positions.concat(points[n4].arr);
-			//	positions.push(px[n4]); 
-			//	positions.push(py[n4]);
-			//	positions.push(pz[n4]);
 
-				var vN1 = getNormalVector(gl,points[n1],points[n2],points[n3],pointInner);
-var vN=vN1;
-/*
-vN1とvN2を比べていい方を取る。をやっているんだけど、issueあるし、必要ない。
-				var vN2 = getNormalVector(gl,points[n2],points[n3],points[n4],pointInner);
-				var mx = points[n1].x+points[n2].x+points[n3].x+points[n4].x;
-				var my = points[n1].y+points[n2].y+points[n3].y+points[n4].y;
-				var mz = points[n1].z+points[n2].z+points[n3].z+points[n4].z;
-				mx=mx*0.25;
-				my=my*0.25;
-				mz=mz*0.25;
-				var vC = new myClass.Vector(mx,my,mz);
-				var aaa1 = (vC.x+vN1.x+vC.y*vN1.y+vC.z*vN1.z)/(vC.length+vN1.length);
-				var theta1 = Math.acos(aaa1);
-				var aaa2 = (vC.x+vN2.x+vC.y*vN2.y+vC.z*vN2.z)/(vC.length+vN2.length);
-				var theta2 = Math.acos(aaa2);
-				var vN;
-				if(theta1<theta2){
-					vN = vN1;
-				}else{
-					vN = vN2;
-					if(vN2.length==0)PRINT_CAUTION.innerHTML+="It is not a triangle which is made from points["+n1.toString()+"],points["+n2.toString()+"],points["+n3.toString()+"],points["+n4.toString()+"]<br>";
-console.log("myGLShaple.js ",points[n1],points[n2],points[n3]);
-			}
-*/
-			//	tempNorm = norm(//set points orderd like a sector around the center as first argument
-			//		px[n1],py[n1],pz[n1],
-			//		px[n2],py[n2],pz[n2],
-			//		px[n4],py[n4],pz[n4],
-			//		px[n3],py[n3],pz[n3]
-			//	);
-
-//issue
-//if(countRectangle==152){
-//	var none = DoAccumeration.none();
-//	Draw.point(gl,points[n1],myColorName.blue(1),DoAccumeration.axisY(1),none,none,none,none);
-//	Draw.point(gl,points[n2],myColorName.blue(1),DoAccumeration.axisY(1),none,none,none,none);
-//	Draw.point(gl,points[n3],myColorName.blue(1),DoAccumeration.axisY(1),none,none,none,none);
-//	Draw.point(gl,points[n4],myColorName.blue(1),DoAccumeration.axisY(1),none,none,none,none);
-//
-//	Draw.triangle(gl,points[n1],points[n2],points[n3],myColorName.red(1),DoAccumeration.translate(0,0,1),DoAccumeration.axisY(1),none,none,none);
-//	Draw.line(gl,points[n1],points[n1].calcTranslate(vN1),myColorName.red(1),DoAccumeration.translate(0,0,1),DoAccumeration.axisY(),none,none,none);
-//	Draw.line(gl,points[n1],points[n1].calcTranslate(vN2),myColorName.red(1),DoAccumeration.translate(0,0,1),DoAccumeration.axisY(),none,none,none);
-//	console.log(points[n1]);
-//
-//	console.log(points[n2]);
-//	console.log(points[n3]);
-//	console.log(points[n4]);
-//	console.log(vN1.arr,vN1.length);
-//	console.log(vN2.arr,vN2.length);
-//	console.log(vN.arr);
-//	vN = vN1;
-//}
-				normals = normals.concat(vN.arr);
-				normals = normals.concat(vN.arr);
-				normals = normals.concat(vN.arr);
-				normals = normals.concat(vN.arr);
-			//	normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
-			//	normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
-			//	normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
-			//	normals.push(tempNorm.x);normals.push(tempNorm.y);normals.push(tempNorm.z);
-
-
+			//	var vN1 = getNormalVector(gl,points[n1],points[n2],points[n3],pointInner);
+			//	normals = normals.concat(vN1.arr);
+			//	normals = normals.concat(vN1.arr);
+			//	normals = normals.concat(vN1.arr);
+			//	normals = normals.concat(vN1.arr);
+				var n,v;
+				n = points[n1];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
+				n = points[n2];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
+				n = points[n3];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
+				n = points[n4];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
 			}
 		}
 
