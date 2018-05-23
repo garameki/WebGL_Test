@@ -361,8 +361,8 @@
 		var aMember = [];
 		var Member = function(){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
 			SuperMember.call(this);
-			this.rxy = 1000*(Math.random()-0.5);
-			this.rz  = 1000*(Math.random()-0.5);
+			this.rxy = 600;//*(Math.random()-0.5);
+			this.rz  = 800;//0*(Math.random()-0.5);
 			this.alpha = 2*3.14*Math.random();
 			this.gamma = 2*3.14*Math.random();
 		};

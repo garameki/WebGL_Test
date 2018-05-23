@@ -44,19 +44,13 @@ var controllBlendColorDepthStencilOfFBO = function(gl){
 
 var fs = (function(){/*
 
-
-	uniform lowp float uBrightness;//Saturn2---1.0 ring--arbitrary to send
-	uniform lowp float uAlpha;//Saturn2---1.0 ring---1.0 to send
-	uniform lowp float uCassiniFactor;//Saturn2---0.0 ring---1.0 to send
-
 	uniform sampler2D uSampler;
 
 	varying highp vec2 vTextureCoord;
 
 	void main(void) {
-		highp vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
-		highp float gg = 1.0/pow(max(dot(texelColor,texelColor),1.0),3.0);//暗いものほど透明にする
-		gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a);
+		mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);
+		gl_FragColor = vec4(texelColor.rgb,1.0);
 	}
 */});
 
@@ -64,68 +58,96 @@ var vs = (function(){/*
 	attribute vec3 aVertexPosition;//x y z
 	attribute vec2 aTextureCoord;//x y
 
-
-	varying highp vec2 vTextureCoord;
-	varying highp vec3 vNTimesEachRGB;
-
-	uniform mat4 uPerspectiveForShadowMatrix;
+	uniform mat4 uPerspectiveMatrixForShadow;
 	uniform mat4 uNotManipulatedMatrix;
 
+	uniform float uRadiusOfSaturn;
 
+//for test	uniform mat4 uPerspectiveMatrix;
+
+	varying highp vec2 vTextureCoord;
+
+
+//make a matrix which rotate a point gamma radian right screw wise
+	vec3 rotate(vec3 pointToRotate,mat4 qMatrix,vec3 pointOnAxis){
+		return (qMatrix * vec4(pointToRotate-pointOnAxis,1.0)).xyz + pointOnAxis;
+	}
+	mat4 getQuaternion(vec3 unitvectorParallelToAxis,float gamma){
+
+		float ncos = cos(-gamma*0.5);
+		float nsin = sin(-gamma*0.5);
+
+		float q0=ncos;
+		float q1=unitvectorParallelToAxis.x*nsin;
+		float q2=unitvectorParallelToAxis.y*nsin;
+		float q3=unitvectorParallelToAxis.z*nsin;
+
+
+		float qq0 = q0*q0;
+		float qq1 = q1*q1;
+		float qq2 = q2*q2;
+		float qq3 = q3*q3;
+
+		float qq12 = q1*q2*2.0;
+		float qq03 = q0*q3*2.0;
+		float qq13 = q1*q3*2.0;
+		float qq02 = q0*q2*2.0;
+		float qq23 = q2*q3*2.0;
+		float qq01 = q0*q1*2.0;
+
+		//mat4返しても、向こうでメモリ確保してくれていて、消えないから大丈夫
+		return mat4(qq0+qq1-qq2-qq3,qq12-qq03,qq13+qq02,0,qq12+qq03,qq0-qq1+qq2-qq3,qq23-qq01,0,qq13-qq02,qq23+qq01,qq0-qq1-qq2+qq3,0,0,0,0,1);
+
+	}
 
 	void main(void) {
+		//for quaternion
+		vec3 qAxis;
+		float qAngle;
+		mat4 qMatrix;
 
-		//平行光源
-		//遠くなら平行光源positionVectorSaturnでいいけど、近くなると点光源の影響がでるよ。例えば、部屋を照らしている電球のすぐ近くに手をかざすと、大きな影ができるということ。平行光源では影の大きさは一定。
-		highp vec3 positionVectorSaturn = normalize((uNotManipulatedMatrix * vec4(0.0,0.0,0.0,1.0) - vec4(0.0,0.0,0.0,1.0)).xyz);//原点から見た土星の方向ベクトルmeans PosSaturn - PosMovedOrigin
+		//土星の中心
+		vec3 pO = (uNotManipulatedMatrix * vec4(0.0,0.0,0.0,1.0)).xyz;
+		//光源
+		vec3 pL = vec3(0.0);
+		//球面上の点arbitrary point on the surface to compute
+		vec3 pP = (uNotManipulatedMatrix * vec4(aVertexPosition,1.0)).xyz;
+		//上の三点で作る平面の法線ベクトルthe normal of the plane made of three points above
+		vec3 vRN = normalize(cross(pP-pO,pL-pO));
+		//光源からの土星の中心に向かう光の方向ベクトルthe vector of the light toward from light origin to the center of the Saturn
+		vec3 vLN = normalize(pO-pL);
+		//光源と土星の中心との距離the length between the light origin and the center of the Saturn
+		float lenLO = length(pO-pL);
+		//∠pRpLpO
+		float theta = asin(uRadiusOfSaturn / lenLO);
+		//球の光の当たっている部分を切り取る平面と直線pLpOの交点the center of the plane which cut off the part of sphere lit
+		vec3 pC = pL + lenLO*cos(theta)*cos(theta)*vLN;
 
-		//点光源
-//		highp vec3 positionVectorSaturn = normalize((uNotManipulatedMatrix * vec4(aVertexPosition,1.0) - vec4(0.0,0.0,0.0,1.0)).xyz);//原点から見た土星の方向ベクトルmeans PosSaturn - PosMovedOrigin
+		vec3 pD = pL + (lenLO - uRadiusOfSaturn)*vLN;
+		//球と接平面との交点the cross point of the sphere and the plane touching at it
+		vec3 pR = pC - lenLO*cos(theta)*sin(theta)*normalize(cross(vLN,vRN));
 
-		//ここでpositionVectorSaturnとorthographicMatrixを使って平行光源から見た物体のgl_Possitionを求め、そのgl_Colorを求め、shadowFactorをセットしたのち、perspectiveMatrixを使って新たにgl_Positionを設定しなおし、gl_Colorを設定する。
-		//影は、色は黒、alphaは   変化なし  ですからね。
+		//回転軸the center vector to rotate pP
+		qAxis = vRN;
+		//角度the angle to rotate pP
+		qAngle = acos(dot(normalize(pP-pC),normalize(pR-pC)));
+		//回転マトリックス a matrix to rotate from pP to pQ which is on the plane as same as pC
+		qMatrix = getQuaternion(qAxis,qAngle);
+		//pPを移動した後の平面上の点pQ the point pQ which is the pP rotated by quaternion,and pP is on the plane to draw
+		vec3 pQ = rotate(pP,qMatrix,pD);
 
+		//この点を光源から見たものにするために、さらに回転するA more rotation will be given to pQ to get the view from the light origin point of view
+		//つまり、視線(0,0,-1)と、光源から土星の中心を結ぶ線が重なるように回転させるso that the gaze vector (0,0,-1 )and the vector from light origin to the center of the Saturn must be overlaided each other
 
-		highp vec3 centerVector = normalize(cross(positionVectorSaturn,vec3(0.0,0.0,-1.0)));//視線を土星に向ける It make observer's gaze to be in direction to the Saturn.
-		highp float theta = acos(dot(positionVectorSaturn,vec3(0.0,0.0,-1.0)));
-//●		highp float theta = acos(dot(positionVectorSaturn,vec3(0.0,0.0,1.0)));
-		//quaternion
-		highp float ncos = cos(-theta*0.5);
-		highp float nsin = sin(-theta*0.5);
-
-		highp float q0=ncos;
-		highp float q1=centerVector.x*nsin;
-		highp float q2=centerVector.y*nsin;
-		highp float q3=centerVector.z*nsin;
-
-
-		highp float qq0 = q0*q0;
-		highp float qq1 = q1*q1;
-		highp float qq2 = q2*q2;
-		highp float qq3 = q3*q3;
-
-		highp float qq12 = q1*q2*2.0;
-		highp float qq03 = q0*q3*2.0;
-		highp float qq13 = q1*q3*2.0;
-		highp float qq02 = q0*q2*2.0;
-		highp float qq23 = q2*q3*2.0;
-		highp float qq01 = q0*q1*2.0;
-
-		highp mat4 rotateLightDirection= mat4(qq0+qq1-qq2-qq3,qq12-qq03,qq13+qq02,0,qq12+qq03,qq0-qq1+qq2-qq3,qq23-qq01,0,qq13-qq02,qq23+qq01,qq0-qq1-qq2+qq3,0,0,0,0,1);
-
-		//highp float a11=qq0+qq1-qq2-qq3;highp float a12=qq12-qq03;highp float a13=qq13+qq02;highp float a14=0.0;highp float a21=qq12+qq03;highp float a22=qq0-qq1+qq2-qq3;highp float a23=qq23-qq01;highp float a24=0.0;highp float a31=qq13-qq02;highp float a32=qq23+qq01;highp float a33=qq0-qq1-qq2+qq3;highp float a34=0.0;highp float a41=0.0;highp float a42=0.0;highp float a43=0.0;highp float a44=1.0;
-		//mat4 rotateLightDirection= mat4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44);//元と同じ
-		//mat4 rotateLightDirection= mat4(a11,a21,a31,a41,a12,a22,a32,a42,a13,a23,a33,a43,a14,a24,a34,a44);//元の転置
-
-//		gl_Position = uOrthographicMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
-		gl_Position = uPerspectiveForShadowMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
-
+		//回転軸 the center axis to rotate
+		qAxis = normalize(cross(pO-pL,vec3(0.0,0.0,-1.0)));//視線を土星に向ける It make observer's gaze to be in direction to the Saturn.
+		//角度 the quantity of angle
+		qAngle = acos(dot(normalize(pO-pL),vec3(0.0,0.0,-1.0)));//Two vectors are unit vectors each other,then the denominator of inner product is 1.
+		qMatrix = getQuaternion(qAxis,qAngle);		
+		vec4 pos = uPerspectiveMatrixForShadow * qMatrix * vec4(pP,1.0);
+		gl_Position = vec4(pos.xy*1.0,pos.z,pos.w);
 
 		vTextureCoord = aTextureCoord;
-
-
-//大きくする
-
 	}
 */});
 var aAttribs = [
@@ -133,12 +155,11 @@ var aAttribs = [
 		"aTextureCoord"
 ];
 var aUniforms = [
-		"uSampler",
-		"uBrightness",
-		"uAlpha",
-		"uCassiniFactor",
 		"uNotManipulatedMatrix",
-		"uPerspectiveForShadowMatrix"
+		"uPerspectiveMatrixForShadow",
+//for test	"uPerspectiveMatrix",
+		"uSampler",
+		"uRadiusOfSaturn"
 ];
 /* */vs = vs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 /* */fs = fs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");

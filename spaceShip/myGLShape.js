@@ -502,8 +502,8 @@ console.log("nn=",nn);
 		var gamma;//longitude
 //		var rr=2.0;//radius
 
-		var dal=10;//diffential of alpha
-		var dgam=10;//differential of gamma
+		var dal=9;//diffential of alpha
+		var dgam=9;//differential of gamma
 //		var dal=3;//diffential of alpha
 //		var dgam=3;//differential of gamma
 

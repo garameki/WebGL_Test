@@ -48,16 +48,10 @@ var controllBlendColorDepthStencilOfFBO = function(gl){
 var fs = (function(){/*
 
 //hint
-//	varying lowp vec4 vColor;	//as same as vertex shader
-//	varying lowp vec2 vTextureCoord;//as same as vertex shader
-//	varying lowp vec3 vNTimesEachRGB;//as same as vertex shader
-	varying highp vec4 vColor;//●	//as same as vertex shader
-	varying highp vec2 vTextureCoord;//as same as vertex shader
-	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
+	varying mediump vec2 vTextureCoord;//as same as vertex shader
+	varying mediump vec3 vNTimesEachRGB;//as same as vertex shader
 
 	uniform mediump float uBrightness;
-	uniform mediump float uAlpha;
-	uniform mediump float uCassiniFactor;//if zero , not avairable,,if 1 , avairable
 	uniform sampler2D uSamplerStencil;//stencil
 	uniform sampler2D uSampler;//texture of polygon
 
@@ -105,7 +99,6 @@ var vs = (function(){/*
 	//'attribute' this type is used in vertex shader only.This type is assigned on buffers defined in js
 	attribute vec3 aVertexPosition;//x y z
 	attribute vec3 aVertexNormal;//x y z
-	attribute vec4 aVertexColor;//R G B Alpha
 	attribute vec2 aTextureCoord;//x y
 
 	//The type of 'uniform' mainly matrices receipter from js
@@ -120,15 +113,9 @@ var vs = (function(){/*
 
 
 	uniform float uBaseLight;// 0.0-1.0 ?
-	uniform float uPointSizeFloat;//a float value
 
-//hint
-//	varying lowp vec4 vColor;
-//	varying lowp vec2 vTextureCoord;
-//	varying lowp vec3 vNTimesEachRGB;
-	varying lowp vec4 vColor;
-	varying lowp vec2 vTextureCoord;
-	varying lowp vec3 vNTimesEachRGB;
+	varying mediump vec2 vTextureCoord;
+	varying mediump vec3 vNTimesEachRGB;
 
 	varying highp vec4 vStencilCoord;//ステンシルテクスチャの座標
 
@@ -138,8 +125,6 @@ var vs = (function(){/*
 		vStencilCoord = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
 		gl_Position = vStencilCoord;//uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
 
-		gl_PointSize = uPointSizeFloat;
-		vColor = aVertexColor;
 		vTextureCoord = aTextureCoord;
 
 		//分ける　位置ベクトル　と　方向ベクトル
@@ -204,19 +189,14 @@ var vs = (function(){/*
 var aAttribs = [
 		"aVertexPosition",
 		"aVertexNormal",
-		"aVertexColor",
 		"aTextureCoord"
 ];
 var aUniforms = [
 		"uPerspectiveMatrix",
 		"uModelViewMatrix",
-		"uPointSizeFloat",
 		"uModelViewMatrixInversedTransposed",
 		"uBaseLight",
-//		"uManipulatedRotationMatrix",
 		"uBrightness",
-		"uAlpha",
-		"uCassiniFactor",
 		"uManipulatedMatrix",
 		"uSamplerStencil",
 		"uSampler",

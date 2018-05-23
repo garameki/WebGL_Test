@@ -27,8 +27,6 @@ var fs = (function(){/*
 
 
 	uniform lowp float uBrightness;//Saturn2---1.0 ring--arbitrary to send
-	uniform lowp float uAlpha;//Saturn2---1.0 ring---1.0 to send
-	uniform lowp float uCassiniFactor;//Saturn2---0.0 ring---1.0 to send
 
 	uniform sampler2D uSampler;
 
@@ -119,8 +117,6 @@ var aAttribs = [
 var aUniforms = [
 		"uSampler",
 		"uBrightness",
-		"uAlpha",
-		"uCassiniFactor",
 		"uNotManipulatedMatrix",
 		"uPerspectiveForShadowMatrix"
 ];
