@@ -422,8 +422,8 @@ function sendAccumeratedMatrix(vari,arrAccumelateToMyMat4,timeSpan){//to get a m
 };
 
 //************************************** DRAW SCENE *************************************************
-//:myDraw ここでshaderにデータを送り、描く
-var myDraw = {
+//:mySendPlanetData ここでshaderにデータを送り、描く
+var mySendPlanetData = {
 drawPlanets:function(gl,names,angle,sNameShader){
 	var member,pmat,mvmat;
 	for(var num in names){//the last is the texture that is gotten by framebuffer
@@ -456,7 +456,6 @@ drawPlanets:function(gl,names,angle,sNameShader){
 		member.labels.repos(gl,pmat,mvmat);
 	}
 },
-
 drawCassini:function(gl,sNamePolygon,angle,sNameShader){
 	var member;
 	for(var num in sNamePolygon){
@@ -475,7 +474,6 @@ drawCassini:function(gl,sNamePolygon,angle,sNameShader){
 		member.draw();//in which texture activated is for use
 	}
 },
-
 makeStencilFromTextureOnBlack:function(gl,names,angle,sNameShader){
 	var member;
 	for(var num in names){
@@ -495,7 +493,34 @@ makeStencilFromTextureOnBlack:function(gl,names,angle,sNameShader){
 		member.draw();//in which texture activated is for use
 	}
 },
+drawPolygonMoreTransparentlyOnStencil:function(gl,names,angle,sNameShader){
+	var member,pmat,mvmat;
+	for(var num in names){//the last is the texture that is gotten by framebuffer
+		member = UnitsToDraw[names[num]];
+		/** To vertex shader **/
+		myShaders[sNameShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameShader].attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
+		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
 
+		sendPerspectiveMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveMatrix);
+		pmat = myMat4.arr;//sended data above
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		mvmat = myMat4.arr;//sended data above
+		sendModelViewMatrixInversedTransposed(myShaders[sNameShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
+//		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+		myShaders[sNameShader].uniform.uBaseLight.sendFloat(member.baseLight);
+		/** Tofragment shader **/
+		myShaders[sNameShader].uniform.uBrightness.sendFloat(member.brightness);
+
+		myShaders[sNameShader].uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member[member.nameTexture].activate(0);
+
+		member.draw();//in which texture activated is for use
+		member.labels.repos(gl,pmat,mvmat);
+	}
+},
 drawPolygonOffStencil:function(gl,names,angle,sNameShader){
 	var member,pmat,mvmat;
 	for(var num in names){//the last is the texture that is gotten by framebuffer
@@ -524,24 +549,6 @@ drawPolygonOffStencil:function(gl,names,angle,sNameShader){
 		member.labels.repos(gl,pmat,mvmat);
 	}
 },
-// to delete ,not use
-//drawShadows:function(gl,names,angle){
-//	var member,mvmat;
-//	for(var num in names){//the last is the texture that is gotten by framebuffer
-//		member = UnitsToDraw[names[num]];
-//			myShaders.drawShadowOnPlane.attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
-//			myShaders.drawShadowOnPlane.attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
-//			member.buffers.bindElement();
-//			sendPerspectiveMatrix(gl,myShaders.drawShadowOnPlane.uniform.uPerspectiveMatrix);
-//			sendAccumeratedMatrix(myShaders.drawShadowOnPlane.uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
-//			sendAccumeratedMatrix(myShaders.drawShadowOnPlane.uniform.uModelViewMatrix,member.aAccumeUnits,angle);
-//			mvmat = myMat4.arr;//sended data above
-//			sendModelViewMatrixInversedTransposed(myShaders.drawShadowOnPlane.uniform.uModelViewMatrixInversedTransposed,mvmat);
-//			myTextures.member[member.nameTexture].activate(0);
-//			myShaders.drawShadowOnPlane.uniform.uSampler.sendInt(0);
-//		member.draw();
-//	}
-//},
 makeStencilFromShadowUsingSaturnAndRing:function(gl,names,angle,sNameShader){
 	var member;
 	for(var num in names){//the last is the texture that is gotten by framebuffer
@@ -743,11 +750,11 @@ function drawScene(gl,angle){
 /* */ var bitRun = 0x0;
 
 //土星以外を描く
-//bitRun = bitRun | xx.spaceShip;
+bitRun = bitRun | xx.spaceShip;
 //土星本体を描く
 bitRun = bitRun | xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawSaturnWithRoundedTextureOnLightSide | xx.drawSaturnWithRectangleTextureOnDarkSide;
 //リングを描く
-//bitRun = bitRun | xx.makeStencilFromTextureOnBlack | xx.makeStencilFromShadowUsingSaturnAndRing | xx.makeStencilFromTwoStencilTextures | xx.drawPolygonMoreTransparentlyOnStencil;
+bitRun = bitRun | xx.makeStencilFromTextureOnBlack | xx.makeStencilFromShadowUsingSaturnAndRing | xx.makeStencilFromTwoStencilTextures | xx.drawPolygonMoreTransparentlyOnStencil | xx.drawPolygonOffStencil;
 
 //draw rounded texture of the Saturn
 //○	var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawTextureOnClipSpace;
@@ -756,7 +763,6 @@ bitRun = bitRun | xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawS
 //var bitRun = xx.spaceShip | xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawSaturnWithRectangleTextureOnDarkSide;
 //var bitRun = xx.spaceShip | xx.drawSaturnWithRectangleTextureOnDarkSide;
 
-bitRun = bitRun | xx.makeStencilFromTextureOnBlack | xx.makeStencilFromShadowUsingSaturnAndRing | xx.makeStencilFromTwoStencilTextures | xx.drawPolygonMoreTransparentlyOnStencil | xx.drawPolygonOffStencil;
 
 if("flagName" in window){
 	flagName = false;
@@ -773,7 +779,7 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
 	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
 		var names = ["earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
-		myDraw.drawPlanets(gl,names,angle,sNameShader);
+		mySendPlanetData.drawPlanets(gl,names,angle,sNameShader);
 	myFBOs[sNameShader].inactivate();
 	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
@@ -786,7 +792,7 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].activate("CTDNSN");
 	myShaders[sNameShader].activate();
 		names = ["ring"];
-		myDraw.drawCassini(gl,names,angle,sNameShader);
+		mySendPlanetData.drawCassini(gl,names,angle,sNameShader);
 	myFBOs[sNameShader].inactivate();
 		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 }//boolean
@@ -798,7 +804,7 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].activate("CTDNSN");
 	myShaders[sNameShader].activate();
 		names = ["ring"];
-		myDraw.drawCassini(gl,names,angle,sNameShader);
+		mySendPlanetData.drawCassini(gl,names,angle,sNameShader);
 	myFBOs[sNameShader].inactivate();
 		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 }//boolean
@@ -827,12 +833,12 @@ if(flagName)console.log(++iiShader+"."+sNameShaderSaturn+" & "+sNameShaderShadow
 	myFBOs[sNameShaderSaturn].activate("CTDRSN");//使い終わったらinactivate()すること。viewportを元に戻す。メモリを解放し、frame bufferを切り離す。
 	myShaders[sNameShaderSaturn].activate();
 		var sNameTarget = "saturn";//表面に影を落としたいアイテムの名前
-		var mats = myDraw[sNameShaderSaturn](gl,sNameTarget,angle,sNameShaderSaturn);
+		var mats = mySendPlanetData[sNameShaderSaturn](gl,sNameTarget,angle,sNameShaderSaturn);
 	gl.enable(gl.BLEND);
 	gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 	myShaders[sNameShaderShadow].activate();
 		var aNames = ["ring"];//,"ミマス","エンケラドス","カロン"];//影にしたいアイテムの名前
-		myDraw[sNameShaderShadow](gl,aNames,angle,sNameShaderShadow,mats.nmmat,mats.psmat);
+		mySendPlanetData[sNameShaderShadow](gl,aNames,angle,sNameShaderShadow,mats.nmmat,mats.psmat);
 	myFBOs[sNameShaderSaturn].inactivate();
 		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
 		myTextures.member["roundedTextureWithShadow"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
@@ -858,7 +864,7 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 		myShaders[sNameShader].uniform.uSamplerRounded.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 		myTextures.member["roundedTextureWithShadow"].activate(0);//上で作ったやつ
 	gl.enable(gl.DEPTH_TEST);
-		myDraw[sNameShader](gl,sName,angle,sNameShader);
+		mySendPlanetData[sNameShader](gl,sName,angle,sNameShader);
 	//myFBOs[sNameShader].inactivate();
 	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
@@ -881,7 +887,7 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 		myShaders[sNameShader].uniform.uSamplerRectangle.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 		myTextures.member[sName].activate(0);//通常のtexture
 	gl.enable(gl.DEPTH_TEST);
-		myDraw[sNameShader](gl,sName,angle,sNameShader);
+		mySendPlanetData[sNameShader](gl,sName,angle,sNameShader);
 	//myFBOs[sNameShader].inactivate();
 	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
@@ -899,7 +905,7 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 		var nRefStencilCassini  = 0x40;//作成するステンシルの値the value of stencil being making
 		myShaders[sNameShader].uniform.refStencil.sendFloat8(nRefStencilCassini);
 		names = ["ring"];
-		myDraw[sNameShader](gl,names,angle,sNameShader);
+		mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
 
 	myFBOs[sNameShader].inactivate();
 		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
@@ -918,7 +924,7 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 		var nRefStencilShadowOfSaturn = 0x80;//作成するステンシルの値the value of stencil being making
 		myShaders[sNameShader].uniform.refStencil.sendFloat8(nRefStencilShadowOfSaturn);
 		names = ["saturn"];
-		myDraw[sNameShader](gl,names,angle,sNameShader);
+		mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
 	myFBOs[sNameShader].inactivate();
 		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 		myTextures.member["stencilShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
@@ -949,7 +955,7 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 //ポリゴンを画面に描きます。ステンシルのかかっている部分(指定のステンシル番号)はさらに透明度を増します。
 //On screen rendering
 //***********************************************************************************
-var sNameShader = "drawPolygonMoreTransparentlyOnStencil";
+var sNameShader = "drawPolygonMoreTransparentlyOnStencil";//------>これのmySendPlanetDataプロパティーがない！
 if((bitRun & myShaderBIT[sNameShader]) != 0){ 
 if(flagName)console.log(++iiShader+"."+sNameShader);
 	//myFBOs[sNameShader].activate("CNDNSN");//引数を省略すると.initialize()で指定した値が使われます
@@ -963,9 +969,9 @@ gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 		var nIgnoreStencil;//このビット上には描かない
 		nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
 		//console.log("nIgnoreStencil=",nIgnoreStencil.toString(16));
-		myShaders[sNameShader].uniform.refStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが扱えます//描かないステンシルの番号
+		myShaders[sNameShader].uniform.uRefStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが同時に扱えます//描かないステンシルの番号
 		var names = ["ring"];
-		myDraw.drawPolygonOffStencil(gl,names,angle,sNameShader);//共用です
+		mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
 	//myFBOs[sNameShader].inactivate();
 }
 //*************************** DRAW POLYGON OFF STENCIL *****************************
@@ -987,7 +993,7 @@ gl.depthFunc(gl.LEQUAL);
 		//console.log("nIgnoreStencil=",nIgnoreStencil.toString());
 		myShaders[sNameShader].uniform.refStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが扱えます//描かないステンシルの番号
 		var names = ["ring"];
-		myDraw[sNameShader](gl,names,angle,sNameShader);
+		mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
 	//myFBOs[sNameShader].inactivate();
 }
 //*************************** DRAW TEXTURE ON CLIP SPACE NORMAL **********************************************
@@ -1871,8 +1877,8 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 </script>
 
 </head>
-<!--body style="overflow:hidden;" onload="prestart();"-->
-<body onload="prestart();">
+<body style="overflow:hidden;" onload="prestart();">
+<!--body onload="prestart();"-->
 <div>
 <div id="canvasContainer">
 	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:512px;height:512px;"></canvas>

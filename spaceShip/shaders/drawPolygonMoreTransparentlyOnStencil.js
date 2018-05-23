@@ -48,21 +48,17 @@ var controllBlendColorDepthStencilOfFBO = function(gl){
 var fs = (function(){/*
 
 //hint
-//	varying lowp vec4 vColor;	//as same as vertex shader
 //	varying lowp vec2 vTextureCoord;//as same as vertex shader
 //	varying lowp vec3 vNTimesEachRGB;//as same as vertex shader
-	varying highp vec4 vColor;//●	//as same as vertex shader
 	varying highp vec2 vTextureCoord;//as same as vertex shader
 	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
 
 	uniform mediump float uBrightness;
-	uniform mediump float uAlpha;
-	uniform mediump float uCassiniFactor;//if zero , not avairable,,if 1 , avairable
 	uniform sampler2D uSamplerStencil;//stencil
 	uniform sampler2D uSampler;//texture of polygon
 
 	varying highp vec4 vStencilCoord;
-	uniform lowp int refStencil;//この上には描かない
+	uniform lowp int uRefStencil;//この上には描かない
 
 	//original AND function from https://gist.github.com/EliCDavis/f35a9e4afb8e1c9ae94cce8f3c2c9b9aint
 	lowp int AND(lowp int n1,lowp int n2){
@@ -93,12 +89,10 @@ var fs = (function(){/*
 
 		lowp float st8 = texture2D(uSamplerStencil,(vStencilCoord.xy / vStencilCoord.w) * 0.5 + 0.5).r;//この式は胆です
 
-		if(AND(int(st8*256.0),refStencil) == 0){//the result of bitwise ANDing isn't zero shows Don't write color.
-//			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,1.0);
-			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a*1.2);
+		if(AND(int(st8*256.0),uRefStencil) == 0){//the result of bitwise ANDing isn't zero shows Don't write color.
+			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,1.0);
 		}else{
-			//gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,0.2);
-			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,(1.0-gg*uCassiniFactor)*uAlpha*texelColor.a*0.4);
+			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,0.2);
 		};
 	}
 */});
@@ -107,7 +101,6 @@ var vs = (function(){/*
 	//'attribute' this type is used in vertex shader only.This type is assigned on buffers defined in js
 	attribute vec3 aVertexPosition;//x y z
 	attribute vec3 aVertexNormal;//x y z
-	attribute vec4 aVertexColor;//R G B Alpha
 	attribute vec2 aTextureCoord;//x y
 
 	//The type of 'uniform' mainly matrices receipter from js
@@ -125,10 +118,8 @@ var vs = (function(){/*
 	uniform float uPointSizeFloat;//a float value
 
 //hint
-//	varying lowp vec4 vColor;
 //	varying lowp vec2 vTextureCoord;
 //	varying lowp vec3 vNTimesEachRGB;
-	varying lowp vec4 vColor;
 	varying lowp vec2 vTextureCoord;
 	varying lowp vec3 vNTimesEachRGB;
 
@@ -141,7 +132,6 @@ var vs = (function(){/*
 		gl_Position = vStencilCoord;//uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
 
 		gl_PointSize = uPointSizeFloat;
-		vColor = aVertexColor;
 		vTextureCoord = aTextureCoord;
 
 		//分ける　位置ベクトル　と　方向ベクトル
@@ -206,7 +196,6 @@ var vs = (function(){/*
 var aAttribs = [
 		"aVertexPosition",
 		"aVertexNormal",
-		"aVertexColor",
 		"aTextureCoord"
 ];
 var aUniforms = [
@@ -217,12 +206,10 @@ var aUniforms = [
 		"uBaseLight",
 //		"uManipulatedRotationMatrix",
 		"uBrightness",
-		"uAlpha",
-		"uCassiniFactor",
 		"uManipulatedMatrix",
 		"uSamplerStencil",
 		"uSampler",
-		"refStencil"//描かないステンシル番号のビット和
+		"uRefStencil"//描かないステンシル番号のビット和
 ];
 
 
