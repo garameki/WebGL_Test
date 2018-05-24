@@ -987,7 +987,7 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 		myShaders[sNameShader].activate();
 			var nRefStencilShadowOfSaturn = 0x80;//作成するステンシルの値the value of stencil being making
 			myShaders[sNameShader].uniform.refStencil.sendFloat8(nRefStencilShadowOfSaturn);
-			names = ["saturn","titan","tethys","mimas"];
+			names = ["saturn"];
 			mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
 		myFBOs[sNameShader].inactivate();
 			myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
