@@ -71,7 +71,7 @@ var vs = (function(){/*
 	uniform mat4 uModelViewMatrix;
 	uniform mat4 uPerspectiveMatrix;
 	uniform mat4 uManipulatedMatrix;
-	uniform mat4 uPerspectiveForShadowMatrix;
+	uniform mat4 uPerspectiveMatrixForShadow;
 	uniform mat4 uNotManipulatedMatrix;
 
 
@@ -186,7 +186,7 @@ var vs = (function(){/*
 		//mat4 rotateLightDirection= mat4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44);//å≥Ç∆ìØÇ∂
 		//mat4 rotateLightDirection= mat4(a11,a21,a31,a41,a12,a22,a32,a42,a13,a23,a33,a43,a14,a24,a34,a44);//å≥ÇÃì]íu
 
-		vec4 xyzw = uPerspectiveForShadowMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
+		vec4 xyzw = uPerspectiveMatrixForShadow * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
 
 		xyzw = vec4(xyzw.xy*0.996,xyzw.zw);
 //Åõ		xyzw = vec4(xyzw.xy*1.0,xyzw.zw);
@@ -225,7 +225,7 @@ var vs = (function(){/*
 //		//mat4 rotateLightDirection= mat4(a11,a12,a13,a14,a21,a22,a23,a24,a31,a32,a33,a34,a41,a42,a43,a44);//å≥Ç∆ìØÇ∂
 //		//mat4 rotateLightDirection= mat4(a11,a21,a31,a41,a12,a22,a32,a42,a13,a23,a33,a43,a14,a24,a34,a44);//å≥ÇÃì]íu
 
-//		mediump vec4 xyzw = uPerspectiveForShadowMatrix * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
+//		mediump vec4 xyzw = uPerspectiveMatrixForShadow * rotateLightDirection * uNotManipulatedMatrix * vec4(aVertexPosition,1.0);
 //		vTextureCoordRounded = (xyzw.xy / xyzw.w) * 0.5 + 0.5;
 
 	}
@@ -244,7 +244,7 @@ var aUniforms = [
 	"uManipulatedMatrix",
 	"uBaseLight",
 	"uNotManipulatedMatrix",
-	"uPerspectiveForShadowMatrix",
+	"uPerspectiveMatrixForShadow",
 	"uBrightness",
 	"uSamplerRounded",
 	"uRadiusOfSaturn"

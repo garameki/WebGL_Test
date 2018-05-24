@@ -2,7 +2,8 @@
 <link rel="stylesheet"		type="text/css"		href="./styleSheet.css"></link>
 <script id="library"		type="text/javascript"	src="./myLib.js"></script>
 <script id="calculationXYZ"	type="text/javascript"	src="./accumeMotionsXYZ.js"></script>
-<script id="matrix"		type="text/javascript"	src="./myMatrix.js"></script>
+<script id="matrix"		type="text/javascript"	src="./myMat4.js"></script>
+<script	type="text/javascript"	src="./myVec3.js"></script>
 <script id="color"		type="text/javascript"	src="./myColor.js"></script>
 <script id="class"		type="text/javascript"	src="./myClass.js"></script>
 <script id="shape"		type="text/javascript"	src="./myGLShape.js"></script>
@@ -241,7 +242,7 @@
 
 //●lll .attribとか.uniformとか、どうせ変数名は一意に決まるものなのだから、分けなくてよくね？
 
-	/** For attribute variable **/
+	/** For ATTRIBUTE variable **/
 	Shader.prototype.getAttribLocation = function(sNameVariable){
 		Object.defineProperty(this.attrib,sNameVariable,{value:new AttribVariable(this.gl,this.program,sNameVariable,this.programName),writable:false,enumerable:true,configurable:false});
 	};
@@ -280,7 +281,7 @@
 	};
 
 
-	/** For uniform variable **/
+	/** For UNIFORM variable **/
 	Shader.prototype.getUniformLocation = function(sNameVariable){
 		Object.defineProperty(this.uniform,sNameVariable,{value:new UniformVariable(this.gl,this.program,sNameVariable,this.programName),writable:false,enumerable:true,configurable:false});
 	};
@@ -315,7 +316,9 @@
 <!--*** shader programs, FBOs and controllers of CDF ***-->
 <script id="shader-spaceShip"						type="text/javascript"	src="./shaders/spaceShip.js"></script>
 <script id="shader-makeTextureOfSaturnFromLightPointOfViewForSaturn"	type="text/javascript"	src="./shaders/makeTextureOfSaturnFromLightPointOfViewForSaturn.js"></script>
-<script id="shader-makeTextureOfSaturnFromLightPointOfViewForShadow"	type="text/javascript"	src="./shaders/makeTextureOfSaturnFromLightPointOfViewForShadow.js"></script>
+
+<script type="text/javascript" src="./shaders/makeTextureOfSaturnFromLightPointOfViewForShadow.js"></script>
+
 <script id="shader-mixTwoTexturesWithDepthes"				type="text/javascript"	src="./shaders/mixTwoTexturesWithDepthes.js"></script>
 <script id="shader-makeCassiniAlpha0"					type="text/javascript"	src="./shaders/makeCassiniAlpha0.js"></script>
 <script id="shader-makeCassiniWhite"					type="text/javascript"	src="./shaders/makeCassiniWhite.js"></script>
@@ -343,9 +346,27 @@ var prestart = function(){
 //********************************** VALUES FOR SHADER ****************************************
 
 /**
- * @param {mvMatrix} model view matrix
+ * SEND QUATERNION ROTATION MATRIX
+ * @param {gl} canvas context object
+ * @param {vari} myShader[sNameShader].uniform[sNameVariable] object which has several functions to send value(s) to the shader program
+ * @param {parentNotManipulatedMatrix} Array(16)
+ * @param {parentParentPosition} Array(3) the position of connected parent's connected parent
 */
-function sendPerspectiveForShadowMatrix(gl,vari,radius,notManipulatedMatrix){
+function sendQMatrix(gl,vari,parentNotManipulatedMatrix){//"parentPosition"を-Z軸上に回転移動させるための行列
+	var length = myVec3.length;
+	var normalize = myVec3.normalize;
+	var dot = myVec3.dot;
+	var cross = myVec3.cross;
+
+	myMat4.load(parentNotManipulatedMatrix);//parent's matrix
+	var parentPos = myMat4.get2D(0,0,0);	//calc parent position and normalize
+	var theta = Math.acos(dot(normalize(parentPos),[0,0,-1]));
+	var axis = normalize(cross(parentPos,[0,0,-1]));//基準側が2番目。1番目は位置ベクトル
+	myMat4.loadIdentity();
+	myMat4.rot(axis[0],axis[1],axis[2],theta);//accuming to identity is itself
+	vari.sendFloat32Array(myMat4.arr);
+};
+function sendPerspectiveMatrixForShadow(gl,vari,radius,notManipulatedMatrix){
 	myMat4.load(notManipulatedMatrix);
 	var aXYZ = myMat4.get2D(0,0,0);
 	var length = Math.sqrt(aXYZ[0]*aXYZ[0]+aXYZ[1]*aXYZ[1]+aXYZ[2]*aXYZ[2]);
@@ -569,7 +590,7 @@ makeStencilFromShadowUsingSaturnAndRing:function(gl,names,angle,sNameShader){
 	}
 },
 makeTextureOfSaturnFromLightPointOfViewForSaturn:function(gl,sNameSaturn,angle,sNameShader){
-	var nmmat,psmat;
+	var notManipulatedMatrix,perspectiveForShadowMatrix;
 	var member;
 
 		//For the Saturn
@@ -581,9 +602,9 @@ makeTextureOfSaturnFromLightPointOfViewForSaturn:function(gl,sNameSaturn,angle,s
 		member.buffers.bindElement();
 //for test	sendPerspectiveMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveMatrix);
 		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
-		nmmat = myMat4.arr;
-		sendPerspectiveForShadowMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveMatrixForShadow,myBall[sNameSaturn].radius,nmmat);
-		psmat = myMat4.arr
+		notManipulatedMatrix = myMat4.arr;
+		sendPerspectiveMatrixForShadow(gl,myShaders[sNameShader].uniform.uPerspectiveMatrixForShadow,myBall[sNameSaturn].radius,notManipulatedMatrix);
+		perspectiveMatrixForShadow = myMat4.arr;
 		myShaders[sNameShader].uniform.uRadiusOfSaturn.sendFloat(myBall[sNameSaturn].radius);//kkk to check
 		// To fragment shader
 		myShaders[sNameShader].uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
@@ -591,9 +612,9 @@ makeTextureOfSaturnFromLightPointOfViewForSaturn:function(gl,sNameSaturn,angle,s
 
 		member.draw();//in which texture activated is for use
 
-		return {nmmat:nmmat,psmat:psmat};
+		return {nm:notManipulatedMatrix,ps:perspectiveMatrixForShadow};
 },
-makeTextureOfSaturnFromLightPointOfViewForShadow:function(gl,aNames,angle,sNameShader,nmmat,psmat){
+makeTextureOfSaturnFromLightPointOfViewForShadow:function(gl,aNames,angle,sNameShader,parentNotManipulatedMatrix,parentPerspectiveMatrixForShadow){
 	var member;
 
 		// For other objects
@@ -605,8 +626,12 @@ makeTextureOfSaturnFromLightPointOfViewForShadow:function(gl,aNames,angle,sNameS
 		myShaders[sNameShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
 		member.buffers.bindElement();
 
-		myShaders[sNameShader].uniform.uNotManipulatedMatrix.sendFloat32Array(nmmat);
-		myShaders[sNameShader].uniform.uPerspectiveForShadowMatrix.sendFloat32Array(psmat);
+//for test
+		sendPerspectiveMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveMatrix);//for test
+//new
+		sendQMatrix(gl,myShaders[sNameShader].uniform.uQMatrix,parentNotManipulatedMatrix);
+		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
+		myShaders[sNameShader].uniform.uPerspectiveMatrixForShadow.sendFloat32Array(parentPerspectiveMatrixForShadow);
 		// To fragment shader
 		myShaders[sNameShader].uniform.uBrightness.sendFloat(member.brightness);
 		myShaders[sNameShader].uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
@@ -631,7 +656,7 @@ drawSaturnWithRoundedTextureOnLightSide:function(gl,sNameSaturn,angle,sNameShade
 		sendModelViewMatrixInversedTransposed(myShaders[sNameShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
 		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
 		nmmat = myMat4.arr;
-		sendPerspectiveForShadowMatrix(gl,myShaders[sNameShader].uniform.uPerspectiveForShadowMatrix,myBall[sNameSaturn].radius,nmmat);
+		sendPerspectiveMatrixForShadow(gl,myShaders[sNameShader].uniform.uPerspectiveMatrixForShadow,myBall[sNameSaturn].radius,nmmat);
 		sendAccumeratedMatrix(myShaders[sNameShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
 		myShaders[sNameShader].uniform.uBaseLight.sendFloat(member.baseLight);
 		/** Tofragment shader **/
@@ -757,11 +782,16 @@ bitRun = bitRun | xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawS
 bitRun = bitRun | xx.makeStencilFromTextureOnBlack | xx.makeStencilFromShadowUsingSaturnAndRing | xx.makeStencilFromTwoStencilTextures | xx.drawPolygonMoreTransparentlyOnStencil | xx.drawPolygonOffStencil;
 
 //draw rounded texture of the Saturn
-//○	var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawTextureOnClipSpace;
+//var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawTextureOnClipSpace;
 //draw the Saturn with the rounded texture and without the shadow
 //var bitRun = xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawSaturnWithRoundedTextureOnLightSide | xx.drawSaturnWithRectangleTextureOnDarkSide;
 //var bitRun = xx.spaceShip | xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawSaturnWithRectangleTextureOnDarkSide;
 //var bitRun = xx.spaceShip | xx.drawSaturnWithRectangleTextureOnDarkSide;
+
+
+//影入りの丸いテクスチャを描くbitRun = bitRun | xx.makeTextureOfSaturnFromLightPointOfViewForSaturn | xx.drawTextureOnClipSpace;
+
+//| xx.drawSaturnWithRoundedTextureOnLightSide | xx.drawSaturnWithRectangleTextureOnDarkSide;
 
 
 if("flagName" in window){
@@ -778,7 +808,8 @@ if((bitRun & myShaderBIT[sNameShader]) != 0){
 if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
 	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
-		var names = ["earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury"];//<-----JUPITERからrenderされる
+		//var names = ["earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+		var names = ["earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 		mySendPlanetData.drawPlanets(gl,names,angle,sNameShader);
 	myFBOs[sNameShader].inactivate();
 	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
@@ -808,99 +839,132 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].inactivate();
 		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 }//boolean
-//************************* MAKE TEXTURE OF SATURN AND ITS RING SHADOW FROM THE POINT OF VIEW OF THE LIGHT ****************************
+//************************* DRAW PLANET WITH SHADOW ON ITS SURFACE ****************************
+//*********************************************************************************************
+//影入りで描きたい惑星を列挙して描きます。
+//シェーダーを連続して換えます
 //*******************************************************************************************************************
-//光源から見た影入りの景色を描く
-//FBOはそのままで、シェーダーを変えて同じFBOに書き込んでいく!!
-//*******************************************************************************************************************
 
-//あとで、土星だけではなく影を落としたい惑星全てについてできるように改造する
-//var aNamesSatellite = {
-//	saturn:["titan","enceladus","tethys","mimas"],
-//	jupitor:["europa","ganymede","io","calisto"],
-//	neptune:["triton","proteus","larissa"],
-//	uranus:["ariel","titania","","umbriel"]
-//};
-//
-//
+	//******************* MAKE TEXTURE OF SATURN AND ITS RING SHADOW FROM THE POINT OF VIEW OF THE LIGHT ****************
+	//*******************************************************************************************************************
+	//光源から見た影入りの景色を描く
+	//FBOはそのままで、シェーダーを変えて同じFBOに書き込んでいく!!
+	//*******************************************************************************************************************
 
-
-//var sNameShader = "lightPointOfView";//旧old
-var sNameShaderSaturn = "makeTextureOfSaturnFromLightPointOfViewForSaturn";
-var sNameShaderShadow = "makeTextureOfSaturnFromLightPointOfViewForShadow";
-if((bitRun & myShaderBIT[sNameShaderSaturn]) != 0){ 
-if(flagName)console.log(++iiShader+"."+sNameShaderSaturn+" & "+sNameShaderShadow);
-	myFBOs[sNameShaderSaturn].activate("CTDRSN");//使い終わったらinactivate()すること。viewportを元に戻す。メモリを解放し、frame bufferを切り離す。
-	myShaders[sNameShaderSaturn].activate();
-		var sNameTarget = "saturn";//表面に影を落としたいアイテムの名前
-		var mats = mySendPlanetData[sNameShaderSaturn](gl,sNameTarget,angle,sNameShaderSaturn);
-	gl.enable(gl.BLEND);
-	gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-	myShaders[sNameShaderShadow].activate();
-		var aNames = ["ring"];//,"ミマス","エンケラドス","カロン"];//影にしたいアイテムの名前
-		mySendPlanetData[sNameShaderShadow](gl,aNames,angle,sNameShaderShadow,mats.nmmat,mats.psmat);
-	myFBOs[sNameShaderSaturn].inactivate();
-		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
-		myTextures.member["roundedTextureWithShadow"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
-}//boolean
-
-var 円形のテクスチャを光が当たっている面に張り付ける
-myBall.saturn.aSattelites = ["ring","ミマス","エンケラドス","カロン","イオ"];
-
-//************************* DRAW SATURN WITH ROUNDED TEXTURE ON LIGHT SIDE ****************************
-//*****************************************************************************************************
-// 光の当たっている面だけを、丸いテクスチャを使って描く
-//*****************************************************************************************************
+	//あとで、土星だけではなく影を落としたい惑星全てについてできるように改造する
+	//myBall.saturn.sattelites = ["ring","titan","enceladus","tethys","mimas"];
+	//myBall.jupitor.sattelites = ["europa","ganymede","io","calisto"];
+	//	neptune:["triton","proteus","larissa"],
+	//	uranus:["ariel","titania","","umbriel"]
+	//};
+	//
+	//
+	//var 円形のテクスチャを光が当たっている面に張り付ける
+	//myBall.saturn.aSattelites = ["ring","ミマス","エンケラドス","カロン","イオ"];
 
 
-//あとで上のシェーダーとくっつける
 
-var sNameShader = "drawSaturnWithRoundedTextureOnLightSide";
-if((bitRun & myShaderBIT[sNameShader]) != 0){
-if(flagName)console.log(++iiShader+"."+sNameShader);
-	//myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
-	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
-		var sName = "saturn";
-		myShaders[sNameShader].uniform.uSamplerRounded.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-		myTextures.member["roundedTextureWithShadow"].activate(0);//上で作ったやつ
-	gl.enable(gl.DEPTH_TEST);
-		mySendPlanetData[sNameShader](gl,sName,angle,sNameShader);
-	//myFBOs[sNameShader].inactivate();
-	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
-}//boolean
-//************************* DRAW SATURN WITH RECTANGLE TEXTURE ON DARK SIDE ****************************
-//*****************************************************************************************************
-// 光の当たっていない面だけを、四角い通常のテクスチャを使って描く
-//いつものシェーダーと違うところは、光の当たっている部分は中心に畳まれてしまうところです。
-//*****************************************************************************************************
+	var sNameShaderSaturn = "makeTextureOfSaturnFromLightPointOfViewForSaturn";
+	var sNameShaderShadow = "makeTextureOfSaturnFromLightPointOfViewForShadow";
+	if((bitRun & myShaderBIT[sNameShaderSaturn]) != 0){ 
+	if(flagName)console.log(++iiShader+"."+sNameShaderSaturn+" & "+sNameShaderShadow);
+		myFBOs[sNameShaderSaturn].activate("CTDRSN");//使い終わったらinactivate()すること。viewportを元に戻す。メモリを解放し、frame bufferを切り離す。
+		myShaders[sNameShaderSaturn].activate();
+			var sNameTarget = "saturn";//表面に影を落としたいアイテムの名前
+			var mats = mySendPlanetData[sNameShaderSaturn](gl,sNameTarget,angle,sNameShaderSaturn);
+		myShaders[sNameShaderShadow].activate();
+			var aNames = ["titan","mimas","tethys"];//,"ミマス","エンケラドス","カロン"];//影にしたいアイテムの名前
+				gl.disable(gl.BLEND);
+			mySendPlanetData[sNameShaderShadow](gl,aNames,angle,sNameShaderShadow,mats.nm,mats.ps);
+			var aNames = ["ring"];
+				gl.enable(gl.BLEND);
+				gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+			mySendPlanetData[sNameShaderShadow](gl,aNames,angle,sNameShaderShadow,mats.nm,mats.ps);
+		myFBOs[sNameShaderSaturn].inactivate();
+			myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
+			myTextures.member["roundedTextureWithShadow"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
+	}//boolean
+//	var sNameShaderSaturn = "makeTextureOfSaturnFromLightPointOfViewForSaturn";
+//	var sNameShaderShadow = "makeTextureOfSaturnFromLightPointOfViewForShadow";
+//	if((bitRun & myShaderBIT[sNameShaderSaturn]) != 0){ 
+//	if(flagName)console.log(++iiShader+"."+sNameShaderSaturn+" & "+sNameShaderShadow);
+//		myFBOs[sNameShaderSaturn].activate("CTDRSN");//使い終わったらinactivate()すること。viewportを元に戻す。メモリを解放し、frame bufferを切り離す。
+//		myShaders[sNameShaderSaturn].activate();
+//			var sNameTarget = "saturn";//表面に影を落としたいアイテムの名前
+//			var mats = mySendPlanetData[sNameShaderSaturn](gl,sNameTarget,angle,sNameShaderSaturn);
+//		gl.enable(gl.BLEND);
+//		gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+//		myShaders[sNameShaderShadow].activate();
+//			var aNames = ["ring","titan","mimas","tethys"];//,"ミマス","エンケラドス","カロン"];//影にしたいアイテムの名前
+//			mySendPlanetData[sNameShaderShadow](gl,aNames,angle,sNameShaderShadow,mats.nm,mats.ps);
+//		myFBOs[sNameShaderSaturn].inactivate();
+//			myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
+//			myTextures.member["roundedTextureWithShadow"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
+//	}//boolean
+
+	//************************* DRAW SATURN WITH ROUNDED TEXTURE ON LIGHT SIDE ****************************
+	//*****************************************************************************************************
+	// 光の当たっている面だけを、丸いテクスチャを使って描く
+	//*****************************************************************************************************
 
 
-//あとで上のシェーダーとくっつける
+	//あとで上のシェーダーとくっつける
 
-var sNameShader = "drawSaturnWithRectangleTextureOnDarkSide";
-if((bitRun & myShaderBIT[sNameShader]) != 0){
-if(flagName)console.log(++iiShader+"."+sNameShader);
-	//myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
-	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
-		var sName = "saturn";
-		myShaders[sNameShader].uniform.uSamplerRectangle.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-		myTextures.member[sName].activate(0);//通常のtexture
-	gl.enable(gl.DEPTH_TEST);
-		mySendPlanetData[sNameShader](gl,sName,angle,sNameShader);
-	//myFBOs[sNameShader].inactivate();
-	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
-}//boolean
-//*************************** MAKE STENCIL FROM TEXTURE ON BLACK *****************
+	var sNameShader = "drawSaturnWithRoundedTextureOnLightSide";
+	if((bitRun & myShaderBIT[sNameShader]) != 0){
+	if(flagName)console.log(++iiShader+"."+sNameShader);
+		//myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
+		myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
+			var sName = "saturn";
+			myShaders[sNameShader].uniform.uSamplerRounded.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+			myTextures.member["roundedTextureWithShadow"].activate(0);//上で作ったやつ
+		gl.enable(gl.DEPTH_TEST);
+			mySendPlanetData[sNameShader](gl,sName,angle,sNameShader);
+		//myFBOs[sNameShader].inactivate();
+		//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+		//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
+	}//boolean
+	//************************* DRAW SATURN WITH RECTANGLE TEXTURE ON DARK SIDE ****************************
+	//*****************************************************************************************************
+	// 光の当たっていない面だけを、四角い通常のテクスチャを使って描く
+	//いつものシェーダーと違うところは、光の当たっている部分は中心に畳まれてしまうところです。
+	//*****************************************************************************************************
+
+
+	//あとで上のシェーダーとくっつける
+
+	var sNameShader = "drawSaturnWithRectangleTextureOnDarkSide";
+	if((bitRun & myShaderBIT[sNameShader]) != 0){
+	if(flagName)console.log(++iiShader+"."+sNameShader);
+		//myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
+		myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
+			var sName = "saturn";
+			myShaders[sNameShader].uniform.uSamplerRectangle.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+			myTextures.member[sName].activate(0);//通常のtexture
+		gl.enable(gl.DEPTH_TEST);
+			mySendPlanetData[sNameShader](gl,sName,angle,sNameShader);
+		//myFBOs[sNameShader].inactivate();
+		//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+		//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
+	}//boolean
+//***********************************************************************************************
+//***********************************************************************************************
+
+
+//*************************** DRAW RING ***************************************
 //*****************************************************************************
-//テクスチャの黒い部分からSTENCILを作成します。
-//ステンシル番号は0x40(the cassini of the ring of the Saturn)
+//土星の輪を描きます。輪には土星の影が落ちています。
 //***********************************************************************************
-var sNameShader = "makeStencilFromTextureOnBlack";
-if((bitRun & myShaderBIT[sNameShader]) != 0){ 
-if(flagName)console.log(++iiShader+"."+sNameShader);
-	myFBOs[sNameShader].activate("CTDNSN");//Stencil Textureをshaderから作成するにはcolor buffer textureをgl.R8,gl.RED,gl.UNSIGNED_BYTEを使ってgl_FragColorに代入することで作成します。
+
+	//*************************** MAKE STENCIL FROM TEXTURE ON BLACK *****************
+	//*****************************************************************************
+	//テクスチャの黒い部分からSTENCILを作成します。
+	//ステンシル番号は0x40(the cassini of the ring of the Saturn)
+	//***********************************************************************************
+	var sNameShader = "makeStencilFromTextureOnBlack";
+	if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+	if(flagName)console.log(++iiShader+"."+sNameShader);
+		myFBOs[sNameShader].activate("CTDNSN");//Stencil Textureをshaderから作成するにはcolor buffer textureをgl.R8,gl.RED,gl.UNSIGNED_BYTEを使ってgl_FragColorに代入することで作成します。
 	myShaders[sNameShader].activate();
 		var nRefStencilCassini  = 0x40;//作成するステンシルの値the value of stencil being making
 		myShaders[sNameShader].uniform.refStencil.sendFloat8(nRefStencilCassini);
@@ -910,92 +974,98 @@ if(flagName)console.log(++iiShader+"."+sNameShader);
 	myFBOs[sNameShader].inactivate();
 		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 		myTextures.member["stencilCassini_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-}//boolean
-//*************************** MAKE STENCIL FROM SHADOW ON PLANE. SHADOW IS MADE FROM 3D-SHAPE  *****************
-//**************************************************************************************************************
-//任意の平面に影を作り、それをステンシルとします。影は任意の立体から作成可能です。
-//ステンシル番号は0x80(the shadow of the Saturn on its ring plane)
-//**************************************************************************************************************
-var sNameShader = "makeStencilFromShadowUsingSaturnAndRing";//this means making stencil form a 3D shaped bulge polygon and the 3D shaped flat polygon
-if((bitRun & myShaderBIT[sNameShader]) != 0){ 
-if(flagName)console.log(++iiShader+"."+sNameShader);
-	myFBOs[sNameShader].activate("CTDNSN");//Stencil Textureをshaderから作成するにはcolor buffer textureをgl.R8,gl.RED,gl.UNSIGNED_BYTEを使ってgl_FragColorに代入することで作成します。
-	myShaders[sNameShader].activate();
-		var nRefStencilShadowOfSaturn = 0x80;//作成するステンシルの値the value of stencil being making
-		myShaders[sNameShader].uniform.refStencil.sendFloat8(nRefStencilShadowOfSaturn);
-		names = ["saturn"];
-		mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
-	myFBOs[sNameShader].inactivate();
-		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-		myTextures.member["stencilShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+	}//boolean
+	//*************************** MAKE STENCIL FROM SHADOW ON PLANE. SHADOW IS MADE FROM 3D-SHAPE  *****************
+	//**************************************************************************************************************
+	//任意の平面に影を作り、それをステンシルとします。影は任意の立体から作成可能です。
+	//ステンシル番号は0x80(the shadow of the Saturn on its ring plane)
+	//**************************************************************************************************************
+	var sNameShader = "makeStencilFromShadowUsingSaturnAndRing";//this means making stencil form a 3D shaped bulge polygon and the 3D shaped flat polygon
+	if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+	if(flagName)console.log(++iiShader+"."+sNameShader);
+		myFBOs[sNameShader].activate("CTDNSN");//Stencil Textureをshaderから作成するにはcolor buffer textureをgl.R8,gl.RED,gl.UNSIGNED_BYTEを使ってgl_FragColorに代入することで作成します。
+		myShaders[sNameShader].activate();
+			var nRefStencilShadowOfSaturn = 0x80;//作成するステンシルの値the value of stencil being making
+			myShaders[sNameShader].uniform.refStencil.sendFloat8(nRefStencilShadowOfSaturn);
+			names = ["saturn"];
+			mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
+		myFBOs[sNameShader].inactivate();
+			myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+			myTextures.member["stencilShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 
-}//boolean
-//*************************** MAKE TEXTURE CONPLEXED STENCIL ***********************
-//***********************************************************************************
-//二つのステンシルテクスチャのbitwise ORをとって新しいテクスチャとして作成
-//ステンシル番号はそれぞれのステンシル番号のbitwise和です
-//***********************************************************************************
-var sNameShader = "makeStencilFromTwoStencilTextures";
-if((bitRun & myShaderBIT[sNameShader]) != 0){ 
-if(flagName)console.log(++iiShader+"."+sNameShader);
-	myFBOs[sNameShader].activate("CTDNSN");
-	myShaders[sNameShader].activate();
-		myShaders[sNameShader].uniform["uSampler0"].sendInt(0);
-		myTextures.member["stencilCassini_R8"].activate(0);
-		myShaders[sNameShader].uniform["uSampler1"].sendInt(1);
-		myTextures.member["stencilShadowOfSaturn_R8"].activate(1);
-	myShaders[sNameShader].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-	myFBOs[sNameShader].inactivate();
-		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-		myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-}
-//*************************** DRAW POLYGON MORE TRANSPARENTLY ON STENCIL *****************************
-//***********************************************************************************
-//ポリゴンを画面に描きます。ステンシルのかかっている部分(指定のステンシル番号)はさらに透明度を増します。
-//On screen rendering
-//***********************************************************************************
-var sNameShader = "drawPolygonMoreTransparentlyOnStencil";//------>これのmySendPlanetDataプロパティーがない！
-if((bitRun & myShaderBIT[sNameShader]) != 0){ 
-if(flagName)console.log(++iiShader+"."+sNameShader);
-	//myFBOs[sNameShader].activate("CNDNSN");//引数を省略すると.initialize()で指定した値が使われます
-	myShaders[sNameShader].activate();
-		myShaders[sNameShader].uniform.uSamplerStencil.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-		myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].activate(1);
-gl.enable(gl.DEPTH_TEST);
-gl.depthFunc(gl.LEQUAL);
-gl.enable(gl.BLEND);
-gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-		var nIgnoreStencil;//このビット上には描かない
-		nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
-		//console.log("nIgnoreStencil=",nIgnoreStencil.toString(16));
-		myShaders[sNameShader].uniform.uRefStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが同時に扱えます//描かないステンシルの番号
-		var names = ["ring"];
-		mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
-	//myFBOs[sNameShader].inactivate();
-}
-//*************************** DRAW POLYGON OFF STENCIL *****************************
-//***********************************************************************************
-//ポリゴンを画面に描きます。ステンシルのかかっている部分(指定のステンシル番号)には描きません。
-//On screen rendering
-//***********************************************************************************
-var sNameShader = "drawPolygonOffStencil";
-if((bitRun & myShaderBIT[sNameShader]) != 0){ 
-if(flagName)console.log(++iiShader+"."+sNameShader);
-	//myFBOs[sNameShader].activate("CNDNSN");//引数を省略すると.initialize()で指定した値が使われます
-	myShaders[sNameShader].activate();
-		myShaders[sNameShader].uniform.uSamplerStencil.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-		myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].activate(1);
-gl.enable(gl.DEPTH_TEST);
-gl.depthFunc(gl.LEQUAL);
-		var nIgnoreStencil;//このビット上には描かない
-		nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
-		//console.log("nIgnoreStencil=",nIgnoreStencil.toString());
-		myShaders[sNameShader].uniform.refStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが扱えます//描かないステンシルの番号
-		var names = ["ring"];
-		mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
-	//myFBOs[sNameShader].inactivate();
-}
+	}//boolean
+	//*************************** MAKE TEXTURE CONPLEXED STENCIL ***********************
+	//***********************************************************************************
+	//二つのステンシルテクスチャのbitwise ORをとって新しいテクスチャとして作成
+	//ステンシル番号はそれぞれのステンシル番号のbitwise和です
+	//***********************************************************************************
+	var sNameShader = "makeStencilFromTwoStencilTextures";
+	if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+	if(flagName)console.log(++iiShader+"."+sNameShader);
+		myFBOs[sNameShader].activate("CTDNSN");
+		myShaders[sNameShader].activate();
+			myShaders[sNameShader].uniform["uSampler0"].sendInt(0);
+			myTextures.member["stencilCassini_R8"].activate(0);
+			myShaders[sNameShader].uniform["uSampler1"].sendInt(1);
+			myTextures.member["stencilShadowOfSaturn_R8"].activate(1);
+		myShaders[sNameShader].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+		myFBOs[sNameShader].inactivate();
+			myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+			myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+	}
+	//*************************** DRAW POLYGON MORE TRANSPARENTLY ON STENCIL *****************************
+	//***********************************************************************************
+	//ポリゴンを画面に描きます。ステンシルのかかっている部分(指定のステンシル番号)はさらに透明度を増します。
+	//On screen rendering
+	//***********************************************************************************
+	var sNameShader = "drawPolygonMoreTransparentlyOnStencil";//------>これのmySendPlanetDataプロパティーがない！
+	if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+	if(flagName)console.log(++iiShader+"."+sNameShader);
+		//myFBOs[sNameShader].activate("CNDNSN");//引数を省略すると.initialize()で指定した値が使われます
+		myShaders[sNameShader].activate();
+			myShaders[sNameShader].uniform.uSamplerStencil.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+			myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].activate(1);
+	gl.enable(gl.DEPTH_TEST);
+	gl.depthFunc(gl.LEQUAL);
+	gl.enable(gl.BLEND);
+	gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+			var nIgnoreStencil;//このビット上には描かない
+			nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
+			//console.log("nIgnoreStencil=",nIgnoreStencil.toString(16));
+			myShaders[sNameShader].uniform.uRefStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが同時に扱えます//描かないステンシルの番号
+			var names = ["ring"];
+			mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
+		//myFBOs[sNameShader].inactivate();
+	}
+	//*************************** DRAW POLYGON OFF STENCIL *****************************
+	//***********************************************************************************
+	//ポリゴンを画面に描きます。ステンシルのかかっている部分(指定のステンシル番号)には描きません。
+	//On screen rendering
+	//***********************************************************************************
+	var sNameShader = "drawPolygonOffStencil";
+	if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+	if(flagName)console.log(++iiShader+"."+sNameShader);
+		//myFBOs[sNameShader].activate("CNDNSN");//引数を省略すると.initialize()で指定した値が使われます
+		myShaders[sNameShader].activate();
+			myShaders[sNameShader].uniform.uSamplerStencil.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+			myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].activate(1);
+	gl.enable(gl.DEPTH_TEST);
+	gl.depthFunc(gl.LEQUAL);
+			var nIgnoreStencil;//このビット上には描かない
+			nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
+			//console.log("nIgnoreStencil=",nIgnoreStencil.toString());
+			myShaders[sNameShader].uniform.refStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが扱えます//描かないステンシルの番号
+			var names = ["ring"];
+			mySendPlanetData[sNameShader](gl,names,angle,sNameShader);
+		//myFBOs[sNameShader].inactivate();
+	}
+
+//************************************************************************************************************
+//************************************************************************************************************
+
+
+
 //*************************** DRAW TEXTURE ON CLIP SPACE NORMAL **********************************************
 //************************************************************************************************************
 //1枚のテクスチャをそのままクリップスペースに描きます。作成したテクスチャが適正なものかどうかを確かめるために使います。
@@ -1238,7 +1308,7 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 		"drawPolygonMoreTransparentlyOnStencil",
 		"makeTextureOfSaturnFromLightPointOfViewForSaturn",
 		"makeTextureOfSaturnFromLightPointOfViewForShadow",
-		//"drawSaturnWithRoundedTexture"
+		//"drawSaturnWithRoundedTexture",
 		"drawSaturnWithRoundedTextureOnLightSide",
 		"drawSaturnWithRectangleTextureOnDarkSide"
 	];
@@ -1291,6 +1361,15 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myTextures.join(gl,nameTextureRing);
 	var nameTextureSaturn = "saturn";
 	myTextures.join(gl,nameTextureSaturn);
+		var nameTextureTitan = "titan";
+		myTextures.join(gl,nameTextureTitan);
+		var nameTextureMimas = "mimas";
+		myTextures.join(gl,nameTextureMimas);
+		var nameTextureTethys = "tethys";
+		myTextures.join(gl,nameTextureTethys);
+
+
+
 	var nameTextureObserve = "niku_stand2";
 	myTextures.join(gl,nameTextureObserve);
 	var nameTextureWhite = "white";
@@ -1351,8 +1430,11 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	myBall.join("jupiter",71492);
 	myBall.join("saturn",60268);
+		myBall.join("titan",5000);
+		myBall.join("mimas",6000);
+		myBall.join("tethys",7000);
+
 	myBall.join("uranus",25559);
-//	myBall.join("uranus",125559);
 	myBall.join("neptune",24764);
 	myBall.join("earth",6378);
 	myBall.join("venus",6051);
@@ -1431,13 +1513,13 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	/** common **/
 	var aAccumeLightingDirectional = [];//平行光源
-	aAccumeLightingDirectional.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));//視点を置き換える行列の中で、translationを含まない行列
+	aAccumeLightingDirectional.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));//---uManipulatedNotTransMatrix//視点を置き換える行列の中で、translationを含まない行列
 	var aAccumeLightingPoint = [];//点光源
-	aAccumeLightingPoint.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeLightingPoint.push(AccumeMotionsXYZ.replaceView(xyzCenter));//---uManipulatedMatrix
 
 		//Earth
 	var r = myBall.earth.radius;
-	var xyzEarth = myXYZTrigonometry.createMember();
+	var xyzEarth = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
@@ -1461,7 +1543,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 /*
 	//not texture but color
 	var r = myBall.earth.radius*1.05;
-	var xyz = myXYZTrigonometry.createMember();
+	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
@@ -1483,7 +1565,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	/** Jupiter **/
 	var r = myBall.jupiter.radius;
-	var xyz = myXYZTrigonometry.createMember();
+	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
@@ -1511,7 +1593,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	/** Moon **/
 	var r = myBall.moon.radius;
-	var xyz = myXYZTrigonometry.createMember();
+	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
@@ -1529,7 +1611,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	/** Uranus **/
 	var r = myBall.uranus.radius;
-	var xyz = myXYZTrigonometry.createMember();
+	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
@@ -1547,7 +1629,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	/** Venus **/
 	var r = myBall.venus.radius;
-	var xyz = myXYZTrigonometry.createMember();
+	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
@@ -1565,7 +1647,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	/** Mars **/
 	var r = myBall.mars.radius;
-	var xyz = myXYZTrigonometry.createMember();
+	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
@@ -1583,7 +1665,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	/** Neptune **/
 	var r = myBall.neptune.radius;
-	var xyz = myXYZTrigonometry.createMember();
+	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
@@ -1601,7 +1683,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	/** Mercury **/
 	var r = myBall.mercury.radius;
-	var xyz = myXYZTrigonometry.createMember();
+	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
@@ -1626,7 +1708,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	/** Saturn **/
 	var r = myBall.saturn.radius;
-	var xyzSaturn = myXYZTrigonometry.createMember();
+	var xyzSaturn = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnitsSaturn = [];
 	aAccumeUnitsSaturn.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aAccumeUnitsSaturn.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
@@ -1658,10 +1740,75 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	UnitsToDraw.join(gl,"ring",shape,aAccumeUnitsRing,labels,nameTextureRing,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaRing,baseLightSun,cassiniFactorRing,aMatricesNotManipulatedRing);
 
 
-	/** Saturn2    this is for gettin' the texture of the shadow of the ring on the surface of the Saturn **/
-	var r = myBall.saturn.radius;
-	var shape = myGLShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"saturn2",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn,[],aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
+	/** Titan **/
+	var radius = myBall.titan.radius;
+	var xyzTitan = myXYZTrigonometry.createMember(myBall.saturn.radius*3.7,5,3);
+
+	var aAccumeUnitsTitan = [];
+	aAccumeUnitsTitan.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnitsTitan.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnitsTitan.push(AccumeMotionsXYZ.trans(xyzTitan));//revolution公転
+	aAccumeUnitsTitan.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+	aAccumeUnitsTitan.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnitsTitan.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+
+	var aMatricesNotManipulatedTitan = [];
+	aMatricesNotManipulatedTitan.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aMatricesNotManipulatedTitan.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aMatricesNotManipulatedTitan.push(AccumeMotionsXYZ.trans(xyzTitan));//revolution公転
+	aMatricesNotManipulatedTitan.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,"titan",colorNameText);//kkk
+	var shape = myGLShape.sphere(gl,radius);
+	UnitsToDraw.join(gl,"titan",shape,aAccumeUnitsTitan,labels,nameTextureTitan,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedTitan);
+
+	/** Mimas **/
+	var radius = myBall.mimas.radius;
+	var xyzMimas = myXYZTrigonometry.createMember(myBall.saturn.radius*2.9,5,4);
+
+	var aAccumeUnitsMimas = [];
+	aAccumeUnitsMimas.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnitsMimas.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnitsMimas.push(AccumeMotionsXYZ.trans(xyzMimas));//revolution公転
+	aAccumeUnitsMimas.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+	aAccumeUnitsMimas.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnitsMimas.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+
+	var aMatricesNotManipulatedMimas = [];
+	aMatricesNotManipulatedMimas.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aMatricesNotManipulatedMimas.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aMatricesNotManipulatedMimas.push(AccumeMotionsXYZ.trans(xyzMimas));//revolution公転
+	aMatricesNotManipulatedMimas.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,"mimas",colorNameText);//kkk
+	var shape = myGLShape.sphere(gl,radius);
+	UnitsToDraw.join(gl,"mimas",shape,aAccumeUnitsMimas,labels,nameTextureMimas,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedMimas);
+
+	/** Tethys **/
+	var radius = myBall.tethys.radius;
+	var xyz = myXYZTrigonometry.createMember(myBall.saturn.radius*1.2,5,7);
+
+	var aAccumeUnits = [];
+	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+
+	var aMatricesNotManipulated = [];
+	aMatricesNotManipulated.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
+	aMatricesNotManipulated.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
+	aMatricesNotManipulated.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aMatricesNotManipulated.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+
+	var labels = new myClass.Labels();
+	labels.addText(0,0,0,"tethys",colorNameText);//kkk
+	var shape = myGLShape.sphere(gl,radius);
+	UnitsToDraw.join(gl,"tethys",shape,aAccumeUnits,labels,nameTextureTethys,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorRing,aMatricesNotManipulated);
+
 
 
 
@@ -1669,7 +1816,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 /*
 	for(var hh=0;hh<10;hh++){
 		var r = myBall.moon.radius;
-		var xyz = myXYZTrigonometry.createMember();
+		var xyz = myXYZTrigonometry.createMember(800,600,1);???
 		var aAccumeUnits = [];
 		aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
 			aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
