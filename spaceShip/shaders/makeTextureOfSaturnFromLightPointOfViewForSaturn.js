@@ -161,6 +161,35 @@ var aUniforms = [
 		"uSampler",
 		"uRadiusOfSaturn"
 ];
+
+//makeTextureOfSaturnFromLightPointOfViewForSaturn:function(gl,sNameSaturn,angle,sNameShader){
+var auFunction = function(gl,sNameSaturn,angle){
+	var notManipulatedMatrix,perspectiveForShadowMatrix;
+	var member;
+
+		//For the Saturn
+		member = UnitsToDraw[sNameSaturn];
+
+		// To vertex shader
+		myShaders[sNameOfShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameOfShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
+//for test	mySendMatrix.perspective(gl,myShaders[sNameOfShader].uniform.uPerspectiveMatrix);
+		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
+		notManipulatedMatrix = myMat4.arr;
+		mySendMatrix.perspectiveForShadow(gl,myShaders[sNameOfShader].uniform.uPerspectiveMatrixForShadow,myBall[sNameSaturn].radius,notManipulatedMatrix);
+		perspectiveMatrixForShadow = myMat4.arr;
+		myShaders[sNameOfShader].uniform.uRadiusOfSaturn.sendFloat(myBall[sNameSaturn].radius);//kkk to check
+		// To fragment shader
+		myShaders[sNameOfShader].uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member[member.nameTexture].activate(0);
+
+		member.draw();//in which texture activated is for use
+
+		return {nm:notManipulatedMatrix,ps:perspectiveMatrixForShadow};
+};
+
+
 /* */vs = vs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 /* */fs = fs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 /* */var funcShader = function(){
@@ -204,5 +233,29 @@ var aUniforms = [
 /* */	},1);
 /* */}
 /* */
+
+/* */var funcSendAttribUniform = function(){
+/* */	mySendAttribUniform.create(sNameOfShader,auFunction);
+/* */};
+/* */if('mySendAttribUniform' in window){
+/* */	console.log("mySendAttribUniform."+sNameOfShader + "---ok1---created");
+/* */	funcSendAttribUniform();
+/* */}else{
+/* */	var count = 0;
+/* */	var hoge = setInterval(function(){
+/* */		if(++count > 1000){
+/* */			clearInterval(hoge);
+/* */			console.error("Can't create mySendAttribUniform."+sNameOfShader);
+/* */		}
+/* */		if('myShaders' in window){
+/* */			clearInterval(hoge);
+/* */			console.log("mySendAttribUniform"+sNameOfShader + "---ok2---created");
+/* */			funcSendAttribUniform();
+/* */		}
+/* */	},1);
+/* */}
+/* */
+
+
 /* */})();
 

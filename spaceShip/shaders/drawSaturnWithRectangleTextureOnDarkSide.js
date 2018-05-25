@@ -171,6 +171,38 @@ var aUniforms = [
 
 // ************************************************************************************************************************************************
 
+//drawSaturnWithRectangleTextureOnDarkSide:function(gl,sNameSaturn,angle,sNameShader){
+var auFunction = function(gl,sNameSaturn,angle){
+
+		var member,pmat,mvmat,nmmat;
+		member = UnitsToDraw[sNameSaturn];
+		/** To vertex shader **/
+		myShaders[sNameOfShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameOfShader].attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
+		myShaders[sNameOfShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
+
+		mySendMatrix.perspective(gl,myShaders[sNameOfShader].uniform.uPerspectiveMatrix);
+		pmat = myMat4.arr;//sended data above
+		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		mvmat = myMat4.arr;//sended data above
+		mySendMatrix.modelViewInversedTransposed(myShaders[sNameOfShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
+		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+
+		myShaders[sNameOfShader].uniform.uRadiusOfSaturn.sendFloat(myBall[sNameSaturn].radius);//kkk to check
+
+		myShaders[sNameOfShader].uniform.uBaseLight.sendFloat(member.baseLight);
+		/** Tofragment shader **/
+		myShaders[sNameOfShader].uniform.uBrightness.sendFloat(member.brightness);
+
+		//"uSamplerRounded"---‚í‚©‚è‚â‚·‚¢‚½‚ßŒÄ‚Ño‚µ‘¤‚Åsend
+		member.draw();//in which texture activated is for use
+		member.labels.repos(gl,pmat,mvmat);
+};
+
+// *****************************************************************************************************************************
+
+
 /* */vs = vs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 /* */fs = fs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 /* */var funcShader = function(){
@@ -214,4 +246,27 @@ var aUniforms = [
 /* */	},1);
 /* */}
 /* */
+
+/* */var funcSendAttribUniform = function(){
+/* */	mySendAttribUniform.create(sNameOfShader,auFunction);
+/* */};
+/* */if('mySendAttribUniform' in window){
+/* */	console.log("mySendAttribUniform."+sNameOfShader + "---ok1---created");
+/* */	funcSendAttribUniform();
+/* */}else{
+/* */	var count = 0;
+/* */	var hoge = setInterval(function(){
+/* */		if(++count > 1000){
+/* */			clearInterval(hoge);
+/* */			console.error("Can't create mySendAttribUniform."+sNameOfShader);
+/* */		}
+/* */		if('myShaders' in window){
+/* */			clearInterval(hoge);
+/* */			console.log("mySendAttribUniform"+sNameOfShader + "---ok2---created");
+/* */			funcSendAttribUniform();
+/* */		}
+/* */	},1);
+/* */}
+/* */
+
 /* */})();

@@ -92,7 +92,7 @@ var fs = (function(){/*
 		if(AND(int(st8*256.0),uRefStencil) == 0){//the result of bitwise ANDing isn't zero shows Don't write color.
 			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,1.0);
 		}else{
-			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,0.2);
+			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,0.5);//kkk0.2->0.5
 		};
 	}
 */});
@@ -212,7 +212,35 @@ var aUniforms = [
 		"uRefStencil"//描かないステンシル番号のビット和
 ];
 
+var auFunction = function(gl,names,angle){
+//drawPolygonMoreTransparentlyOnStencil:function(gl,names,angle,sNameOfShader){
+	var member,pmat,mvmat;
+	for(var num in names){//the last is the texture that is gotten by framebuffer
+		member = UnitsToDraw[names[num]];
+		/** To vertex shader **/
+		myShaders[sNameOfShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		myShaders[sNameOfShader].attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
+		myShaders[sNameOfShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
+		member.buffers.bindElement();
 
+		mySendMatrix.perspective(gl,myShaders[sNameOfShader].uniform.uPerspectiveMatrix);
+		pmat = myMat4.arr;//sended data above
+		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		mvmat = myMat4.arr;//sended data above
+		mySendMatrix.modelViewInversedTransposed(myShaders[sNameOfShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
+//		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
+		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+		myShaders[sNameOfShader].uniform.uBaseLight.sendFloat(member.baseLight);
+		/** Tofragment shader **/
+		myShaders[sNameOfShader].uniform.uBrightness.sendFloat(member.brightness);
+
+		myShaders[sNameOfShader].uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+		myTextures.member[member.nameTexture].activate(0);
+
+		member.draw();//in which texture activated is for use
+		member.labels.repos(gl,pmat,mvmat);
+	}
+};
 
 /* */vs = vs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 /* */fs = fs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
@@ -257,4 +285,29 @@ var aUniforms = [
 /* */	},1);
 /* */}
 /* */
+
+
+/* */var funcSendAttribUniform = function(){
+/* */	mySendAttribUniform.create(sNameOfShader,auFunction);
+/* */};
+/* */if('mySendAttribUniform' in window){
+/* */	console.log("mySendAttribUniform."+sNameOfShader + "---ok1---created");
+/* */	funcSendAttribUniform();
+/* */}else{
+/* */	var count = 0;
+/* */	var hoge = setInterval(function(){
+/* */		if(++count > 1000){
+/* */			clearInterval(hoge);
+/* */			console.error("Can't create mySendAttribUniform."+sNameOfShader);
+/* */		}
+/* */		if('myShaders' in window){
+/* */			clearInterval(hoge);
+/* */			console.log("mySendAttribUniform"+sNameOfShader + "---ok2---created");
+/* */			funcSendAttribUniform();
+/* */		}
+/* */	},1);
+/* */}
+/* */
+
+
 /* */})();

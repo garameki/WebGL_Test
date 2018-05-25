@@ -15,6 +15,9 @@
 /* customize below */
 
 var sNameOfShader = "makeStencilFromShadowUsingSaturnAndRing";
+
+
+/** for myFBOs **/
 var sModeOfFBO = "CTDNSN";//C[NTR]D[NTR]S[NTR]
 var colorBufferModeOfFBO = myFBOs.colorBufferModeIsR8ForStencil;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551 or colorBufferModeIsALPHA
 var controllBlendColorDepthStencilOfFBO = function(gl){
@@ -55,6 +58,7 @@ var controllBlendColorDepthStencilOfFBO = function(gl){
 
 };
 
+/** for myShaders **/
 var fs = (function(){/*
 
 	//uniform sampler2D uSampler;
@@ -137,13 +141,35 @@ var aUniforms = [
 	"uManipulatedMatrix",
 	"refStencil"
 ];
+
+/** for mySendAttribUniform **/
+var auFunction = function(gl,names,angle){
+	var member;
+	for(var num in names){//the last is the texture that is gotten by framebuffer
+		member = UnitsToDraw[names[num]];
+		/** To vertex shader **/
+		myShaders[sNameOfShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
+		member.buffers.bindElement();
+
+		mySendMatrix.perspective(gl,myShaders[sNameOfShader].uniform.uPerspectiveMatrix);
+		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
+		mvmat = myMat4.arr;//sended data above
+		mySendMatrix.modelViewInversedTransposed(myShaders[sNameOfShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
+		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+		/** Tofragment shader **/
+//		myShaders[sNameOfShader].uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
+
+		member.draw();//in which texture activated is for use
+	}
+}
+
 /* */vs = vs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 /* */fs = fs.toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];//.replace(/\n/g,BR).replace(/\r/g,"");
 /* */var funcShader = function(){
 /* */	myShaders.create(sNameOfShader,vs,fs,aAttribs,aUniforms);
 /* */};
 /* */if('myShaders' in window){
-/* */	console.log(sNameOfShader + "---ok1---created in myShaders");
+/* */	console.log("myShaders."+sNameOfShader + "---ok1---created");
 /* */	funcShader();
 /* */}else{
 /* */	var count = 0;
@@ -163,21 +189,46 @@ var aUniforms = [
 /* */	myFBOs.create(sNameOfShader,sModeOfFBO,colorBufferModeOfFBO,controllBlendColorDepthStencilOfFBO);//null---Color buffer is not to use.
 /* */};
 /* */if('myFBOs' in window){
-/* */	console.log(sNameOfShader + "---ok1---created in myShaders");
+/* */	console.log("myFBOs."+sNameOfShader + "---ok1---created");
 /* */	funcFBO();
 /* */}else{
 /* */	var count = 0;
 /* */	var hoge = setInterval(function(){
 /* */		if(++count > 1000){
 /* */			clearInterval(hoge);
-/* */			console.error("Can't create myShaders."+sNameOfShader);
+/* */			console.error("Can't create myFBOs."+sNameOfShader);
 /* */		}
 /* */		if('myShaders' in window){
 /* */			clearInterval(hoge);
-/* */			console.log(sNameOfShader + "---ok2---created in myShaders");
+/* */			console.log("myFBOs."+sNameOfShader + "---ok2---created");
 /* */			funcFBO();
 /* */		}
 /* */	},1);
 /* */}
 /* */
+
+
+/* */var funcSendAttribUniform = function(){
+/* */	mySendAttribUniform.create(sNameOfShader,auFunction);
+/* */};
+/* */if('mySendAttribUniform' in window){
+/* */	console.log("mySendAttribUniform."+sNameOfShader + "---ok1---created");
+/* */	funcSendAttribUniform();
+/* */}else{
+/* */	var count = 0;
+/* */	var hoge = setInterval(function(){
+/* */		if(++count > 1000){
+/* */			clearInterval(hoge);
+/* */			console.error("Can't create mySendAttribUniform."+sNameOfShader);
+/* */		}
+/* */		if('myShaders' in window){
+/* */			clearInterval(hoge);
+/* */			console.log("mySendAttribUniform"+sNameOfShader + "---ok2---created");
+/* */			funcSendAttribUniform();
+/* */		}
+/* */	},1);
+/* */}
+/* */
+
+
 /* */})();
