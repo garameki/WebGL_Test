@@ -92,7 +92,7 @@ var fs = (function(){/*
 		if(AND(int(st8*256.0),uRefStencil) == 0){//the result of bitwise ANDing isn't zero shows Don't write color.
 			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,1.0);
 		}else{
-			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,0.5);//kkk0.2->0.5
+			gl_FragColor = vec4(uBrightness)*vec4(texelColor.rgb * vNTimesEachRGB,1.0-gg);//kkk0.2->0.5
 		};
 	}
 */});

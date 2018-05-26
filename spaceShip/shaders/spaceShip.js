@@ -49,7 +49,6 @@ var fs = (function(){/*
 //	varying lowp vec4 vColor;	//as same as vertex shader
 //	varying lowp vec2 vTextureCoord;//as same as vertex shader
 //	varying lowp vec3 vNTimesEachRGB;//as same as vertex shader
-	varying highp vec4 vColor;//●	//as same as vertex shader
 	varying highp vec2 vTextureCoord;//as same as vertex shader
 	varying highp vec3 vNTimesEachRGB;//as same as vertex shader
 
@@ -60,13 +59,6 @@ var fs = (function(){/*
 
 	void main(void) {
 
-	//  method 1 
-//		gl_FragColor = texture2D(uSampler,vTextureCoord);//色が補完されて丸く見えるなるべくこれにしたい
-
-	//  method 2 
-//		gl_FragColor = vColor;
-
-		//uSamplerの数字とgl.TEXT0の数字は共通
 
 	 // method 3 
 	//	mediump vec4 texelColor = texture2D(uSampler,vTextureCoord);//ja version
@@ -85,7 +77,6 @@ var vs = (function(){/*
 	//'attribute' this type is used in vertex shader only.This type is assigned on buffers defined in js
 	attribute vec3 aVertexPosition;//x y z
 	attribute vec3 aVertexNormal;//x y z
-	attribute vec4 aVertexColor;//R G B Alpha
 	attribute vec2 aTextureCoord;//x y
 
 	//The type of 'uniform' mainly matrices receipter from js
@@ -100,7 +91,6 @@ var vs = (function(){/*
 
 
 	uniform float uBaseLight;// 0.0-1.0 ?
-	uniform float uPointSizeFloat;//a float value
 
 //hint
 //	varying lowp vec4 vColor;
@@ -115,8 +105,6 @@ var vs = (function(){/*
 //●kkk
 		gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
 
-		gl_PointSize = uPointSizeFloat;
-		vColor = aVertexColor;
 		vTextureCoord = aTextureCoord;
 
 		//分ける　位置ベクトル　と　方向ベクトル
@@ -181,13 +169,11 @@ var vs = (function(){/*
 var aAttribs = [
 		"aVertexPosition",
 		"aVertexNormal",
-		"aVertexColor",
 		"aTextureCoord"
 ];
 var aUniforms = [
 		"uPerspectiveMatrix",
 		"uModelViewMatrix",
-		"uPointSizeFloat",
 		"uSampler",
 		"uModelViewMatrixInversedTransposed",
 		"uBaseLight",
@@ -206,7 +192,6 @@ var auFunction = function(gl,names,angle){
 		/** To vertex shader **/
 		myShaders[sNameOfShader].attrib.aVertexPosition.assignBuffer(member.buffers.position,3);
 		myShaders[sNameOfShader].attrib.aVertexNormal.assignBuffer(member.buffers.normal,3);
-		myShaders[sNameOfShader].attrib.aVertexColor.assignBuffer(member.buffers.color,4);
 		myShaders[sNameOfShader].attrib.aTextureCoord.assignBuffer(member.buffers.texture,2);
 		member.buffers.bindElement();
 
@@ -217,12 +202,19 @@ var auFunction = function(gl,names,angle){
 		mySendMatrix.modelViewInversedTransposed(myShaders[sNameOfShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
 //		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uManipulatedRotationMatrix,member.aAccumeUnitsLightDirectional,angle);
 		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
+
 		myShaders[sNameOfShader].uniform.uBaseLight.sendFloat(member.baseLight);
-		myShaders[sNameOfShader].uniform.uPointSizeFloat.sendFloat(3.0);
+//○		myShaders[sNameOfShader].uniform.uBaseLight.sendFloat(1.0);
+
 		/** Tofragment shader **/
 		myShaders[sNameOfShader].uniform.uBrightness.sendFloat(member.brightness);
+//○		myShaders[sNameOfShader].uniform.uBrightness.sendFloat(1.0);
+
 		myShaders[sNameOfShader].uniform.uAlpha.sendFloat(member.alpha);
+//○		myShaders[sNameOfShader].uniform.uAlpha.sendFloat(1.0);
+
 		myShaders[sNameOfShader].uniform.uCassiniFactor.sendFloat(member.cassiniFactor);
+//○		myShaders[sNameOfShader].uniform.uCassiniFactor.sendFloat(1.0);
 
 		myShaders[sNameOfShader].uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 		myTextures.member[member.nameTexture].activate(1);
