@@ -172,7 +172,7 @@ var aUniforms = [
 // ************************************************************************************************************************************************
 
 //drawSaturnWithRectangleTextureOnDarkSide:function(gl,sNameSaturn,angle,sNameShader){
-var auFunction = function(gl,sNameSaturn,angle){
+var auFunction = function(gl,angle,sNameSaturn){
 
 		var member,pmat,mvmat,nmmat;
 		member = UnitsToDraw[sNameSaturn];

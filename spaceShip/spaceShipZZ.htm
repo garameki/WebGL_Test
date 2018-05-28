@@ -7,6 +7,7 @@
 <script	type="text/javascript"	src="./mySendMatrix.js"></script>
 <script	type="text/javascript"	src="./myShaders.js"></script>
 <script	type="text/javascript"	src="./mySendAttribUniform.js"></script>
+<script	type="text/javascript"	src="./myPlanetData.js"></script>
 
 
 
@@ -137,21 +138,18 @@
 </script>
 
 <!--*** shader programs, FBOs and controllers of CDF ***-->
-<script id="shader-spaceShip"						type="text/javascript"	src="./shaders/spaceShip.js"></script>
-<script id="shader-makeTextureOfSaturnFromLightPointOfViewForSaturn"	type="text/javascript"	src="./shaders/makeTextureOfSaturnFromLightPointOfViewForSaturn.js"></script>
-
+<script type="text/javascript" src="./shaders/spaceShip.js"></script>
+<script type="text/javascript" src="./shaders/makeTextureOfSaturnFromLightPointOfViewForSaturn.js"></script>
 <script type="text/javascript" src="./shaders/makeTextureOfSaturnFromLightPointOfViewForShadow.js"></script>
-
-<script id="shader-mixTwoTexturesWithDepthes"				type="text/javascript"	src="./shaders/mixTwoTexturesWithDepthes.js"></script>
-<script id="shader-makeStencilFromTextureOnBlack"			type="text/javascript"	src="./shaders/makeStencilFromTextureOnBlack.js"></script>
-<script id="shader-makeStencilFromShadowUsingSaturnAndRing"		type="text/javascript"	src="./shaders/makeStencilFromShadowUsingSaturnAndRing.js"></script>
-<script id="shader-makeStencilFromTwoStencilTextures"			type="text/javascript"	src="./shaders/makeStencilFromTwoStencilTextures.js"></script>
-<script id="shader-drawPolygonOffStencil"				type="text/javascript"	src="./shaders/drawPolygonOffStencil.js"></script>
-<script id="shader-drawPolygonMoreTransparentlyOnStencil"		type="text/javascript"	src="./shaders/drawPolygonMoreTransparentlyOnStencil.js"></script>
-<script id="shader-drawTextureOnClipSpace"				type="text/javascript"	src="./shaders/drawTextureOnClipSpace.js"></script>
-<!--script id="shader-drawSaturnWithRoundedTexture"			type="text/javascript"	src="./shaders/drawSaturnWithRoundedTexture.js"></script-->
-<script id="shader-drawSaturnWithRoundedTextureOnLightSide"  type="text/javascript" src="./shaders/drawSaturnWithRoundedTextureOnLightSide.js"></script>
-<script id="shader-drawSaturnWithRectangleTextureOnDarkSide" type="text/javascript" src="./shaders/drawSaturnWithRectangleTextureOnDarkSide.js"></script>
+<script	type="text/javascript" src="./shaders/mixTwoTexturesWithDepthes.js"></script>
+<script type="text/javascript" src="./shaders/makeStencilFromTextureOnBlack.js"></script>
+<script	type="text/javascript" src="./shaders/makeStencilFromShadowUsingSaturnAndRing.js"></script>
+<script type="text/javascript" src="./shaders/makeStencilFromTwoStencilTextures.js"></script>
+<script	type="text/javascript" src="./shaders/drawPolygonOffStencil.js"></script>
+<script type="text/javascript" src="./shaders/drawPolygonMoreTransparentlyOnStencil.js"></script>
+<script type="text/javascript" src="./shaders/drawTextureOnClipSpace.js"></script>
+<script type="text/javascript" src="./shaders/drawSaturnWithRoundedTextureOnLightSide.js"></script>
+<script type="text/javascript" src="./shaders/drawSaturnWithRectangleTextureOnDarkSide.js"></script>
 
 
 <script type='text/javascript'>
@@ -285,17 +283,9 @@ if(flagName){
 	//FBOはそのままで、シェーダーを変えて同じFBOに書き込んでいく!!
 	//*******************************************************************************************************************
 
-	//あとで、土星だけではなく影を落としたい惑星全てについてできるように改造する
-	//myBall.saturn.sattelites = ["ring","titan","enceladus","tethys","mimas"];
-	//myBall.jupitor.sattelites = ["europa","ganymede","io","calisto"];
-	//	neptune:["triton","proteus","larissa"],
-	//	uranus:["ariel","titania","","umbriel"]
-	//};
-	//
-	//
-	//var 円形のテクスチャを光が当たっている面に張り付ける
-	//myBall.saturn.aSattelites = ["ring","ミマス","エンケラドス","カロン","イオ"];
-
+	var sattelites = { };
+	sattelites.saturn = ["titan","mimas","tethys"];
+	sattelites.earth = ["moon"];
 
 
 	var sNameShaderSaturn = "makeTextureOfSaturnFromLightPointOfViewForSaturn";
@@ -306,8 +296,8 @@ if(flagName){
 	bitRun = bitRun & inv;//使い終わったビットを0にする
 }		myFBOs[sNameShaderSaturn].activate("CTDRSN");//使い終わったらinactivate()すること。viewportを元に戻す。メモリを解放し、frame bufferを切り離す。
 		myShaders[sNameShaderSaturn].activate();
-			var sNameTarget = "saturn";//表面に影を落としたいアイテムの名前
-			var mats = mySendAttribUniform[sNameShaderSaturn](gl,sNameTarget,angle);
+			var sNameSaturn = "saturn";//表面に影を落としたいアイテムの名前
+			var mats = mySendAttribUniform[sNameShaderSaturn](gl,sNameSaturn,angle);
 		myShaders[sNameShaderShadow].activate();
 			var aNames = ["titan","mimas","tethys"];//,"ミマス","エンケラドス","カロン"];//影にしたいアイテムの名前
 				gl.disable(gl.BLEND);
@@ -336,11 +326,11 @@ if(flagName){
 	bitRun = bitRun & inv;//使い終わったビットを0にする
 }		//myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
 		myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
-			var sName = "saturn";
+			var sNameSaturn = "saturn";
 			myShaders[sNameShader].uniform.uSamplerRounded.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 			myTextures.member["roundedTextureWithShadow"].activate(0);//上で作ったやつ
 		gl.enable(gl.DEPTH_TEST);
-			mySendAttribUniform[sNameShader](gl,sName,angle);
+			mySendAttribUniform[sNameShader](gl,sNameSaturn,angle);
 		//myFBOs[sNameShader].inactivate();
 		//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 		//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
@@ -363,17 +353,18 @@ if(flagName){
 	}
 		//myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
 		myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
-			var sName = "saturn";
+			var sNameSaturn = "saturn";
 			myShaders[sNameShader].uniform.uSamplerRectangle.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-			myTextures.member[sName].activate(0);//通常のtexture
+			myTextures.member[sNameSaturn].activate(0);//通常のtexture
 		gl.enable(gl.DEPTH_TEST);
-			mySendAttribUniform[sNameShader](gl,sName,angle);
+			mySendAttribUniform[sNameShader](gl,angle,sNameSaturn);
 		//myFBOs[sNameShader].inactivate();
 		//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 		//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
 	}//boolean
 //***********************************************************************************************
 //***********************************************************************************************
+
 
 
 //*************************** DRAW RING ***************************************
@@ -536,9 +527,9 @@ if(flagName){
 // ****************************************************************************************************************
 
 
-/うえのやつにDEPTHを加味した描画をさせる
+//うえのやつにDEPTHを加味した描画をさせる
 
-
+//myBallのradiusはUitToDrawに組み込んだ方がいい!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 
@@ -1396,83 +1387,83 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 //**************************** 3D DRAW with MOVING, LIGHTING, TEXTURING, COLORING and so on *************************************************
 
 
-/* all the things to be wanted to draw must be thrown into 'oModel',e.g. shape or text with its position x,y,z*/
-(function(){
-	UnitsToDraw = { };
-	Object.defineProperty(UnitsToDraw,'join',{value:join,writable:false,enumerable:false,configurable:false});	
-	function join(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated){
-		Object.defineProperty(UnitsToDraw,sName,{value:new ToolBox(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated),writable:false,enumerable:true,configurable:false});
-	}
-
-
-	//
-	//@param {myGLShape.obj} shape in which there are points,color,normal vector,indeces and so on
-	//
-	function ToolBox(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightsDirectional,aLightsPoint,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated){//f means float
-		this.draw = shape.draw;
-		this.buffers = createBuffers(gl,shape,sName);
-		this.aAccumeUnits = aMotions;
-		this.labels = aLabels;
-		this.nameTexture = sNameTexture;
-
-		this.aAccumeUnitsLightDirectional = aLightsDirectional;
-		this.aAccumeUnitsLightPoint = aLightsPoint;
-		this.brightness = brightness;
-		this.alpha = alpha;
-		this.baseLight = fBaseLight;
-
-		this.cassiniFactor = fCassiniFactor;
-		this.aMatricesNotManipulated=aMatricesNotManipulated;
-	};
-
-	/** inner function**/
-	function createBuffers(gl,shape,sName){
-		//生成したバッファをWebGLBufferにバインドしたら、
-		//あとはそれにvertexのattributionをbufferDataを使って
-		//頂点の座標、頂点の色、テキストデータなどをバッファに放り込むだけ
-
-		//position to buffer
-		var buffPositions = gl.createBuffer();
-		buffPositions._name = sName+"-Position:"+shape.name;
-		gl.bindBuffer(gl.ARRAY_BUFFER,buffPositions);
-		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.pos),gl.STATIC_DRAW);
-
-		//normal vectors to buffer//●
-		var buffNormal = gl.createBuffer();
-		buffNormal._name = sName+"-Normal:"+shape.name;
-		gl.bindBuffer(gl.ARRAY_BUFFER,buffNormal);
-		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.nor),gl.STATIC_DRAW);
-
-		//color to buffer
-		var buffColors = gl.createBuffer();//正方形のvertices
-		buffColors._name = sName + "-Colors:"+shape.name;
-		gl.bindBuffer(gl.ARRAY_BUFFER,buffColors);
-		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.col),gl.STATIC_DRAW);
-
-		//texture position to buffer
-		var buffTextureCoordinate = gl.createBuffer();
-		buffTextureCoordinate._name = sName+"-Texturecoord:"+shape.name;
-		gl.bindBuffer(gl.ARRAY_BUFFER,buffTextureCoordinate);
-		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.tex),gl.STATIC_DRAW);
-
-		//indices to ELEMENT buffer
-		var buffIndex = gl.createBuffer();
-		buffIndex._name = sName + "-Index:"+shape.name;
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,buffIndex);
-		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(shape.ind),gl.STATIC_DRAW);
-
-		return {
-			position : buffPositions,
-			texture : buffTextureCoordinate,
-			normal : buffNormal,
-			color : buffColors,
-			bindElement : function(){gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,buffIndex)}
-		};
-	};
-
-
-
-})();//UnitsToDraw
+///* all the things to be wanted to draw must be thrown into 'oModel',e.g. shape or text with its position x,y,z*/
+//(function(){
+//	UnitsToDraw = { };
+//	Object.defineProperty(UnitsToDraw,'join',{value:join,writable:false,enumerable:false,configurable:false});	
+//	function join(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated){
+//		Object.defineProperty(UnitsToDraw,sName,{value:new ToolBox(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated),writable:false,enumerable:true,configurable:false});
+//	}
+//
+//
+//	//
+//	//@param {myGLShape.obj} shape in which there are points,color,normal vector,indeces and so on
+//	//
+//	function ToolBox(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightsDirectional,aLightsPoint,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated){//f means float
+//		this.draw = shape.draw;
+//		this.buffers = createBuffers(gl,shape,sName);
+//		this.aAccumeUnits = aMotions;
+//		this.labels = aLabels;
+//		this.nameTexture = sNameTexture;
+//
+//		this.aAccumeUnitsLightDirectional = aLightsDirectional;
+//		this.aAccumeUnitsLightPoint = aLightsPoint;
+//		this.brightness = brightness;
+//		this.alpha = alpha;
+//		this.baseLight = fBaseLight;
+//
+//		this.cassiniFactor = fCassiniFactor;
+//		this.aMatricesNotManipulated=aMatricesNotManipulated;
+//	};
+//
+//	/** inner function**/
+//	function createBuffers(gl,shape,sName){
+//		//生成したバッファをWebGLBufferにバインドしたら、
+//		//あとはそれにvertexのattributionをbufferDataを使って
+//		//頂点の座標、頂点の色、テキストデータなどをバッファに放り込むだけ
+//
+//		//position to buffer
+//		var buffPositions = gl.createBuffer();
+//		buffPositions._name = sName+"-Position:"+shape.name;
+//		gl.bindBuffer(gl.ARRAY_BUFFER,buffPositions);
+//		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.pos),gl.STATIC_DRAW);
+//
+//		//normal vectors to buffer//●
+//		var buffNormal = gl.createBuffer();
+//		buffNormal._name = sName+"-Normal:"+shape.name;
+//		gl.bindBuffer(gl.ARRAY_BUFFER,buffNormal);
+//		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.nor),gl.STATIC_DRAW);
+//
+//		//color to buffer
+//		var buffColors = gl.createBuffer();//正方形のvertices
+//		buffColors._name = sName + "-Colors:"+shape.name;
+//		gl.bindBuffer(gl.ARRAY_BUFFER,buffColors);
+//		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.col),gl.STATIC_DRAW);
+//
+//		//texture position to buffer
+//		var buffTextureCoordinate = gl.createBuffer();
+//		buffTextureCoordinate._name = sName+"-Texturecoord:"+shape.name;
+//		gl.bindBuffer(gl.ARRAY_BUFFER,buffTextureCoordinate);
+//		gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shape.tex),gl.STATIC_DRAW);
+//
+//		//indices to ELEMENT buffer
+//		var buffIndex = gl.createBuffer();
+//		buffIndex._name = sName + "-Index:"+shape.name;
+//		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,buffIndex);
+//		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(shape.ind),gl.STATIC_DRAW);
+//
+//		return {
+//			position : buffPositions,
+//			texture : buffTextureCoordinate,
+//			normal : buffNormal,
+//			color : buffColors,
+//			bindElement : function(){gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,buffIndex)}
+//		};
+//	};
+//
+//
+//
+//})();//UnitsToDraw
 
 </script>
 
