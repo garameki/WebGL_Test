@@ -1,18 +1,18 @@
 ﻿(function(){
-	myGLShape = { };
-	Object.defineProperty(myGLShape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'triangle'	,{value:triangle,writable:false,enumerable:true,configurable:false});
+	myShape = { };
+	Object.defineProperty(myShape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'triangle'	,{value:triangle,writable:false,enumerable:true,configurable:false});
 //●
-	Object.defineProperty(myGLShape,'cylindricalCalumn'	,{value:cylindricalCalumn,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'rectangle'	,{value:rectangle,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'axisX'		,{value:axisX,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'axisY'		,{value:new axisY,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'axisZ'		,{value:new axisZ,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'tetra'		,{value:tetrahedron,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'hexa'		,{value:hexahedron,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'sphere'	,{value:sphere2,writable:false,enumerable:true,configurable:false});
-	Object.defineProperty(myGLShape,'ring'		,{value:ringPlane,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'cylindricalCalumn'	,{value:cylindricalCalumn,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'rectangle'	,{value:rectangle,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'axisX'		,{value:axisX,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'axisY'		,{value:new axisY,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'axisZ'		,{value:new axisZ,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'tetra'		,{value:tetrahedron,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'hexa'		,{value:hexahedron,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'sphere'	,{value:sphere2,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myShape,'ring'		,{value:ringPlane,writable:false,enumerable:true,configurable:false});
 
 	//entities
 //●
@@ -222,13 +222,13 @@ console.log("nn=",nn);
 		}
 	};
 	function axisX(gl) {
-			return myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(10,0,0),new myColorName.red(1));	
+			return myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(10,0,0),new myColorName.red(1));	
 	};
 	function axisY(gl){
-			return myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,10,0),new myColorName.green(1));	
+			return myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,10,0),new myColorName.green(1));	
 	};
 	function axisZ(gl){
-			return myGLShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,10),new myColorName.blue(1));	
+			return myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,10),new myColorName.blue(1));	
 	};
 	function tetrahedron(gl){
 		//create tetrahedron
@@ -635,9 +635,9 @@ if(alphaB==180){
 			ind:indices,
 			draw:function(){
 //:sphere2
-//console.log("myGLShape:sphere2:bindTexture=",gl.getParameter(gl.TEXTURE_BINDING_2D));
-//console.log("myGLShape:sphere2:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE),"gl.TEXTURE0=",gl.TEXTURE0);
-//console.log("myGLShape:sphere2:elementArrayBuffer=",gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING));
+//console.log("myShape:sphere2:bindTexture=",gl.getParameter(gl.TEXTURE_BINDING_2D));
+//console.log("myShape:sphere2:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE),"gl.TEXTURE0=",gl.TEXTURE0);
+//console.log("myShape:sphere2:elementArrayBuffer=",gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING));
 				gl.drawElements(gl.TRIANGLES,countTriangle*3,gl.UNSIGNED_SHORT,0);
 			}
 
@@ -718,8 +718,8 @@ nn++;
 			ind:index,
 			draw:function(){
 //:ring
-//console.log("myGLShape:ring:bindTexture=",gl.getParameter(gl.TEXTURE_BINDING_2D));
-//console.log("myGLShape:ring:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE));
+//console.log("myShape:ring:bindTexture=",gl.getParameter(gl.TEXTURE_BINDING_2D));
+//console.log("myShape:ring:activeTexture=",gl.getParameter(gl.ACTIVE_TEXTURE));
 				gl.drawElements(gl.TRIANGLES,countTriangle*3,gl.UNSIGNED_SHORT,0);
 			}
 

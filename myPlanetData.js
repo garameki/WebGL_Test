@@ -8,7 +8,7 @@
 
 
 	//
-	//@param {myGLShape.obj} shape in which there are points,color,normal vector,indeces and so on
+	//@param {myShape.obj} shape in which there are points,color,normal vector,indeces and so on
 	//
 	function ToolBox(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightsDirectional,aLightsPoint,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated){//f means float
 		this.draw = shape.draw;
