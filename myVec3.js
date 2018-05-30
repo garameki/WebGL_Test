@@ -1,3 +1,20 @@
+// GIVE FUNCTIONS TO CALCULATE 3D VECTOR
+
+// how to use
+//
+// var vA = [ 5,-3, 2];
+// var vB = [ 0, 6,-3];
+//
+// var length = myVec3.length;
+// var dot = myVec3.dot;
+// var cross = myVec3.cross;
+//
+// var len = length(vA);//->6.164...
+// var strong = dot(vA,vB);//->-24
+// var vAxis = corss(vA,vB);->[-3,15,30]----right hand coordinate as same as clipping space used in webgl
+
+
+
 /* */(function(){
 
 
