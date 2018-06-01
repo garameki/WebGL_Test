@@ -1,5 +1,5 @@
-WebGL_Test ORGANIZING
-=====================
+WebGL_Test version 1.0  
+======================  
 
 HOW TO USE
 ==========
