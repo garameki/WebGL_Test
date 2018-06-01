@@ -4,25 +4,22 @@
 	Object.defineProperty(Array.prototype,'x',{get:function(){return this[0];},set:function(n){this[0]=n},enumerable:false,configurable:false});
 	Object.defineProperty(Array.prototype,'y',{get:function(){return this[1];},set:function(n){this[1]=n},enumerable:false,configurable:false});
 	Object.defineProperty(Array.prototype,'z',{get:function(){return this[2];},set:function(n){this[2]=n},enumerable:false,configurable:false});
-	Object.defineProperty(Array.prototype,'arr2D',{get:function(){return [this[0],this[1]];},enumerable:false,configurable:false});
-	Object.defineProperty(Array.prototype,'arr3D',{get:function(){return [this[0],this[1],this[2]];},enumerable:false,configurable:false});
-
-
-//	Object.defineProperty(Array.prototype,'length2D',{get:function(){return Math.sqrt(this[0]*this[0]+this[1]*this[1]]);},enumerable:false,configurable:false});
-//	Object.defineProperty(Array.prototype,'length3D',{get:function(){return Math.sqrt(this[0]*this[0]+this[1]*this[1]+this[2]*this[2]);},enumerable:false,configurable:false});
-//	Object.defineProperty(Array.prototype,'normalize2D',{value:normalize2D,writable:false,enumerable:false,configurable:false});
-	function normalize2D(){
-		var len = 1. / this.length2D;
-		this[0] = this[0] * len;
-		this[1] = this[1] * len;
-	};
-//	Object.defineProperty(Array.prototype,'normalize3D',{value:normalize3D,writable:false,enumerable:false,configurable:false});
+//	Object.defineProperty(Array.prototype,'arr3D',{get:function(){return [this[0],this[1],this[2]];},enumerable:false,configurable:false});
+	Object.defineProperty(Array.prototype,'length3D',{get:function(){return Math.sqrt(this[0]*this[0]+this[1]*this[1]+this[2]*this[2]);},enumerable:false,configurable:false});
+	Object.defineProperty(Array.prototype,'normalize3D',{value:normalize3D,writable:false,enumerable:false,configurable:false});
 	function normalize3D(){
 		var len = 1. / this.length3D;
 		this[0] = this[0] * len;
 		this[1] = this[1] * len;
 		this[2] = this[2] * len;
 	};
+	Object.defineProperty(Array.prototype,'opposite3D',{value:opposite3D,writable:false,enumerable:false,configurable:false});
+	function opposite3D(){
+		this[0] = -this[0];
+		this[1] = -this[1];
+		this[2] = -this[2];
+	};
+	
 
 
 	myShape = { };
@@ -589,10 +586,10 @@ if(alphaB==180){
 				if(false){
 					//for mirror ball
 					var vN1 = getNormalVector(gl,points[n1],points[n2],points[n3],pointInner);
-					normals = normals.concat(vN1.arr);
-					normals = normals.concat(vN1.arr);
-					normals = normals.concat(vN1.arr);
-					normals = normals.concat(vN1.arr);
+					normals = normals.concat(vN1);
+					normals = normals.concat(vN1);
+					normals = normals.concat(vN1);
+					normals = normals.concat(vN1);
 				}else{
 					//for smooth surface
 					normals = normals.concat(points[n1]);
@@ -762,43 +759,41 @@ nn++;
 	/**
 	 *Get Normal Vector from 3 points and get an inner point
 	 *
-	 *@param {Vector} out  x,y,z
-	 *@param {Vector} p1 x,y,z
-	 *@param {Vector} p2 x,y,z
-	 *@param {Vector} p3 x,y,z
-	 *@param {Vector} pInnerBody x,y,z
+	 *@param {Array extended} out  x,y,z
+	 *@param {Array extended} p1 x,y,z
+	 *@param {Array extended} p2 x,y,z
+	 *@param {Array extended} p3 x,y,z
+	 *@param {Array extended} pInnerBody x,y,z
 	 *
 	*/
 	function getNormalVector(gl,p1,p2,p3,pInnerBody){
 
-			var magenta = myColorName.magenta(1);
-			var red = myColorName.red(1);
-			var green = myColorName.red(1);
-			var blue = myColorName.blue(1);
-			var cyan = myColorName.cyan(1);
-			var yellow = myColorName.yellow(1);
+	//		var magenta = myColorName.magenta(1);
+	//		var red = myColorName.red(1);
+	//		var green = myColorName.red(1);
+	//		var blue = myColorName.blue(1);
+	//		var cyan = myColorName.cyan(1);
+	//		var yellow = myColorName.yellow(1);
 
-		var pCenter = new myClass.Point((p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3);
-		var vio = new myClass.Vector(pCenter.x - pInnerBody.x,pCenter.y - pInnerBody.y,pCenter.z - pInnerBody.z);
-		var pio = pCenter.calcTranslate(vio);
-		var vP = new myClass.Vector(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
-		var vQ = new myClass.Vector(p3.x-p1.x,p3.y-p1.y,p3.z-p1.z);
+		var pCenter = [(p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3];
+		var vio = myVec3.plus(pCenter,pInnerBody);
+		var pio = myVec3.plus(pCenter,vio);
+		var vP = myVec3.minus(p2,p1);
+		var vQ = myVec3.minus(p3,p1);
 
-		var vN = new myClass.Vector(vP.y*vQ.z-vP.z*vQ.y,vP.z*vQ.x-vP.x*vQ.z,vP.x*vQ.y-vP.y*vQ.x);
-		var pCN = new myClass.Point(pCenter.x+vN.x,pCenter.y+vN.y,pCenter.z+vN.z);
-		var l1=vio.calcLength();//Math.pow(vio.x*vio.x+vio.y*vio.y+vio.z*vio.z,0.5);//calcLength();
-		var l2=vN.calcLength();//Math.pow(vN.x*vN.x+vN.y*vN.y+vN.z*vN.z,0.5);//.calcLength();
+		var vN = myVec3.cross(vP,vQ);//right hand cross product
+
+		var l1 = vio.length3D;
+		var l2 = vN.length3D;
 		if(l1==0 || l2==0){
-			vN = new myClass.Vector(0,0,0);
+			vN = [0,0,0];
 				PRINT_CAUTION.innerHTML+="Can't product Normal Vector vN=(0,0,0) in GLShape.js<br>";
 			return vN;
 		}else{
-			var theta = Math.acos((vio.x*vN.x+vio.y*vN.y+vio.z*vN.z)/(l1*l2));
-			if(theta>Math.PI/2){vN.x=-vN.x;vN.y=-vN.y;vN.z=-vN.z;}
+			var theta = Math.acos(myVec3.dot(vio.x,vN)/(l1*l2));
+			if(theta>Math.PI/2)vN.opposite();//destruction method{vN.x=-vN.x;vN.y=-vN.y;vN.z=-vN.z;}
 		}
-		var pCN2 = new myClass.Point(pCenter.x + vN.x,pCenter.y + vN.y,pCenter.z + vN.z);
-		vN.makeMyselfUnitVector();
-
+		vN.normalize3D();//destructional method
 
 		return vN;
 	};
