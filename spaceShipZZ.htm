@@ -922,7 +922,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 		var labels = new myClass.Labels();
 		labels.addText(0,-5,0,"",colorNameText);
 	};
-	var shape = myShape.hexa(gl);
+	var shape = myShape.hexa(gl,500);
 	UnitsToDraw.join(gl,"plane",shape,aAccumeUnits,labels,nameTextureBase,[],[],brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
@@ -951,7 +951,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.none());
 	var labels = new myClass.Labels();
 	labels.addText(0,-5,0,"Sun",colorNameText);
-//	var shape = myShape.hexa(gl);
+//	var shape = myShape.hexa(gl,r);
 	var shape = myShape.sphere(gl,r);
 	UnitsToDraw.join(gl,"sun",shape,aAccumeUnits,labels,nameTextureSun,aAccumeLightingDirectionalSun,aAccumeLightingPointSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
@@ -977,7 +977,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.none());
 	var labels = new myClass.Labels();
 	labels.addText(0,-5,0,"Earth",colorNameText);
-//	var shape = myShape.hexa(gl);
+//	var shape = myShape.hexa(gl,r);
 	var shape = myShape.sphere(gl,r);
 	UnitsToDraw.join(gl,"earth",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
@@ -999,7 +999,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.none());
 	var labels = new myClass.Labels();
 	labels.addText(0,-5,0,"",colorNameText);
-//	var shape = myShape.hexa(gl);
+//	var shape = myShape.hexa(gl,r);
 	var shape = myShape.sphere(gl,r);
 	UnitsToDraw.join(gl,"atmosphere",shape,aAccumeUnits,labels,nameTextureAtomosphere,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessAtomosphere,alphaAtomosphere);
 
@@ -1175,7 +1175,8 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 //	var shape = myShape.sphere(gl,r);
 //	var shape = myShape.tetra(gl,r);
 //	var shape = myShape.cylindricalCalumn(gl,r,r);
-	var shape = myShape.hexa(gl,r);
+//	var shape = myShape.hexa(gl,r);
+	var shape = myShape.triangle(gl,[10,10,130],[150,100,100],[-100,-150,-100],[1,1,1,1]);
 
 	UnitsToDraw.join(gl,"saturn",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
 

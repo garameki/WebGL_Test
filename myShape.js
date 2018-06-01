@@ -212,7 +212,7 @@ console.log("cylindricalCalumn nn=",nn);
 	function triangle(gl,p1,p2,p3,color){
 		var positions = [];
 		positions.push(p1.x,p1.y,p1.z,p2.x,p2.y,p2.z,p3.x,p3.y,p3.z,p1.x,p1.y,p1.z);
-		var vN = getNormalVector(gl,p1,p2,p3,new myClass.Point(0,0,0));
+		var vN = getNormalVector(gl,p1,p2,p3,[0,0,0]);
 		var normals = [
 			vN.x,vN.y,vN.z,
 			vN.x,vN.y,vN.z,
@@ -244,13 +244,13 @@ console.log("cylindricalCalumn nn=",nn);
 		}
 	};
 	function axisX(gl) {
-			return myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(10,0,0),new myColorName.red(1));	
+			return myShape.line(gl,[0,0,0],[10,0,0],new myColorName.red(1));	
 	};
 	function axisY(gl){
-			return myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,10,0),new myColorName.green(1));	
+			return myShape.line(gl,[0,0,0],[0,10,0],new myColorName.green(1));	
 	};
 	function axisZ(gl){
-			return myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,10),new myColorName.blue(1));	
+			return myShape.line(gl,[0,0,0],[0,0,10],new myColorName.blue(1));	
 	};
 	function tetrahedron(gl,radius){
 		//create tetrahedron
