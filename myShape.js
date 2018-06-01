@@ -4,6 +4,10 @@
 	Object.defineProperty(Array.prototype,'x',{get:function(){return this[0];},set:function(n){this[0]=n},enumerable:false,configurable:false});
 	Object.defineProperty(Array.prototype,'y',{get:function(){return this[1];},set:function(n){this[1]=n},enumerable:false,configurable:false});
 	Object.defineProperty(Array.prototype,'z',{get:function(){return this[2];},set:function(n){this[2]=n},enumerable:false,configurable:false});
+	Object.defineProperty(Array.prototype,'arr2D',{get:function(){return [this[0],this[1]];},enumerable:false,configurable:false});
+	Object.defineProperty(Array.prototype,'arr3D',{get:function(){return [this[0],this[1],this[2]];},enumerable:false,configurable:false});
+
+
 //	Object.defineProperty(Array.prototype,'length2D',{get:function(){return Math.sqrt(this[0]*this[0]+this[1]*this[1]]);},enumerable:false,configurable:false});
 //	Object.defineProperty(Array.prototype,'length3D',{get:function(){return Math.sqrt(this[0]*this[0]+this[1]*this[1]+this[2]*this[2]);},enumerable:false,configurable:false});
 //	Object.defineProperty(Array.prototype,'normalize2D',{value:normalize2D,writable:false,enumerable:false,configurable:false});
@@ -552,7 +556,7 @@ if(alphaB==180){
 				x=rr * Math.cos(rad * gamma) * Math.cos(rad * alpha);
 				y=rr * Math.cos(rad * gamma) * Math.sin(rad * alpha);
 				z=rr * Math.sin(rad * gamma);
-				points.push(new myClass.Point(x,y,z));
+				points.push([x,y,z]);
 //○				px.push(x);
 //○				py.push(y);
 //○				pz.push(z);
@@ -560,7 +564,7 @@ if(alphaB==180){
 			}
 			flagFirstTime=false;
 		}
-		var pointInner = new myClass.Point(0,0,0);
+		var pointInner = [0,0,0];
 //	console.log(" nLongitude=",nLongitude," nLatitude=",nLatitude);
 		var countRectangle=0;
 		var ii,kk;
@@ -572,27 +576,30 @@ if(alphaB==180){
 			for(ii=0;ii<nLatitude-1;ii++){
 				countRectangle++;
 				n1=kk * nLatitude + ii;
-				positions = positions.concat(points[n1].arr);
+				positions = positions.concat(points[n1]);
 
 				n2 = kk * nLatitude + ii + 1;
-				positions = positions.concat(points[n2].arr);
+				positions = positions.concat(points[n2]);
 
 				n3 = kk * nLatitude + ii + nLatitude;
-				positions = positions.concat(points[n3].arr);
+				positions = positions.concat(points[n3]);
 
 				n4 = kk * nLatitude + ii + nLatitude + 1;
-				positions = positions.concat(points[n4].arr);
-
-			//	var vN1 = getNormalVector(gl,points[n1],points[n2],points[n3],pointInner);
-			//	normals = normals.concat(vN1.arr);
-			//	normals = normals.concat(vN1.arr);
-			//	normals = normals.concat(vN1.arr);
-			//	normals = normals.concat(vN1.arr);
-				var n,v;
-				n = points[n1];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
-				n = points[n2];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
-				n = points[n3];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
-				n = points[n4];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
+				positions = positions.concat(points[n4]);
+				if(false){
+					//for mirror ball
+					var vN1 = getNormalVector(gl,points[n1],points[n2],points[n3],pointInner);
+					normals = normals.concat(vN1.arr);
+					normals = normals.concat(vN1.arr);
+					normals = normals.concat(vN1.arr);
+					normals = normals.concat(vN1.arr);
+				}else{
+					//for smooth surface
+					normals = normals.concat(points[n1]);
+					normals = normals.concat(points[n2]);
+					normals = normals.concat(points[n3]);
+					normals = normals.concat(points[n4]);
+				}
 			}
 		}
 
