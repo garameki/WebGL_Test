@@ -12,51 +12,6 @@
 
 	/** global scope **/
 	myClass = { };
-console.log("myClass.js");
-	Object.defineProperty(myClass,'Point',{value:Point,writable:false,enumerable:true});
-	function Point(x,y,z){
-		this.x=x;
-		this.y=y;
-		this.z=z;
-	};
-	Point.prototype.calcTranslate = function(v){
-		//@param {Point} out
-		//@param {Vector} v
-		return new myClass.Point(this.x+v.x,this.y+v.y,this.z+v.z);
-	};
-	Object.defineProperty(Point.prototype,'arr',{get:function(){return [this.x,this.y,this.z];},enumerable:true});
-
-
-
-	Object.defineProperty(myClass,'Vector',{value:Vector,writable:false,enumerable:true});
-	function Vector(x,y,z){
-		this.x=x;
-		this.y=y;
-		this.z=z;
-	};
-	Vector.prototype.arr = function(){
-		return [this.x,this.y,this.z];
-	};
-	Object.defineProperty(Vector.prototype,'length',{get:function(){return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5);},enumerable:true,configurable:false});
-	Object.defineProperty(Vector.prototype,'arr',{get:function(){return [this.x,this.y,this.z];},enumerable:true,configurable:false});
-	Vector.prototype.calcLength = function(){
-		return Math.pow(this.x*this.x+this.y*this.y+this.z*this.z,0.5);
-	};
-	Vector.prototype.makeMyselfUnitVector = function(){
-		var len = 1/this.calcLength();
-		this.x=this.x*len;
-		this.y=this.y*len;
-		this.z=this.z*len;
-	};
-	Vector.prototype.normalize = function(){
-		var len = 1/this.calcLength();
-		this.x=this.x*len;
-		this.y=this.y*len;
-		this.z=this.z*len;
-	};
-
-
-
 
 
 //kkkk
