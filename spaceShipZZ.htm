@@ -1307,7 +1307,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 		t1 = 3.141592653*2*Math.random();
 		t2 = 3.141592653*Math.random()-1.5707963265;
 		r2 = r1*Math.cos(t2);
-		p1 = new myClass.Point(r2*Math.cos(t1),r2*Math.sin(t1),r1*Math.sin(t2));
+		p1 = [r2*Math.cos(t1),r2*Math.sin(t1),r1*Math.sin(t2)];
 		var shape = myShape.point(gl,p1,myColorName.purple(1));
 		UnitsToDraw.join(gl,"star"+hh.toString(),shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 	}
@@ -1345,7 +1345,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,"origin",colorNameText);
 //	labels.addText(0,0,0,"origin",colorNameText);
-	var shape = myShape.triangle(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,-10),new myClass.Point(-5,0,-10),myColorName.magenta(1));
+	var shape = myShape.triangle(gl,[0,0,0],[5,0,-10],[-5,0,-10],myColorName.magenta(1));
 		UnitsToDraw.join(gl,"observer",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 */
