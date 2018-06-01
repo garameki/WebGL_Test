@@ -1,6 +1,7 @@
 ﻿(function(){
 
-	//this is the patch using instead of myClass.Position() class
+	//extended Array class
+	//this is for the patch using instead of myClass.Position() class
 	Object.defineProperty(Array.prototype,'x',{get:function(){return this[0];},set:function(n){this[0]=n},enumerable:false,configurable:false});
 	Object.defineProperty(Array.prototype,'y',{get:function(){return this[1];},set:function(n){this[1]=n},enumerable:false,configurable:false});
 	Object.defineProperty(Array.prototype,'z',{get:function(){return this[2];},set:function(n){this[2]=n},enumerable:false,configurable:false});
@@ -26,7 +27,7 @@
 	Object.defineProperty(myShape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myShape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myShape,'triangle'	,{value:triangle,writable:false,enumerable:true,configurable:false});
-//●
+
 	Object.defineProperty(myShape,'cylindricalCalumn'	,{value:cylindricalCalumn,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myShape,'rectangle'	,{value:rectangle,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myShape,'axisX'		,{value:axisX,writable:false,enumerable:true,configurable:false});
@@ -38,22 +39,19 @@
 	Object.defineProperty(myShape,'ring'		,{value:ringPlane,writable:false,enumerable:true,configurable:false});
 
 	//entities
-//●
+
 	function cylindricalCalumn(gl,radius,height){
 		var rad = Math.PI/180;
 		var aCirclePos = [];
-		for(var theta = 0;theta < 360;theta += 10){
+		for(var theta = 0;theta <= 360;theta += 5){
 			posx = radius * Math.cos(theta * rad);
 			posy = radius * Math.sin(theta * rad);	
 			posz = 0;
-			aCirclePos.push(new myClass.Point(posx,posy,posz));
+			aCirclePos.push([posx,posy,posz]);
 		}
-		var innerP = new myClass.Point(0,0,height*0.5);
 		var ii,nn = aCirclePos.length;
-console.log("nn=",nn);
+console.log("cylindricalCalumn nn=",nn);
 		var normals = [];
-		var pointOrigin = new myClass.Point(0,0,0);
-		var pointHeight = new myClass.Point(0,0,-height);
 
 		var positions = [];
 		positions.push(0,0,0);
