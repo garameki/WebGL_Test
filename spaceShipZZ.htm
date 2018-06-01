@@ -1313,15 +1313,15 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	aAccumeUnits.push(AccumeMotions.translate(-15,-15,-30));
 	var labels = new myClass.Labels();
 	labels.addText(0,0,5,"back",colorNameText);
-	var shape = myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,5),myColorName.magenta(1));
+	var shape = myShape.line(gl,[0,0,0],[0,0,5],myColorName.magenta(1));
 		UnitsToDraw.join(gl,"back",shape,aAccumeUnits,labels,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 	var labels = new myClass.Labels();
 	labels.addText(0,5,0,"up",colorNameText);
-	var shape = myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,5,0),myColorName.magenta(1));
+	var shape = myShape.line(gl,[0,0,0],[0,5,0],myColorName.magenta(1));
 		UnitsToDraw.join(gl,"up",shape,aAccumeUnits,labels,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 	var labels = new myClass.Labels();
 	labels.addText(5,0,0,"right",colorNameText);
-	var shape = myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,0),myColorName.magenta(1));
+	var shape = myShape.line(gl,[0,0,0],[5,0,0],myColorName.magenta(1));
 		UnitsToDraw.join(gl,"right",shape,aAccumeUnits,labels,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
@@ -1332,6 +1332,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	/** observer **/
+/*
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 	var labels = new myClass.Labels();
@@ -1340,12 +1341,13 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var shape = myShape.triangle(gl,new myClass.Point(0,0,0),new myClass.Point(5,0,-10),new myClass.Point(-5,0,-10),myColorName.magenta(1));
 		UnitsToDraw.join(gl,"observer",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
-
+*/
 
 
 
 
 	/** shadow **/
+/*
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0,90));
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
@@ -1354,7 +1356,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 //	labels.addText(0,0,0,"origin",colorNameText);
 	var shape = myShape.cylindricalCalumn(gl,500,500);
 		UnitsToDraw.join(gl,"shadow",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
-
+*/
 
 
 

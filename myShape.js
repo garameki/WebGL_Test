@@ -1,4 +1,26 @@
 ﻿(function(){
+
+	//this is the patch using instead of myClass.Position() class
+	Object.defineProperty(Array.prototype,'x',{get:function(){return this[0];},set:function(n){this[0]=n},enumerable:false,configurable:false});
+	Object.defineProperty(Array.prototype,'y',{get:function(){return this[1];},set:function(n){this[1]=n},enumerable:false,configurable:false});
+	Object.defineProperty(Array.prototype,'z',{get:function(){return this[2];},set:function(n){this[2]=n},enumerable:false,configurable:false});
+//	Object.defineProperty(Array.prototype,'length2D',{get:function(){return Math.sqrt(this[0]*this[0]+this[1]*this[1]]);},enumerable:false,configurable:false});
+//	Object.defineProperty(Array.prototype,'length3D',{get:function(){return Math.sqrt(this[0]*this[0]+this[1]*this[1]+this[2]*this[2]);},enumerable:false,configurable:false});
+//	Object.defineProperty(Array.prototype,'normalize2D',{value:normalize2D,writable:false,enumerable:false,configurable:false});
+	function normalize2D(){
+		var len = 1. / this.length2D;
+		this[0] = this[0] * len;
+		this[1] = this[1] * len;
+	};
+//	Object.defineProperty(Array.prototype,'normalize3D',{value:normalize3D,writable:false,enumerable:false,configurable:false});
+	function normalize3D(){
+		var len = 1. / this.length3D;
+		this[0] = this[0] * len;
+		this[1] = this[1] * len;
+		this[2] = this[2] * len;
+	};
+
+
 	myShape = { };
 	Object.defineProperty(myShape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myShape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
@@ -167,7 +189,8 @@ console.log("nn=",nn);
 	};
 	function line(gl,pointStart,pointEnd,color){
 		var positions = [];
-		positions.push(pointStart.x,pointStart.y,pointStart.z,pointEnd.x,pointEnd.y,pointEnd.z);
+		positions = positions.concat(pointStart);
+		positions = positions.concat(pointEnd);
 		var normals = [1.0,1.0,1.0,1.0,1.0,1.0];
 		var colors = [];
 		colors.push(color.r,color.g,color.b,color.a);
