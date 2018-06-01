@@ -254,7 +254,7 @@ console.log("nn=",nn);
 	function axisZ(gl){
 			return myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,10),new myColorName.blue(1));	
 	};
-	function tetrahedron(gl){
+	function tetrahedron(gl,radius){
 		//create tetrahedron
 		var ra=1.0;
 		var rb=2*Math.pow(2,0.5)/3*ra;
@@ -281,11 +281,13 @@ console.log("nn=",nn);
 			x3,y3,z3,
 			x4,y4,z4
 		];
-		var p1 = new myClass.Point(x1,y1,z1);
-		var p2 = new myClass.Point(x2,y2,z2);
-		var p3 = new myClass.Point(x3,y3,z3);
-		var p4 = new myClass.Point(x4,y4,z4);
-		var pInner = new myClass.Point(0,0,0);
+		for(var ii=0,len=positions.length;ii<len;ii++)positions[ii]=positions[ii]*radius;
+
+		var p1 = [x1,y1,z1];
+		var p2 = [x2,y2,z2];
+		var p3 = [x3,y3,z3];
+		var p4 = [x4,y4,z4];
+		var pInner = [0,0,0];
 		var v1 = getNormalVector(gl,p1,p2,p3,pInner);
 		var v2 = getNormalVector(gl,p1,p2,p4,pInner);
 		var v3 = getNormalVector(gl,p1,p3,p4,pInner);

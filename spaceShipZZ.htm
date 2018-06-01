@@ -1170,7 +1170,12 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	var labels = new myClass.Labels();
 	labels.addText(0,0,0,nameTextureSaturn,colorNameText);//kkk
-	var shape = myShape.sphere(gl,r);
+
+//●for shape test
+//	var shape = myShape.sphere(gl,r);
+	var shape = myShape.tetra(gl,r);
+
+
 	UnitsToDraw.join(gl,"saturn",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
 
 	/** Ring **/
