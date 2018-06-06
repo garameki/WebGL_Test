@@ -1,5 +1,14 @@
-WebGL_Test version 1.0  
+WebGL_Test version 1.1  
 ======================  
+  
+What's New  
+===========  
+nothing is changed to see screen  
+  
+only few things is changed  
+1.Add new file myLabel.js which is from old myClass.js removed now.  
+2.Rename myColor.js to myColorName.js : no contents is changed.  
+
 
 HOW TO USE
 ==========
