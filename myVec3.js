@@ -68,6 +68,19 @@ Object.defineProperty(myVec3,'plus',{value:plus,enumerable:true,configurable:fal
 		return c;
 	};
 
+Object.defineProperty(myVec3,'minus',{value:minus,enumerable:true,configurable:false});
+	/**
+	 * @param {a,b} Array
+	*/
+	function minus(a,b){
+		var c = [];
+		c.push(a[0]-b[0]);
+		c.push(a[1]-b[1]);
+		c.push(a[2]-b[2]);
+		return c;
+	};
+
+
 //Object.defineProperty(myVec3,'normalize',{
 //});
 

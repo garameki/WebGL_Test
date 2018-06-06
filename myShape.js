@@ -1,9 +1,32 @@
 ﻿(function(){
+
+	//extended Array class
+	Object.defineProperty(Array.prototype,'x',{get:function(){return this[0];},set:function(n){this[0]=n},enumerable:false,configurable:false});
+	Object.defineProperty(Array.prototype,'y',{get:function(){return this[1];},set:function(n){this[1]=n},enumerable:false,configurable:false});
+	Object.defineProperty(Array.prototype,'z',{get:function(){return this[2];},set:function(n){this[2]=n},enumerable:false,configurable:false});
+//	Object.defineProperty(Array.prototype,'arr3D',{get:function(){return [this[0],this[1],this[2]];},enumerable:false,configurable:false});
+	Object.defineProperty(Array.prototype,'length3D',{get:function(){return Math.sqrt(this[0]*this[0]+this[1]*this[1]+this[2]*this[2]);},enumerable:false,configurable:false});
+	Object.defineProperty(Array.prototype,'normalize3D',{value:normalize3D,writable:false,enumerable:false,configurable:false});
+	function normalize3D(){
+		var len = 1. / this.length3D;
+		this[0] = this[0] * len;
+		this[1] = this[1] * len;
+		this[2] = this[2] * len;
+	};
+	Object.defineProperty(Array.prototype,'opposite3D',{value:opposite3D,writable:false,enumerable:false,configurable:false});
+	function opposite3D(){
+		this[0] = -this[0];
+		this[1] = -this[1];
+		this[2] = -this[2];
+	};
+	
+
+
 	myShape = { };
 	Object.defineProperty(myShape,'point'		,{value:point,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myShape,'line'		,{value:line,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myShape,'triangle'	,{value:triangle,writable:false,enumerable:true,configurable:false});
-//●
+
 	Object.defineProperty(myShape,'cylindricalCalumn'	,{value:cylindricalCalumn,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myShape,'rectangle'	,{value:rectangle,writable:false,enumerable:true,configurable:false});
 	Object.defineProperty(myShape,'axisX'		,{value:axisX,writable:false,enumerable:true,configurable:false});
@@ -15,22 +38,19 @@
 	Object.defineProperty(myShape,'ring'		,{value:ringPlane,writable:false,enumerable:true,configurable:false});
 
 	//entities
-//●
+
 	function cylindricalCalumn(gl,radius,height){
 		var rad = Math.PI/180;
 		var aCirclePos = [];
-		for(var theta = 0;theta < 360;theta += 10){
+		for(var theta = 0;theta <= 360;theta += 5){
 			posx = radius * Math.cos(theta * rad);
 			posy = radius * Math.sin(theta * rad);	
 			posz = 0;
-			aCirclePos.push(new myClass.Point(posx,posy,posz));
+			aCirclePos.push([posx,posy,posz]);
 		}
-		var innerP = new myClass.Point(0,0,height*0.5);
 		var ii,nn = aCirclePos.length;
-console.log("nn=",nn);
+console.log("cylindricalCalumn nn=",nn);
 		var normals = [];
-		var pointOrigin = new myClass.Point(0,0,0);
-		var pointHeight = new myClass.Point(0,0,-height);
 
 		var positions = [];
 		positions.push(0,0,0);
@@ -167,7 +187,8 @@ console.log("nn=",nn);
 	};
 	function line(gl,pointStart,pointEnd,color){
 		var positions = [];
-		positions.push(pointStart.x,pointStart.y,pointStart.z,pointEnd.x,pointEnd.y,pointEnd.z);
+		positions = positions.concat(pointStart);
+		positions = positions.concat(pointEnd);
 		var normals = [1.0,1.0,1.0,1.0,1.0,1.0];
 		var colors = [];
 		colors.push(color.r,color.g,color.b,color.a);
@@ -190,7 +211,7 @@ console.log("nn=",nn);
 	function triangle(gl,p1,p2,p3,color){
 		var positions = [];
 		positions.push(p1.x,p1.y,p1.z,p2.x,p2.y,p2.z,p3.x,p3.y,p3.z,p1.x,p1.y,p1.z);
-		var vN = getNormalVector(gl,p1,p2,p3,new myClass.Point(0,0,0));
+		var vN = getNormalVector(gl,p1,p2,p3,[0,0,0]);
 		var normals = [
 			vN.x,vN.y,vN.z,
 			vN.x,vN.y,vN.z,
@@ -222,15 +243,15 @@ console.log("nn=",nn);
 		}
 	};
 	function axisX(gl) {
-			return myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(10,0,0),new myColorName.red(1));	
+			return myShape.line(gl,[0,0,0],[10,0,0],new myColorName.red(1));	
 	};
 	function axisY(gl){
-			return myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,10,0),new myColorName.green(1));	
+			return myShape.line(gl,[0,0,0],[0,10,0],new myColorName.green(1));	
 	};
 	function axisZ(gl){
-			return myShape.line(gl,new myClass.Point(0,0,0),new myClass.Point(0,0,10),new myColorName.blue(1));	
+			return myShape.line(gl,[0,0,0],[0,0,10],new myColorName.blue(1));	
 	};
-	function tetrahedron(gl){
+	function tetrahedron(gl,radius){
 		//create tetrahedron
 		var ra=1.0;
 		var rb=2*Math.pow(2,0.5)/3*ra;
@@ -257,11 +278,13 @@ console.log("nn=",nn);
 			x3,y3,z3,
 			x4,y4,z4
 		];
-		var p1 = new myClass.Point(x1,y1,z1);
-		var p2 = new myClass.Point(x2,y2,z2);
-		var p3 = new myClass.Point(x3,y3,z3);
-		var p4 = new myClass.Point(x4,y4,z4);
-		var pInner = new myClass.Point(0,0,0);
+		for(var ii=0,len=positions.length;ii<len;ii++)positions[ii]=positions[ii]*radius;
+
+		var p1 = [x1,y1,z1];
+		var p2 = [x2,y2,z2];
+		var p3 = [x3,y3,z3];
+		var p4 = [x4,y4,z4];
+		var pInner = [0,0,0];
 		var v1 = getNormalVector(gl,p1,p2,p3,pInner);
 		var v2 = getNormalVector(gl,p1,p2,p4,pInner);
 		var v3 = getNormalVector(gl,p1,p3,p4,pInner);
@@ -338,43 +361,44 @@ console.log("nn=",nn);
 			}
 		}
 	};
-	function hexahedron(gl){
+	function hexahedron(gl,radius){
 		//regular hexahedron
 
-		p1 = new myClass.Point(1,1,1);
-		p2 = new myClass.Point(1,-1,1);
-		p3 = new myClass.Point(-1,-1,1);
-		p4 = new myClass.Point(-1,1,1);
-		p5 = new myClass.Point(1,1,-1);
-		p6 = new myClass.Point(1,-1,-1);
-		p7 = new myClass.Point(-1,-1,-1);
-		p8 = new myClass.Point(-1,1,-1);
-		pInner = new myClass.Point(0,0,0);
+		p1 = [1,1,1];
+		p2 = [1,-1,1];
+		p3 = [-1,-1,1];
+		p4 = [-1,1,1];
+		p5 = [1,1,-1];
+		p6 = [1,-1,-1];
+		p7 = [-1,-1,-1];
+		p8 = [-1,1,-1];
+		pInner = [0,0,0];
 		var positions = [];
-		positions = positions.concat(p1.arr);
-		positions = positions.concat(p2.arr);
-		positions = positions.concat(p3.arr);
-		positions = positions.concat(p4.arr);
-		positions = positions.concat(p4.arr);
-		positions = positions.concat(p3.arr);
-		positions = positions.concat(p7.arr);
-		positions = positions.concat(p8.arr);
-		positions = positions.concat(p8.arr);
-		positions = positions.concat(p7.arr);
-		positions = positions.concat(p6.arr);
-		positions = positions.concat(p5.arr);
-		positions = positions.concat(p5.arr);
-		positions = positions.concat(p6.arr);
-		positions = positions.concat(p2.arr);
-		positions = positions.concat(p1.arr);
-		positions = positions.concat(p5.arr);
-		positions = positions.concat(p1.arr);
-		positions = positions.concat(p4.arr);
-		positions = positions.concat(p8.arr);
-		positions = positions.concat(p2.arr);
-		positions = positions.concat(p6.arr);
-		positions = positions.concat(p7.arr);
-		positions = positions.concat(p3.arr);
+		positions = positions.concat(p1);
+		positions = positions.concat(p2);
+		positions = positions.concat(p3);
+		positions = positions.concat(p4);
+		positions = positions.concat(p4);
+		positions = positions.concat(p3);
+		positions = positions.concat(p7);
+		positions = positions.concat(p8);
+		positions = positions.concat(p8);
+		positions = positions.concat(p7);
+		positions = positions.concat(p6);
+		positions = positions.concat(p5);
+		positions = positions.concat(p5);
+		positions = positions.concat(p6);
+		positions = positions.concat(p2);
+		positions = positions.concat(p1);
+		positions = positions.concat(p5);
+		positions = positions.concat(p1);
+		positions = positions.concat(p4);
+		positions = positions.concat(p8);
+		positions = positions.concat(p2);
+		positions = positions.concat(p6);
+		positions = positions.concat(p7);
+		positions = positions.concat(p3);
+		for(var ii=0,len=positions.length;ii<len;ii++)positions[ii]=positions[ii]*radius;
 
 		v1 = getNormalVector(gl,p1,p2,p3,pInner);
 		v2 = getNormalVector(gl,p4,p8,p3,pInner);
@@ -383,30 +407,30 @@ console.log("nn=",nn);
 		v5 = getNormalVector(gl,p1,p4,p8,pInner);
 		v6 = getNormalVector(gl,p2,p3,p7,pInner);
 		var normals = [];
-		normals = normals.concat(v1.arr);
-		normals = normals.concat(v1.arr);
-		normals = normals.concat(v1.arr);
-		normals = normals.concat(v1.arr);
-		normals = normals.concat(v2.arr);
-		normals = normals.concat(v2.arr);
-		normals = normals.concat(v2.arr);
-		normals = normals.concat(v2.arr);
-		normals = normals.concat(v3.arr);
-		normals = normals.concat(v3.arr);
-		normals = normals.concat(v3.arr);
-		normals = normals.concat(v3.arr);
-		normals = normals.concat(v4.arr);
-		normals = normals.concat(v4.arr);
-		normals = normals.concat(v4.arr);
-		normals = normals.concat(v4.arr);
-		normals = normals.concat(v5.arr);
-		normals = normals.concat(v5.arr);
-		normals = normals.concat(v5.arr);
-		normals = normals.concat(v5.arr);
-		normals = normals.concat(v6.arr);
-		normals = normals.concat(v6.arr);
-		normals = normals.concat(v6.arr);
-		normals = normals.concat(v6.arr);
+		normals = normals.concat(v1);
+		normals = normals.concat(v1);
+		normals = normals.concat(v1);
+		normals = normals.concat(v1);
+		normals = normals.concat(v2);
+		normals = normals.concat(v2);
+		normals = normals.concat(v2);
+		normals = normals.concat(v2);
+		normals = normals.concat(v3);
+		normals = normals.concat(v3);
+		normals = normals.concat(v3);
+		normals = normals.concat(v3);
+		normals = normals.concat(v4);
+		normals = normals.concat(v4);
+		normals = normals.concat(v4);
+		normals = normals.concat(v4);
+		normals = normals.concat(v5);
+		normals = normals.concat(v5);
+		normals = normals.concat(v5);
+		normals = normals.concat(v5);
+		normals = normals.concat(v6);
+		normals = normals.concat(v6);
+		normals = normals.concat(v6);
+		normals = normals.concat(v6);
 		var colors = [
 			1.0,1.0,1.0,1.0,
 			1.0,1.0,1.0,1.0,
@@ -529,7 +553,7 @@ if(alphaB==180){
 				x=rr * Math.cos(rad * gamma) * Math.cos(rad * alpha);
 				y=rr * Math.cos(rad * gamma) * Math.sin(rad * alpha);
 				z=rr * Math.sin(rad * gamma);
-				points.push(new myClass.Point(x,y,z));
+				points.push([x,y,z]);
 //○				px.push(x);
 //○				py.push(y);
 //○				pz.push(z);
@@ -537,7 +561,7 @@ if(alphaB==180){
 			}
 			flagFirstTime=false;
 		}
-		var pointInner = new myClass.Point(0,0,0);
+		var pointInner = [0,0,0];
 //	console.log(" nLongitude=",nLongitude," nLatitude=",nLatitude);
 		var countRectangle=0;
 		var ii,kk;
@@ -549,27 +573,30 @@ if(alphaB==180){
 			for(ii=0;ii<nLatitude-1;ii++){
 				countRectangle++;
 				n1=kk * nLatitude + ii;
-				positions = positions.concat(points[n1].arr);
+				positions = positions.concat(points[n1]);
 
 				n2 = kk * nLatitude + ii + 1;
-				positions = positions.concat(points[n2].arr);
+				positions = positions.concat(points[n2]);
 
 				n3 = kk * nLatitude + ii + nLatitude;
-				positions = positions.concat(points[n3].arr);
+				positions = positions.concat(points[n3]);
 
 				n4 = kk * nLatitude + ii + nLatitude + 1;
-				positions = positions.concat(points[n4].arr);
-
-			//	var vN1 = getNormalVector(gl,points[n1],points[n2],points[n3],pointInner);
-			//	normals = normals.concat(vN1.arr);
-			//	normals = normals.concat(vN1.arr);
-			//	normals = normals.concat(vN1.arr);
-			//	normals = normals.concat(vN1.arr);
-				var n,v;
-				n = points[n1];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
-				n = points[n2];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
-				n = points[n3];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
-				n = points[n4];v=(new myClass.Vector(n.x,n.y,n.z)).normalize();normals = normals.concat(n.arr);
+				positions = positions.concat(points[n4]);
+				if(false){
+					//for mirror ball
+					var vN1 = getNormalVector(gl,points[n1],points[n2],points[n3],pointInner);
+					normals = normals.concat(vN1);
+					normals = normals.concat(vN1);
+					normals = normals.concat(vN1);
+					normals = normals.concat(vN1);
+				}else{
+					//for smooth surface
+					normals = normals.concat(points[n1]);
+					normals = normals.concat(points[n2]);
+					normals = normals.concat(points[n3]);
+					normals = normals.concat(points[n4]);
+				}
 			}
 		}
 
@@ -732,43 +759,41 @@ nn++;
 	/**
 	 *Get Normal Vector from 3 points and get an inner point
 	 *
-	 *@param {Vector} out  x,y,z
-	 *@param {Vector} p1 x,y,z
-	 *@param {Vector} p2 x,y,z
-	 *@param {Vector} p3 x,y,z
-	 *@param {Vector} pInnerBody x,y,z
+	 *@param {Array extended} out  x,y,z
+	 *@param {Array extended} p1 x,y,z
+	 *@param {Array extended} p2 x,y,z
+	 *@param {Array extended} p3 x,y,z
+	 *@param {Array extended} pInnerBody x,y,z
 	 *
 	*/
 	function getNormalVector(gl,p1,p2,p3,pInnerBody){
 
-			var magenta = myColorName.magenta(1);
-			var red = myColorName.red(1);
-			var green = myColorName.red(1);
-			var blue = myColorName.blue(1);
-			var cyan = myColorName.cyan(1);
-			var yellow = myColorName.yellow(1);
+	//		var magenta = myColorName.magenta(1);
+	//		var red = myColorName.red(1);
+	//		var green = myColorName.red(1);
+	//		var blue = myColorName.blue(1);
+	//		var cyan = myColorName.cyan(1);
+	//		var yellow = myColorName.yellow(1);
 
-		var pCenter = new myClass.Point((p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3);
-		var vio = new myClass.Vector(pCenter.x - pInnerBody.x,pCenter.y - pInnerBody.y,pCenter.z - pInnerBody.z);
-		var pio = pCenter.calcTranslate(vio);
-		var vP = new myClass.Vector(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
-		var vQ = new myClass.Vector(p3.x-p1.x,p3.y-p1.y,p3.z-p1.z);
+		var pCenter = [(p1.x+p2.x+p3.x)/3,(p1.y+p2.y+p3.y)/3,(p1.z+p2.z+p3.z)/3];
+		var vio = myVec3.plus(pCenter,pInnerBody);
+		var pio = myVec3.plus(pCenter,vio);
+		var vP = myVec3.minus(p2,p1);
+		var vQ = myVec3.minus(p3,p1);
 
-		var vN = new myClass.Vector(vP.y*vQ.z-vP.z*vQ.y,vP.z*vQ.x-vP.x*vQ.z,vP.x*vQ.y-vP.y*vQ.x);
-		var pCN = new myClass.Point(pCenter.x+vN.x,pCenter.y+vN.y,pCenter.z+vN.z);
-		var l1=vio.calcLength();//Math.pow(vio.x*vio.x+vio.y*vio.y+vio.z*vio.z,0.5);//calcLength();
-		var l2=vN.calcLength();//Math.pow(vN.x*vN.x+vN.y*vN.y+vN.z*vN.z,0.5);//.calcLength();
+		var vN = myVec3.cross(vP,vQ);//right hand cross product
+
+		var l1 = vio.length3D;
+		var l2 = vN.length3D;
 		if(l1==0 || l2==0){
-			vN = new myClass.Vector(0,0,0);
+			vN = [0,0,0];
 				PRINT_CAUTION.innerHTML+="Can't product Normal Vector vN=(0,0,0) in GLShape.js<br>";
 			return vN;
 		}else{
-			var theta = Math.acos((vio.x*vN.x+vio.y*vN.y+vio.z*vN.z)/(l1*l2));
-			if(theta>Math.PI/2){vN.x=-vN.x;vN.y=-vN.y;vN.z=-vN.z;}
+			var theta = Math.acos(myVec3.dot(vio.x,vN)/(l1*l2));
+			if(theta>Math.PI/2)vN.opposite();//destruction method{vN.x=-vN.x;vN.y=-vN.y;vN.z=-vN.z;}
 		}
-		var pCN2 = new myClass.Point(pCenter.x + vN.x,pCenter.y + vN.y,pCenter.z + vN.z);
-		vN.makeMyselfUnitVector();
-
+		vN.normalize3D();//destructional method
 
 		return vN;
 	};
