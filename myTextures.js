@@ -6,7 +6,6 @@
 */
 (function(){
 
-	var flagMaxTexture = false;
 		//reference
 		//https://stackoverflow.com/questions/11292599/how-to-use-multiple-textures-in-webgl
 		//https://stackoverflow.com/questions/8688600/context-getimagedata-on-localhost
@@ -103,7 +102,7 @@ console.log("myself.texture=",myself.texture._name);
 	myTextures = { };
 
 	var oTextures = { };
-	var rootHTTPImages = "documents/games/3d/";//default
+	var rootHTTPImages = "./textures/";//default
 
 	Object.defineProperty(myTextures,'changeRoot',{value:changeRootForImage,writable:false,enumerable:false,configurable:false});
 	function changeRootForImage(sFolda){

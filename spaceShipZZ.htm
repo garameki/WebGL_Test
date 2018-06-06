@@ -779,36 +779,6 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	myTextures.changeRoot("./textures/");
 
-	var nameTextureSun = "sun";
-	myTextures.join(gl,nameTextureSun);
-
-	var nameTextureBase = "earth";
-	myTextures.join(gl,nameTextureBase);
-	var nameTextureMoon = "moon";
-	myTextures.join(gl,nameTextureMoon);
-	var nameTextureJupiter = "jupiter";
-	myTextures.join(gl,nameTextureJupiter);
-	var nameTextureUranus = "uranus";
-	myTextures.join(gl,nameTextureUranus);
-	var nameTextureVenus = "venus";
-	myTextures.join(gl,nameTextureVenus);
-	var nameTextureMars = "mars";
-	myTextures.join(gl,nameTextureMars);
-	var nameTextureNeptune = "neptune";
-	myTextures.join(gl,nameTextureNeptune);
-	var nameTextureMercury = "mercury";
-	myTextures.join(gl,nameTextureMercury);
-	var nameTextureRing = "ring";
-	myTextures.join(gl,nameTextureRing);
-	var nameTextureSaturn = "saturn";
-	myTextures.join(gl,nameTextureSaturn);
-		var nameTextureTitan = "titan";
-		myTextures.join(gl,nameTextureTitan);
-		var nameTextureMimas = "mimas";
-		myTextures.join(gl,nameTextureMimas);
-		var nameTextureTethys = "tethys";
-		myTextures.join(gl,nameTextureTethys);
-		myTextures.join(gl,"lapetus");
 
 
 
@@ -840,6 +810,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	var _front_=false;
 	var _frontLength_ = 60;
+
+
+
+
 
 
 
@@ -930,6 +904,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	/** for Sun **/
+	var nameTextureSun = "sun";
+	myTextures.join(gl,nameTextureSun);
+
 	var aAccumeLightingDirectionalSun = [];//平行光源
 	aAccumeLightingDirectionalSun.push(AccumeMotions.gotoOrigin());
 	var aAccumeLightingPointSun = [];//点光源
@@ -962,6 +939,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	aAccumeLightingPoint.push(AccumeMotionsXYZ.replaceView(xyzCenter));//---uManipulatedMatrix
 
 		//Earth
+	var nameTextureBase = "earth";
+	myTextures.join(gl,nameTextureBase);
+
 	var r = myBall.earth.radius;
 	var xyzEarth = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
@@ -1007,6 +987,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	/** Jupiter **/
+	var nameTextureJupiter = "jupiter";
+	myTextures.join(gl,nameTextureJupiter);
+
 	var r = myBall.jupiter.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
@@ -1035,6 +1018,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	/** Moon **/
+	var nameTextureMoon = "moon";
+	myTextures.join(gl,nameTextureMoon);
+
 	var r = myBall.moon.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
@@ -1053,6 +1039,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	/** Uranus **/
+	var nameTextureUranus = "uranus";
+	myTextures.join(gl,nameTextureUranus);
+
 	var r = myBall.uranus.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
@@ -1071,6 +1060,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	/** Venus **/
+	var nameTextureVenus = "venus";
+	myTextures.join(gl,nameTextureVenus);
+
 	var r = myBall.venus.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
@@ -1089,6 +1081,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	/** Mars **/
+	var nameTextureMars = "mars";
+	myTextures.join(gl,nameTextureMars);
+
 	var r = myBall.mars.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
@@ -1108,6 +1103,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	/** Neptune **/
+	var nameTextureNeptune = "neptune";
+	myTextures.join(gl,nameTextureNeptune);
+
 	var r = myBall.neptune.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
@@ -1126,6 +1124,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	/** Mercury **/
+	var nameTextureMercury = "mercury";
+	myTextures.join(gl,nameTextureMercury);
+
 	var r = myBall.mercury.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
@@ -1149,8 +1150,13 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 //AccumeMotions-------> myMotionsOnce
 //AccumeMotionsXYZ ---> myMotionsContinuous
 
+//:tex
+		myTextures.join(gl,"lapetus");
 
 	/** Saturn **/
+	var nameTextureSaturn = "saturn";
+	myTextures.join(gl,nameTextureSaturn);
+
 	var r = myBall.saturn.radius;
 	var xyzSaturn = myXYZTrigonometry.createMember(800,200,0.2);
 	var aAccumeUnitsSaturn = [];
@@ -1181,6 +1187,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	UnitsToDraw.join(gl,"saturn",shape,aAccumeUnitsSaturn,myLabel.saturn,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
 
 	/** Ring **/
+	var nameTextureRing = "ring";
+	myTextures.join(gl,nameTextureRing);
+
 	var rOut = myBall.saturn.radius*2.327;
 	var rIn = myBall.saturn.radius*1.116086;
 	var aAccumeUnitsRing = aAccumeUnitsSaturn;
@@ -1192,6 +1201,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	/** Titan **/
+	var nameTextureTitan = "titan";
+	myTextures.join(gl,nameTextureTitan);
+
 	var radius = myBall.titan.radius;
 	var xyzTitan = myXYZTrigonometry.createMember(myBall.saturn.radius*3.7,5,3);
 
@@ -1215,6 +1227,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	UnitsToDraw.join(gl,"titan",shape,aAccumeUnitsTitan,myLabel.titan,nameTextureTitan,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedTitan);
 
 	/** Mimas **/
+	var nameTextureMimas = "mimas";
+	myTextures.join(gl,nameTextureMimas);
+
 	var radius = myBall.mimas.radius;
 	var xyzMimas = myXYZTrigonometry.createMember(myBall.saturn.radius*2.9,5,4);
 
@@ -1238,6 +1253,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	UnitsToDraw.join(gl,"mimas",shape,aAccumeUnitsMimas,myLabel.mimas,nameTextureMimas,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedMimas);
 
 	/** Tethys **/
+	var nameTextureTethys = "tethys";
+	myTextures.join(gl,nameTextureTethys);
+
 	var radius = myBall.tethys.radius;
 	var xyz = myXYZTrigonometry.createMember(myBall.saturn.radius*1.2,5,7);
 
@@ -1245,14 +1263,14 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
 	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSaturn));//center of revolution
+	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));//manipulate
 	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
 
 	var aMatricesNotManipulated = [];
 	aMatricesNotManipulated.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
 	aMatricesNotManipulated.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulated.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
+	aMatricesNotManipulated.push(AccumeMotionsXYZ.trans(xyz));//center of revolution
 	aMatricesNotManipulated.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
 
 	myLabel.join('tethys');
