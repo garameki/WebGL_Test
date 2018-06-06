@@ -1,9 +1,9 @@
 ﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
 <link rel="stylesheet"		type="text/css"		href="./styleSheet.css"></link>
 <script type="text/javascript"	src="./extString.js"></script><!--String object extension-->
-<script id="library"		type="text/javascript"	src="./myLib.js"></script>
-<script id="calculationXYZ"	type="text/javascript"	src="./accumeMotionsXYZ.js"></script>
-<script id="matrix"		type="text/javascript"	src="./myMat4.js"></script>
+<script type="text/javascript"	src="./myLib.js"></script>
+<script type="text/javascript"	src="./accumeMotionsXYZ.js"></script>
+<script type="text/javascript"	src="./myMat4.js"></script>
 <script	type="text/javascript"	src="./myVec3.js"></script>
 <script	type="text/javascript"	src="./mySendMatrix.js"></script>
 <script	type="text/javascript"	src="./myShaders.js"></script>
@@ -12,12 +12,12 @@
 
 
 
-<script id="color"		type="text/javascript"	src="./myColor.js"></script>
-<script id="class"		type="text/javascript"	src="./myLabel.js"></script>
-<script id="shape"		type="text/javascript"	src="./myShape.js"></script>
-<script id="motions"		type="text/javascript"	src="./accumeMotions.js"></script>
-<script id="textures"		type="text/javascript"	src="./myTextures.js"></script>
-<script id="fbo"		type="text/javascript"	src="./myFBOs.js"></script>
+<script type="text/javascript"	src="./myColorName.js"></script>
+<script type="text/javascript"	src="./myLabel.js"></script>
+<script type="text/javascript"	src="./myShape.js"></script>
+<script type="text/javascript"	src="./accumeMotions.js"></script>
+<script type="text/javascript"	src="./myTextures.js"></script>
+<script type="text/javascript"	src="./myFBOs.js"></script>
 
 
 <!--******************************* SHADER PROGMRAMS *****************************************************-->
@@ -129,7 +129,7 @@
 		elep.style.backgroundColor=sBackColor;
 		elep.style.fontSize = nSize;
 		Object.defineProperty(myLine,sName,{set:function(str){
-//			str = str.toDetoxification(str);//myLabel
+			str = str.toDetoxification(str);//myLabel
 			elep.innerText=str;
 		},enumerable:true,configurable:false});
 	};
@@ -905,7 +905,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var baseLightCommon = 0.0;
 	var baseLightSun = 1.0;
 
-	var colorNameText = myColorName.white(0.5);
+	var colorName = myColorName.white(0.5);
 
 	var aMatricesNotManipulatedCommon = [];
 
@@ -916,15 +916,15 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 //	if(_front_){
 	if(true){
 		aAccumeUnits.push(AccumeMotions.translate(0,0,-20));
-		var labels = new myLabel.Labels();
-		labels.addText(0,-1,0,"ship",colorNameText);
+		myLabel.join('plane');
+		myLabel.plane.addText(0,-1,0,"ship",colorName);
 	} else {
 		aAccumeUnits.push(AccumeMotions.translate(0,0,10));
-		var labels = new myLabel.Labels();
-		labels.addText(0,-5,0,"",colorNameText);
+		myLabel.join('plane');
+		myLabel.plane.addText(0,-5,0,"",colorName);
 	};
 	var shape = myShape.hexa(gl,500);
-	UnitsToDraw.join(gl,"plane",shape,aAccumeUnits,labels,nameTextureBase,[],[],brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"plane",shape,aAccumeUnits,myLabel.plane,nameTextureBase,[],[],brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 
@@ -950,11 +950,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myLabel.Labels();
-	labels.addText(0,-5,0,"Sun",colorNameText);
-//	var shape = myShape.hexa(gl,r);
+	myLabel.join('sun');
+	myLabel.sun.addText(0,-5,0,"Sun",colorName);
 	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"sun",shape,aAccumeUnits,labels,nameTextureSun,aAccumeLightingDirectionalSun,aAccumeLightingPointSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"sun",shape,aAccumeUnits,myLabel.sun,nameTextureSun,aAccumeLightingDirectionalSun,aAccumeLightingPointSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 	/** common **/
 	var aAccumeLightingDirectional = [];//平行光源
@@ -976,11 +975,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myLabel.Labels();
-	labels.addText(0,-5,0,"Earth",colorNameText);
-//	var shape = myShape.hexa(gl,r);
+	myLabel.join('earth');
+	myLabel.earth.addText(0,-5,0,"Earth",colorName);
 	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"earth",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"earth",shape,aAccumeUnits,myLabel.earth,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 
@@ -998,11 +996,11 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
 						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myLabel.Labels();
-	labels.addText(0,-5,0,"",colorNameText);
+	myLabel.join("atomosphere");
+	myLabel.atomosphere.addText(0,-5,0,"",colorName);
 //	var shape = myShape.hexa(gl,r);
 	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"atmosphere",shape,aAccumeUnits,labels,nameTextureAtomosphere,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessAtomosphere,alphaAtomosphere);
+	UnitsToDraw.join(gl,"atmosphere",shape,aAccumeUnits,myLabel.atomosphere,nameTextureAtomosphere,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessAtomosphere,alphaAtomosphere);
 
 
 */
@@ -1024,10 +1022,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.axisY(1));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,"Jupitor",colorNameText);//kkk
+	myLabel.join('jupiter');
+	myLabel.jupiter.addText(0,0,0,"Jupitor",colorName);//kkk
 	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"jupiter",shape,aAccumeUnits,labels,nameTextureJupiter,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedJupiter);
+	UnitsToDraw.join(gl,"jupiter",shape,aAccumeUnits,myLabel.jupiter,nameTextureJupiter,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedJupiter);
 
 
 	var aMatricesNotManipulatedCommon = [];
@@ -1048,10 +1046,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.axisY(1));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,nameTextureMoon,colorNameText);//kkk
+	myLabel.join('moon');
+	myLabel.moon.addText(0,0,0,nameTextureMoon,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"moon",shape,aAccumeUnits,labels,nameTextureMoon,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"moon",shape,aAccumeUnits,myLabel.moon,nameTextureMoon,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 	/** Uranus **/
@@ -1066,10 +1064,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.axisY(1));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,nameTextureUranus,colorNameText);//kkk
+	myLabel.join('uranus');
+	myLabel.uranus.addText(0,0,0,nameTextureUranus,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"uranus",shape,aAccumeUnits,labels,nameTextureUranus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"uranus",shape,aAccumeUnits,myLabel.uranus,nameTextureUranus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 	/** Venus **/
@@ -1084,10 +1082,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.axisY(1));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,nameTextureVenus,colorNameText);//kkk
+	myLabel.join('venus');
+	myLabel.venus.addText(0,0,0,nameTextureVenus,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"venus",shape,aAccumeUnits,labels,nameTextureVenus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"venus",shape,aAccumeUnits,myLabel.venus,nameTextureVenus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 	/** Mars **/
@@ -1102,10 +1100,11 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.axisY(1));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,nameTextureMars,colorNameText);//kkk
+
+	myLabel.join('mars');
+	myLabel.mars.addText(0,0,0,nameTextureMars,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"mars",shape,aAccumeUnits,labels,nameTextureMars,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"mars",shape,aAccumeUnits,myLabel.mars,nameTextureMars,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 	/** Neptune **/
@@ -1120,10 +1119,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.axisY(1));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,nameTextureNeptune,colorNameText);//kkk
+	myLabel.join('neptune');
+	myLabel.neptune.addText(0,0,0,nameTextureNeptune,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"neptune",shape,aAccumeUnits,labels,nameTextureNeptune,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"neptune",shape,aAccumeUnits,myLabel.neptune,nameTextureNeptune,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 	/** Mercury **/
@@ -1138,10 +1137,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 						//	aAccumeUnits.push(AccumeMotions.axisY(1));
 						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 						//	aAccumeUnits.push(AccumeMotions.none());
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,nameTextureMercury,colorNameText);//kkk
+	myLabel.join('mercury');
+	myLabel.mercury.addText(0,0,0,nameTextureMercury,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"mercury",shape,aAccumeUnits,labels,nameTextureMercury,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,"mercury",shape,aAccumeUnits,myLabel.mercury,nameTextureMercury,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 
@@ -1169,8 +1168,8 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	aMatricesNotManipulatedSaturn.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
 	aMatricesNotManipulatedSaturn.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
 
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,nameTextureSaturn,colorNameText);//kkk
+	myLabel.join('saturn');
+	myLabel.saturn.addText(0,0,0,nameTextureSaturn,colorName);//kkk
 
 //●for shape test
 //	var shape = myShape.sphere(gl,r);
@@ -1179,17 +1178,17 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 //	var shape = myShape.hexa(gl,r);
 	var shape = myShape.triangle(gl,[10,10,130],[150,100,100],[-100,-150,-100],[1,1,1,1]);
 
-	UnitsToDraw.join(gl,"saturn",shape,aAccumeUnitsSaturn,labels,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
+	UnitsToDraw.join(gl,"saturn",shape,aAccumeUnitsSaturn,myLabel.saturn,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
 
 	/** Ring **/
 	var rOut = myBall.saturn.radius*2.327;
 	var rIn = myBall.saturn.radius*1.116086;
 	var aAccumeUnitsRing = aAccumeUnitsSaturn;
 	var aMatricesNotManipulatedRing = aMatricesNotManipulatedSaturn;
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,"",colorNameText);//kkk
+	myLabel.join('ring');
+	myLabel.ring.addText(0,0,0,"",colorName);//kkk
 	var shape = myShape.ring(gl,rIn,rOut);
-	UnitsToDraw.join(gl,"ring",shape,aAccumeUnitsRing,labels,nameTextureRing,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessRing,alphaRing,baseLightSun,cassiniFactorRing,aMatricesNotManipulatedRing);
+	UnitsToDraw.join(gl,"ring",shape,aAccumeUnitsRing,myLabel.ring,nameTextureRing,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessRing,alphaRing,baseLightSun,cassiniFactorRing,aMatricesNotManipulatedRing);
 
 
 	/** Titan **/
@@ -1210,10 +1209,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	aMatricesNotManipulatedTitan.push(AccumeMotionsXYZ.trans(xyzTitan));//revolution公転
 	aMatricesNotManipulatedTitan.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
 
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,"titan",colorNameText);//kkk
+	myLabel.join('titan');
+	myLabel.titan.addText(0,0,0,"titan",colorName);//kkk
 	var shape = myShape.sphere(gl,radius);
-	UnitsToDraw.join(gl,"titan",shape,aAccumeUnitsTitan,labels,nameTextureTitan,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedTitan);
+	UnitsToDraw.join(gl,"titan",shape,aAccumeUnitsTitan,myLabel.titan,nameTextureTitan,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedTitan);
 
 	/** Mimas **/
 	var radius = myBall.mimas.radius;
@@ -1233,10 +1232,10 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	aMatricesNotManipulatedMimas.push(AccumeMotionsXYZ.trans(xyzMimas));//revolution公転
 	aMatricesNotManipulatedMimas.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
 
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,"mimas",colorNameText);//kkk
+	myLabel.join('mimas');
+	myLabel.mimas.addText(0,0,0,"mimas",colorName);//kkk
 	var shape = myShape.sphere(gl,radius);
-	UnitsToDraw.join(gl,"mimas",shape,aAccumeUnitsMimas,labels,nameTextureMimas,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedMimas);
+	UnitsToDraw.join(gl,"mimas",shape,aAccumeUnitsMimas,myLabel.mimas,nameTextureMimas,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedMimas);
 
 	/** Tethys **/
 	var radius = myBall.tethys.radius;
@@ -1256,16 +1255,18 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	aMatricesNotManipulated.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
 	aMatricesNotManipulated.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
 
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,"tethys",colorNameText);//kkk
+	myLabel.join('tethys');
+	myLabel.tethys.addText(0,0,0,"tethys",colorName);//kkk
 	var shape = myShape.sphere(gl,radius);
-	UnitsToDraw.join(gl,"tethys",shape,aAccumeUnits,labels,nameTextureTethys,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorRing,aMatricesNotManipulated);
+	UnitsToDraw.join(gl,"tethys",shape,aAccumeUnits,myLabel.tethys,nameTextureTethys,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorRing,aMatricesNotManipulated);
 
 
 
 
-	/** satellite thrown in various random directions **/
+	/** asteroids thrown in various random directions **/
 /*
+
+	var name;
 	for(var hh=0;hh<10;hh++){
 		var r = myBall.moon.radius;
 		var xyz = myXYZTrigonometry.createMember(800,600,1);???
@@ -1277,10 +1278,11 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 							//	aAccumeUnits.push(AccumeMotions.axisY(1));
 							//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
 							//	aAccumeUnits.push(AccumeMotions.none());
-		var labels = new myLabel.Labels();
-		labels.addText(0,0,0,hh.toString(),colorNameText);//kkk
+		name="st"+hh.toString();
+		myLabel.join(name);
+		myLabel[name].addText(0,0,0,hh.toString(),colorName);//kkk
 		var shape = myShape.sphere(gl,r);
-		UnitsToDraw.join(gl,"st"+hh.toString(),shape,aAccumeUnits,labels,nameTextureAsteroid,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+		UnitsToDraw.join(gl,name,shape,aAccumeUnits,myLabel[name],nameTextureAsteroid,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 	};
 
 */
@@ -1296,14 +1298,18 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 	//stars far from planet
 /*
+
+//use cube map
+
+
 	var spread=100;
 	var p1,r1,t1;
 	for(var hh=0;hh<100;hh++){
 		var aAccumeUnits=[];
 		aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
 		if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
-		var labels = new myLabel.Labels();
-		//labels.addText(0,0,-10,"hexa",colorNameText);
+llllllllll		myLabel.join('');
+		//labels.addText(0,0,-10,"hexa",colorName);
 		r1 = 1000*Math.random()+1000;
 		t1 = 3.141592653*2*Math.random();
 		t2 = 3.141592653*Math.random()-1.5707963265;
@@ -1315,24 +1321,28 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 */
 
 	/** x,y,z axes **/
-
+//feature
+//myLabel.join('axes');
+//	myLabel.back.addText(0,0,5,"back",colorName);
+//	myLabel.up.axes.addText(0,5,0,"up",colorName);
+//	myLabel.axes.addText(5,0,0,"right",colorName);
+//var shape = myShape.axes(gl,5,myColorName.white(1));// embeded three axes in one shape
+//
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
 	aAccumeUnits.push(AccumeMotions.translate(-15,-15,-30));
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,5,"back",colorNameText);
+	myLabel.join('back');
+	myLabel.back.addText(0,0,5,"back",colorName);
 	var shape = myShape.line(gl,[0,0,0],[0,0,5],myColorName.magenta(1));
-		UnitsToDraw.join(gl,"back",shape,aAccumeUnits,labels,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
-	var labels = new myLabel.Labels();
-	labels.addText(0,5,0,"up",colorNameText);
+		UnitsToDraw.join(gl,"back",shape,aAccumeUnits,myLabel.back,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	myLabel.join('up');
+	myLabel.up.addText(0,5,0,"up",colorName);
 	var shape = myShape.line(gl,[0,0,0],[0,5,0],myColorName.magenta(1));
-		UnitsToDraw.join(gl,"up",shape,aAccumeUnits,labels,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
-	var labels = new myLabel.Labels();
-	labels.addText(5,0,0,"right",colorNameText);
+		UnitsToDraw.join(gl,"up",shape,aAccumeUnits,myLabel.up,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	myLabel.join('right');
+	myLabel.right.addText(5,0,0,"right",colorName);
 	var shape = myShape.line(gl,[0,0,0],[5,0,0],myColorName.magenta(1));
-		UnitsToDraw.join(gl,"right",shape,aAccumeUnits,labels,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
-
-
+		UnitsToDraw.join(gl,"right",shape,aAccumeUnits,myLabel.right,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 
 
@@ -1343,11 +1353,11 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 /*
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,"origin",colorNameText);
-//	labels.addText(0,0,0,"origin",colorNameText);
+	myLabel.join('observer');
+	myLabel.addText(0,0,0,"origin",colorName);
+//	myLabel.addText(0,0,0,"origin",colorName);
 	var shape = myShape.triangle(gl,[0,0,0],[5,0,-10],[-5,0,-10],myColorName.magenta(1));
-		UnitsToDraw.join(gl,"observer",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+		UnitsToDraw.join(gl,"observer",shape,aAccumeUnits,myLabel.observer,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
 */
 
@@ -1359,11 +1369,11 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var aAccumeUnits = [];
 	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0,90));
 	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	var labels = new myLabel.Labels();
-	labels.addText(0,0,0,"shadow",colorNameText);
-//	labels.addText(0,0,0,"origin",colorNameText);
+	myLabel.join('');
+	myLabel.addText(0,0,0,"shadow",colorName);
+//	myLabel.addText(0,0,0,"origin",colorName);
 	var shape = myShape.cylindricalCalumn(gl,500,500);
-		UnitsToDraw.join(gl,"shadow",shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+		UnitsToDraw.join(gl,"shadow",shape,aAccumeUnits,myLabel,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 */
 
 

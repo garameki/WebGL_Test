@@ -19,6 +19,11 @@
 			this.elementDiv.style.color=color.rgba;
 			document.getElementById("canvasContainer").appendChild(this.elementDiv);//kkk #canvasContainer only
 
+//html part
+//<div id='canvasContainer'>
+//<canvas width=512 height=512></canvas>
+//</div>
+//this containers are going to vanish in future
 			this.elementText = document.createTextNode("");
 			this.elementText.className='textGLText';
 			this.elementDiv.appendChild(this.elementText);
@@ -40,7 +45,6 @@
 			}
 			this.elementDiv.style.left = Math.floor((newP[0]+1)*gl.canvas.width*0.5+this.offsetLeft).toString()+"px";
 			this.elementDiv.style.top = Math.floor((1-newP[1])*gl.canvas.height*0.5+this.offsetTop).toString()+"px";
-
 		};
 		Text.prototype.setText = function(str){
 			this.elementText.nodeValue=str;
@@ -48,9 +52,9 @@
 //i think that the functions of myMat4 must be limited not to use globaly but to be used by suitable functions.
 
 		//outer class
-		Object.defineProperty(myLabel,'create',{value:join,writable:false,enumerable:false,configurable:false});
+		Object.defineProperty(myLabel,'join',{value:join,writable:false,enumerable:false,configurable:false});
 		function join(sName){
-			Object.defineProperty(myLabel,sName,{value new Labels(),writable:false,enumerable:false,configurable:false});
+			Object.defineProperty(myLabel,sName,{value:new Labels(),writable:false,enumerable:false,configurable:false});
 		};
 //○		Object.defineProperty(myLabel,'Labels',{value:Labels,writable:false,enumerable:true,configurable:false});
 		function Labels(){

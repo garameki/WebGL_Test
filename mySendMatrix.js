@@ -18,8 +18,8 @@ function sendQMatrix(vari,parentNotManipulatedMatrix){//"parentPosition"を-Z軸上
 	var parentPos = myMat4.get2D(0,0,0);	//calc parent position and normalize
 	var theta = Math.acos(dot(normalize(parentPos),[0,0,-1]));
 	var axis = normalize(cross(parentPos,[0,0,-1]));//基準側が2番目。1番目は位置ベクトル
-	myMat4.loadIdentity();
-	myMat4.rot(axis[0],axis[1],axis[2],theta);//accuming to identity is itself
+	myMat4.loadIdentity();//set Identity vector into myMat4.arr
+	myMat4.rot(axis[0],axis[1],axis[2],theta);//accumeration of multiplications to myMat4.arr
 	vari.sendFloat32Array(myMat4.arr);
 };
 
