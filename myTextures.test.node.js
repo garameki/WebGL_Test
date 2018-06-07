@@ -20,6 +20,9 @@ console.log("");
 
 var html1 = `
 <!DOCTYPE html><html><head><title>テスト</title>
+<script type='text/javascript' src='./myShaders.js'></script>
+<script type='text/javascript' src='./myFBOs.js'></script>
+<script type='text/javascript' src='./shaders/drawTextureOnClipSpace.js'></script>
 <script type='text/javascript' src='./myTextures.js'></script>
 <script type='text/javascript'>
 onload=function(){
@@ -34,10 +37,25 @@ onload=function(){
 		return;
 	}
 
-	myTextures.changeRoot("./textures/");
+	myTextures.changeRoot("textures/");
 	myTextures.join(gl,'earth');
-	mytextures.earth.readFile('earth.png');
+	myTextures.earth.readFile("earth.png");
 
+	for(var name in myTextures)console.log(name);
+	myTextures.earth.readFile('earth.png');
+
+//*************************** DRAW TEXTURE ON CLIP SPACE **********************************************
+
+	var sNameShader ='drawTextureOnClipSpace';
+	myShaders[sNameShader].attach(gl);
+	myShaders[sNameShader].activate();
+	myShaders[sNameShader].uniform["uSampler"].sendInt(0);
+	myTextures.earth.activate(0);
+	myShaders[sNameShader].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+//**************************************** END ******************************************************************
+// ****************************************************************************************************************
 
 
 
@@ -51,12 +69,13 @@ onload=function(){
 //var script2 = `onload = function(){console.log("OK");};`;
 
 /** server **/
-http.createServer(function(req,res){
+//https://github.com/broofa/node-mime/blob/master/src/test.js
 
+http.createServer(function(req,res){
 	var url = req.url.replace(/^\/$/,'\/index.html');// '/'->'/index.html'
 	var extension = getExtension(url);
 	console.log("extension=",extension,"url=",url);
-	var script;
+	var content;
 	switch(extension){
 		case 'html':
 		case 'htm':
@@ -71,13 +90,20 @@ http.createServer(function(req,res){
 			break;
 		case 'js':
 			res.writeHead(200,{'Content-Type':'text/javascritpt'});
-			script = fs.readFileSync('.'+url,'UTF-8');
-			res.write(script);
+			content = fs.readFileSync('.'+url,'UTF-8');
+			res.write(content);
+			res.end();
+			break;
+		case 'png':
+			res.writeHead(200,{'Content-Type':'image/png'});
+			content = fs.readFileSync('.'+url);
+console.log("myTexture.test.node.js url=",url);
+			res.write(content);
 			res.end();
 			break;
 		default:
 	}
-}).listen(8001,'127.0.0.1');
+}).listen(8000,'127.0.0.1');
 
 
 

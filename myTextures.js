@@ -25,7 +25,7 @@
 	function nearestGreaterOrEqualPowerOf2(v) {
 	  return Math.pow(2, Math.ceil(Math.log2(v)));
 	}
-	Texture.prototype.read = function(){
+	Texture.prototype.readFile = function(){
 		var gl = this.gl;
 		var image = new Image();
 		var myself = this;
@@ -113,10 +113,7 @@ console.log("myself.texture=",myself.texture._name);
 	function join(gl,sName){
 		var instance = new Texture(gl,sName);
 		Object.defineProperty(myTextures,sName,{value:instance,writable:false,enumerable:true,configurable:false});
-console.log("*****************************************");
-console.log("myTextues.js "+sName+":instance=",instance);
-		instance.read();
-
+//		instance.readFile();
 	};
 
 })();//myTextures
