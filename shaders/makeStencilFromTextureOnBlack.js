@@ -103,7 +103,7 @@ var auFunction = function(gl,names,angle,nRefStencil){
 		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uModelViewMatrix,member.aAccumeUnits,angle);
 		/** Tofragment shader **/
 		myShaders[sNameOfShader].uniform.uSampler.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-		myTextures.member[member.nameTexture].activate(1);
+		myTextures[member.nameTexture].activate(1);
 
 
 		member.draw();//in which texture activated is for use

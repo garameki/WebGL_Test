@@ -101,7 +101,6 @@ console.log("myself.texture=",myself.texture._name);
 	//textures
 	myTextures = { };
 
-	var oTextures = { };
 	var rootHTTPImages = "./textures/";//default
 
 	Object.defineProperty(myTextures,'changeRoot',{value:changeRootForImage,writable:false,enumerable:false,configurable:false});
@@ -110,20 +109,14 @@ console.log("myself.texture=",myself.texture._name);
 		//code to recognize whether it exists or not
 	};
 
-	Object.defineProperty(myTextures,'join',{value:create,writable:false,enumerable:true,configurable:false});
-	function create(gl,name){
-		var instance = new Texture(gl,name,Object.keys(oTextures).length);
-		Object.defineProperty(oTextures,name,{value:instance,writable:false,enumerable:true,configurable:false});
+	Object.defineProperty(myTextures,'join',{value:join,writable:false,enumerable:false,configurable:false});
+	function join(gl,sName){
+		var instance = new Texture(gl,sName);
+		Object.defineProperty(myTextures,sName,{value:instance,writable:false,enumerable:true,configurable:false});
+console.log("*****************************************");
+console.log("myTextues.js "+sName+":instance=",instance);
 		instance.read();
 
-	};
-
-	Object.defineProperty(myTextures,'member',{get:function(){return oTextures;}});//reference to use myTextures.member['nameOfTexture']
-
-	Object.defineProperty(myTextures,'create',{value:makeColorTexture,writable:false,enumerable:true,configurable:false});
-	function makeColorTexture(gl,sName){
-		var instance = new Texture(gl,sName);
-		Object.defineProperty(oTextures,name,{value:instance,writable:false,enumerable:true,configurable:false});
 	};
 
 })();//myTextures

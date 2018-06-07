@@ -269,8 +269,8 @@ if(flagName){
 		//var names = ["earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 		mySendAttribUniform[sNameShader](gl,names,angle);
 	myFBOs[sNameShader].inactivate();
-	//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-	//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
+	//	myTextures["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+	//	myTextures["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
 }//boolean
 //************************* DRAW PLANET WITH SHADOW ON ITS SURFACE ****************************
 //*********************************************************************************************
@@ -308,8 +308,8 @@ if(flagName){
 				gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 			mySendAttribUniform[sNameShaderShadow](gl,aNames,angle,mats.nm,mats.ps);
 		myFBOs[sNameShaderSaturn].inactivate();
-			myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
-			myTextures.member["roundedTextureWithShadow"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
+			myTextures["forDrawingClipSpace"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
+			myTextures["roundedTextureWithShadow"].import(myFBOs[sNameShaderSaturn].textureColorBuffer);//用意したtextureに保存
 	}//boolean
 
 	//************************* DRAW SATURN WITH ROUNDED TEXTURE ON LIGHT SIDE ****************************
@@ -329,12 +329,12 @@ if(flagName){
 		myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
 			var sNameSaturn = "saturn";
 			myShaders[sNameShader].uniform.uSamplerRounded.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-			myTextures.member["roundedTextureWithShadow"].activate(0);//上で作ったやつ
+			myTextures["roundedTextureWithShadow"].activate(0);//上で作ったやつ
 		gl.enable(gl.DEPTH_TEST);
 			mySendAttribUniform[sNameShader](gl,sNameSaturn,angle);
 		//myFBOs[sNameShader].inactivate();
-		//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-		//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
+		//	myTextures["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+		//	myTextures["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
 	}//boolean
 	//************************* DRAW SATURN WITH RECTANGLE TEXTURE ON DARK SIDE ****************************
 	//*****************************************************************************************************
@@ -356,12 +356,12 @@ if(flagName){
 		myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
 			var sNameSaturn = "saturn";
 			myShaders[sNameShader].uniform.uSamplerRectangle.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-			myTextures.member[sNameSaturn].activate(0);//通常のtexture
+			myTextures[sNameSaturn].activate(0);//通常のtexture
 		gl.enable(gl.DEPTH_TEST);
 			mySendAttribUniform[sNameShader](gl,angle,sNameSaturn);
 		//myFBOs[sNameShader].inactivate();
-		//	myTextures.member["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-		//	myTextures.member["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
+		//	myTextures["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+		//	myTextures["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
 	}//boolean
 //***********************************************************************************************
 //***********************************************************************************************
@@ -393,8 +393,8 @@ if(flagName){
 		mySendAttribUniform[sNameShader](gl,names,angle,nRefStencilCassini);
 
 	myFBOs[sNameShader].inactivate();
-		myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-		myTextures.member["stencilCassini_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+		myTextures["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+		myTextures["stencilCassini_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 	}//boolean
 	//*************************** MAKE STENCIL FROM SHADOW ON PLANE. SHADOW IS MADE FROM 3D-SHAPE  *****************
 	//**************************************************************************************************************
@@ -415,8 +415,8 @@ if(flagName){
 			names = ["saturn","titan","tethys","mimas"];
 			mySendAttribUniform[sNameShader](gl,names,angle,sNameShader);
 		myFBOs[sNameShader].inactivate();
-			myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-			myTextures.member["stencilShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+			myTextures["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+			myTextures["stencilShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 
 	}//boolean
 	//*************************** MAKE TEXTURE CONPLEXED STENCIL ***********************
@@ -434,14 +434,14 @@ if(flagName){
 		myFBOs[sNameShader].activate("CTDNSN");
 		myShaders[sNameShader].activate();
 			myShaders[sNameShader].uniform["uSampler0"].sendInt(0);
-			myTextures.member["stencilCassini_R8"].activate(0);
+			myTextures["stencilCassini_R8"].activate(0);
 			myShaders[sNameShader].uniform["uSampler1"].sendInt(1);
-			myTextures.member["stencilShadowOfSaturn_R8"].activate(1);
+			myTextures["stencilShadowOfSaturn_R8"].activate(1);
 		myShaders[sNameShader].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 		myFBOs[sNameShader].inactivate();
-			myTextures.member["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-			myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+			myTextures["forDrawingClipSpace"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+			myTextures["stencil_Cassini_ShadowOfSaturn_R8"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 	}
 	//*************************** DRAW POLYGON MORE TRANSPARENTLY ON STENCIL *****************************
 	//***********************************************************************************
@@ -463,7 +463,7 @@ if(flagName){
 
 		myShaders[sNameShader].activate();
 			myShaders[sNameShader].uniform.uSamplerStencil.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-			myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].activate(1);
+			myTextures["stencil_Cassini_ShadowOfSaturn_R8"].activate(1);
 			var nIgnoreStencil;//このビット上には描かない
 			nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
 			myShaders[sNameShader].uniform.uRefStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが同時に扱えます//描かないステンシルの番号
@@ -489,7 +489,7 @@ if(flagName){
 			gl.depthFunc(gl.LEQUAL);
 
 			myShaders[sNameShader].uniform.uSamplerStencil.sendInt(1);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-			myTextures.member["stencil_Cassini_ShadowOfSaturn_R8"].activate(1);
+			myTextures["stencil_Cassini_ShadowOfSaturn_R8"].activate(1);
 			var nIgnoreStencil;//このビット上には描かない
 			nIgnoreStencil = nRefStencilShadowOfSaturn | nRefStencilCassini;//bitwise OR
 			myShaders[sNameShader].uniform.refStencil.sendInt(nIgnoreStencil);//ここはbitwise ANDしておけば複数のステンシルが扱えます//描かないステンシルの番号
@@ -519,7 +519,7 @@ if(flagName){
 	myFBOs[sNameShader].activate("CNDNSN");
 	myShaders[sNameShader].activate();
 	myShaders[sNameShader].uniform["uSampler"].sendInt(0);
-	myTextures.member["forDrawingClipSpace"].activate(0);
+	myTextures["forDrawingClipSpace"].activate(0);
 	myShaders[sNameShader].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 	myFBOs[sNameShader].inactivate();
@@ -556,10 +556,10 @@ if(flagName){
 // *****************************************************************************
 //************** release memories ***************************
 	myFBOs.free();//free up memories
-//	gl.deleteTexture(myTextures.member["opaquesColorBuffer"].texture);
-//	gl.deleteTexture(myTextures.member["opaquesDepthBuffer"].texture);
-//	gl.deleteTexture(myTextures.member["ringColorBuffer"].texture);
-//	gl.deleteTexture(myTextures.member["ringDepthBuffer"].texture);
+//	gl.deleteTexture(myTextures["opaquesColorBuffer"].texture);
+//	gl.deleteTexture(myTextures["opaquesDepthBuffer"].texture);
+//	gl.deleteTexture(myTextures["ringColorBuffer"].texture);
+//	gl.deleteTexture(myTextures["ringDepthBuffer"].texture);
 //*****************************************
 
 	
@@ -786,7 +786,6 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myTextures.join(gl,nameTextureObserve);
 	var nameTextureWhite = "white";
 	var nameTextureAtomosphere = "white";
-//issue	myTextures.create(gl,nameTextureAtomosphere,myColorName.white(0.5));//preserve alpha here
 	myTextures.join(gl,nameTextureAtomosphere);
 
 	//void textures for mixing textures in shader of mixTwoTexturesWithDepthes
@@ -801,6 +800,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	//不要myTextures.join(gl,"cassiniAlphaStencilBuffer");
 	myTextures.join(gl,"roundedTextureWithShadow");//光源からの眺め
 	myTextures.join(gl,"forDrawingClipSpace");
+console.log("????????????????????????????????????????????????????????????????")
 
 	myTextures.join(gl,"stencilCassini_R8");//the stencil of cassini(see also the variable 'refStencilCassini')
 	myTextures.join(gl,"stencilShadowOfSaturn_R8");//the stencil of cassini(see also the variable 'refStencilShadowOfSaturn')

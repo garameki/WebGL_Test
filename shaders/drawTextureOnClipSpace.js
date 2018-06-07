@@ -1,6 +1,5 @@
 /**
- *	二つのテクスチャーをデプステストありでクリップ空間に描く(それぞれのデプスバッファテクスチャーが必要です(24bit))
- *	To draw two textures with depth test (according to each depth texture(24bit) to 'depth test')
+ *	draw a texture on clipping space
 **/
 
 

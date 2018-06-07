@@ -108,7 +108,7 @@ var auFunction = function(gl,aNames,angle,parentNotManipulatedMatrix,parentPersp
 		// To fragment shader
 		myShaders[sNameOfShader].uniform.uBrightness.sendFloat(member.brightness);
 		myShaders[sNameOfShader].uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
-		myTextures.member[member.nameTexture].activate(0);
+		myTextures[member.nameTexture].activate(0);
 
 		member.draw();//in which texture activated is for use
 
