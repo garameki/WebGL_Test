@@ -7,40 +7,72 @@ String.prototype.json_escape = function (){		//https://qiita.com/qoAop/items/777
     });
 };
 
+					//https://github.com/broofa/node-mime
+function getExtension(url){
+	var parts = url.split('.');
+	var extension = parts[parts.length-1];
+	return extension;
+};
+
 console.log("");
 console.log("localhost:8001 to listen");
 console.log("");
 
 var html1 = `
 <!DOCTYPE html><html><head><title>テスト</title>
-<script type='text/javascript' src='./myTextures.js'></script><script type='text/javascript'>onload=function(){console.log("オッケー");};</script>
-</head><body><div><p id=\'SCREEN\'></p></div>出来た</body></html>`;
-var script1 = fs.readFileSync('./myTextures.js','UTF-8');
-var script2 = `onload = function(){console.log("OK");};`;
+<script type='text/javascript' src='./myTextures.js'></script>
+<script type='text/javascript'>
+onload=function(){
+	console.log("オッケー");
+	SCREEN.innerText = '出来た';
+
+	/** get context **/
+	var canvas = document.getElementById('CANVAS');
+	var gl=canvas.getContext("webgl2");
+	if(!gl){
+		alert('Unable to initialize WebGL.Your browser or machine may not support it.');
+		return;
+	}
+
+	myTextures.changeRoot("./textures/");
+	myTextures.join(gl,'earth');
+	mytextures.earth.readFile('earth.png');
+
+
+
+
+
+};
+</script>
+</head><body>
+<div>できるかな？<p id="SCREEN"></p>
+<canvas id="CANVAS" width=512 height=512></canvas>
+</div></body></html>`;
+//var script2 = `onload = function(){console.log("OK");};`;
 
 /** server **/
 http.createServer(function(req,res){
 
-
-//	console.log("requested=",req);
-	console.log("requested=",req.url.replace(/^\/$/,'index.html').split('.'));
-//	console.log("html1=",html1);
-	switch(req.url){
-		case '/':
-		case '/index.html':
-		case '/index.htm':
+	var url = req.url.replace(/^\/$/,'\/index.html');// '/'->'/index.html'
+	var extension = getExtension(url);
+	console.log("extension=",extension,"url=",url);
+	var script;
+	switch(extension){
+		case 'html':
+		case 'htm':
 			res.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});
 			res.write(html1);
 			res.end();
 			res.finished;
 			break;
-		case '/favicon.ico':
+		case 'ico':
 			res.writeHead(200);
 			res.end();
 			break;
-		case '/myTextures.js':
+		case 'js':
 			res.writeHead(200,{'Content-Type':'text/javascritpt'});
-			res.write(script1);
+			script = fs.readFileSync('.'+url,'UTF-8');
+			res.write(script);
 			res.end();
 			break;
 		default:
