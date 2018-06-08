@@ -1,6 +1,8 @@
 searchWord.bat
 node_modules
 templateServer.js
+package-lock.json
+
 
 
 
