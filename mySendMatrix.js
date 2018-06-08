@@ -1,3 +1,17 @@
+//Å@There are 6 kind of matrices to be sended.
+//
+// + Quaternion
+// + Perspective matrix for shadow
+// + Orthographic matrix
+// + Perspective matrix
+// + Inversed model view matrix
+// + Multiplicated Matrix of given matrices for model view matrix or others
+
+
+
+
+
+
 /* */(function(){
 
 mySendMatrix = { };
@@ -87,7 +101,7 @@ function sendModelViewMatrixInversedTransposed(vari,mvMatrix){
  	//send a matrix which rotates and translate normal vector and which makes the direction of normal vectors correct,especially when magnifiring was done to its body
 
 	//https://msdn.microsoft.com/ja-jp/library/ms810476.aspx
-	//	says the reason 'inverse & transpose' in this article above
+	//	says the reason why 'inverse & transpose' must be done.
 	myMat4.load(mvMatrix);
 	myMat4.inverse();
 	myMat4.transpose();
