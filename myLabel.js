@@ -29,7 +29,7 @@
 			this.elementDiv.appendChild(this.elementText);
 			this.elementText.nodeValue = str;
 
-			var offset = myLib.getOffset(this.elementDiv.parentNode);//kkk to do that offsets get to be changable
+			var offset = libElement.getOffset(this.elementDiv.parentNode);//kkk to do that offsets get to be changable
 			this.offsetLeft=0;//offset.left;
 			this.offsetTop=0;//offset.top;
 //			this.elementText.onclick=function(event){console.log("event=",event);};

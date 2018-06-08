@@ -1,12 +1,12 @@
 ﻿(function(){
-	//mylib
-	myLib = { };
+	//libElement
+	libElement = { };
 
 	/**
 	 *calculate  total offsetTop and offsetLeft of ancestors recursively
 	 *@param {DOMElement} element 
 	*/
-	Object.defineProperty(myLib,'getOffset',{value:getOffset,enumerable:true,configurable:false});
+	Object.defineProperty(libElement,'getOffset',{value:getOffset,enumerable:true,configurable:false});
 	function getOffset(element){
 		function getAllOffset(element){
 			if(element.tagName=='HTML') return {left:0,top:0};
