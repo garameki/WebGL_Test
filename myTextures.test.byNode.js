@@ -49,10 +49,6 @@ onload=function(){
 	function h24toD(a){
 		return a*d0x1i;
 	};
-	gl.enable(gl.DEPTH_TEST);
-	gl.clear(h24toD(0xFFFFFF));// 1.0 
-	gl.clear(gl.DEPTH_BUFFER_BIT);
-	gl.depthFunc(gl.LEQUAL);
 
 	var ROOT = 'textures/';
 	var FILENAME = 'earth.png';
