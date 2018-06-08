@@ -12,10 +12,10 @@
 	/** inner class **/
 	var Texture = function(gl,sName){
 		this.gl = gl;
-		this.name = sName;//this is used like this, rootHTTPImages+this.name+".png"
 		this.texture = gl.createTexture();
 		this.texture._name = sName;
-		console.log("myTextures.js:this.texture=",this.texture);
+		console.log("myTextures.js  this.texture=",this.texture);
+		this.readyImage = false;
 	};
 	Texture.prototype.activate = function(num){
 		this.gl.activeTexture(this.gl.TEXTURE0 + Number(num));//https://stackoverflow.com/questions/11292599/how-to-use-multiple-textures-in-webgl toji answered
@@ -25,14 +25,17 @@
 	function nearestGreaterOrEqualPowerOf2(v) {
 	  return Math.pow(2, Math.ceil(Math.log2(v)));
 	}
-	Texture.prototype.readFile = function(){
+	Texture.prototype.readFile = function(filename){
 		var gl = this.gl;
 		var image = new Image();
+		image.src = rootHTTPImages+filename;//via server
 		var myself = this;
 		image.onload = function (){
+			myself.readyImage = true;
+
 			var size = image.naturalWidth*image.naturalHeight;
 			if(size > Number(gl.getParameter(gl.MAX_TEXTURE_SIZE))){
-//				myInfo.main.caution="The size is over  '"+myself.name+"' "+size;
+//				myInfo.main.caution="The size is over  '"+filename+"' "+size;
 			}
 			gl.bindTexture(gl.TEXTURE_2D,myself.texture);
 			if(false){
@@ -52,46 +55,12 @@
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);			//gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+
 			}//boolean
+
+
 		};
 
-		var reader = new FileReader();
-		reader.onloadend = function(){
-			image.src = reader.result;
-		};
-
-		var h = new XMLHttpRequest();//You need local http server if you execute javascript in local host.
-		h.responseType = "blob";
-		h.onloadend = function(){
-			//https://stackoverflow.com/questions/30426277/catch-a-404-error-for-xhr
-			if(h.status == 404){
-//				myInfo.main.caution="404 error occured in myTextures.js at '"+this.name+"'";
-
-				//---https://webglfundamentals.org/webgl/lessons/webgl-data-textures.html
-				//---https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL
-				//---https://github.com/mrdoob/three.js/issues/386
-				var color = myColorName.blue(1.0);
-				var pixel = new Uint8Array([color.r,color.g,color.b,color.a,color.r,color.g,color.b,color.a,color.r,color.g,color.b,color.a,color.r,color.g,color.b,color.a]);
-				//gl.activeTexture(gl.TEXTURE0);//kkk
-				//gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
-
-console.log("myself.texture=",myself.texture._name);
-				gl.bindTexture(gl.TEXTURE_2D,myself.texture);
-
-				gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-				gl.texParameteri (gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_NEAREST);//gl.TEXTURE_2Dにbit演算している？
-				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,2,2,0,gl.RGBA,gl.UNSIGNED_SHORT_4_4_4_4,new Uint16Array(pixel),0);
-			}else{
-				reader.readAsDataURL(h.response);
-			}
-		};
-		h.open('GET',"http://localhost:8000/"+rootHTTPImages+this.name+".png");
-		h.send();
-		//To get url data, it's necessary to have been executing two applications listed below
-		// ・chrome.exe --disable-web-security --user-data-dir//
-		// ・ruby -run -e httpd . -p 8000//The dot '.' means current folda in which exeute ruby command.
-		//		And set the variable rootHTTPImages with it
-		//the line of Ruby is able to be replaced with other language as python,php or more in order to work as simple http local server.
 	};
 	Texture.prototype.import = function(texture){
 		this.texture = texture;
@@ -101,7 +70,7 @@ console.log("myself.texture=",myself.texture._name);
 	//textures
 	myTextures = { };
 
-	var rootHTTPImages = "./textures/";//default
+	var rootHTTPImages = "textures/";//default
 
 	Object.defineProperty(myTextures,'changeRoot',{value:changeRootForImage,writable:false,enumerable:false,configurable:false});
 	function changeRootForImage(sFolda){
