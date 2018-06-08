@@ -1,4 +1,11 @@
-﻿var http = 	require('http');
+﻿// this is server prgram
+//
+// type $node myTextures.test.byNode.js
+// go   localhost:8000/ in google chrome
+
+
+
+var http = 	require('http');
 var fs = 	require('fs');
 //var PNG = 	require('pngjs').PNG;
 
