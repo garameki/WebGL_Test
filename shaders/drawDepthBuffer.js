@@ -13,7 +13,7 @@ var fs = (function(){/*
 	varying lowp vec2 vCoord;
 	void main(void){
 		lowp float newCoordX = (vCoord.x + 1.0) * 0.5;
-		lowp float newCoordY = (vCoord.y + 1.0) * 0.5;
+		lowp float newCoordY = (-vCoord.y + 1.0) * 0.5;
 		lowp vec2 newCoord = vec2(newCoordX,newCoordY);
 
 		lowp vec3 depth = texture2D(uSampler,newCoord).rgb;

@@ -51,9 +51,15 @@ var vs = (function(){/*
 	attribute vec2 aVertexPosition;
 
 	varying mediump vec2 vCoord;
+	vec2 toCoord(vec4 pos){
+		mat4 toCoordMatrix = mat4(0.5/pos.w , 0.0 , 0.0 , 0.0 , 0.0 , -0.5/pos.w , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.5 , 0.5 , 0.0 , 1.0);
+		vec4 coord = toCoordMatrix * pos;	
+		return coord.xy;
+	}
 	void main(void){
 		
-		vCoord = aVertexPosition.xy * 0.5 + 0.5;
+		//vCoord = vec2(aVertexPosition.x * 0.5 + 0.5,-aVertexPosition.y * 0.5 + 0.5);
+		vCoord = toCoord(vec4(aVertexPosition,0.0,1.0));
 		gl_Position = vec4(aVertexPosition,0.0,1.0);//x y z w
 
 	}
