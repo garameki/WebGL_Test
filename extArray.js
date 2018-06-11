@@ -17,3 +17,4 @@
 		this[1] = -this[1];
 		this[2] = -this[2];
 	};
+
