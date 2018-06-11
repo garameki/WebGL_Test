@@ -17,7 +17,7 @@
   },
   "scripts": {
     "browser": "opener http://localhost:8000/",
-    "server": "node libServerLocalHTML.js spaceShipZZ.htm",
+    "server": "node nodeServerLocalHTML.js spaceShipZZ.htm",
     "start":"npm-run-all -p server browser"
 
   },
