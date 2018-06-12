@@ -1,5 +1,4 @@
-﻿(function(){
-	var drawStep = 10;//milli seconds
+﻿	var drawStep = 10;//milli seconds
 
 //sum=0;
 
@@ -86,9 +85,9 @@
 
 			this.ratioR=0.01;
 
-			this.matAccume=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
-			this.matAccumeNotTranslated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
-			this.matAccumeNotRotated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
+			this.matAccume=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
+			this.matAccumeNotTranslated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
+			this.matAccumeNotRotated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 		};
 		inherits(Member,SuperMember);
 		Object.defineProperty(Member.prototype,'thetaLR',{get:function(){return gDTurnLR*this.ratioR;}});
@@ -171,7 +170,7 @@
 			var sumRemainder=0;
 			return function(dt){
 				sumRemainder+=dt;
-				var n = Math.floor(sumRemainder/drawStep);
+				var n = Math.floor(sumRemainder/drawStep);//何回移動させるか
 				sumRemainder=sumRemainder%drawStep;
 
 				//accumerate all motions
@@ -351,168 +350,3 @@
 		};
 	})();
 
-	//for using trigonometric functions
-	(function(){//xyz follow to trigonometric functions
-
-		/** global scope **/
-		myXYZTrigonometry = { };
-
-
-		/** inner class **/
-		var aMember = [];
-		var Member = function(){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
-			SuperMember.call(this);
-//○			this.rxy = 600;//*(Math.random()-0.5);
-//○			this.rz  = 800;//0*(Math.random()-0.5);
-			this.alpha = 2*3.14*Math.random();
-			this.gamma = 2*3.14*Math.random();
-		};
-		inherits(Member,SuperMember);
-		//@override
-		Member.prototype.reposition = function(totalTime){
-			this.x=this.rxy * Math.cos(this.fTimes*this.ratioTime*totalTime+this.alpha);
-			this.y=this.rxy * Math.sin(this.fTimes*this.ratioTime*totalTime+this.alpha);
-			this.z=this.rz  * Math.sin(this.fTimes*this.ratioTime*totalTime+this.gamma);
-		};
-		//@override
-		Member.prototype.ratioTime = Math.PI*0.00555555555*0.005;
-
-		Object.defineProperty(myXYZTrigonometry,'createMember',{value:createMember});
-		function createMember(r_xy,r_z,fTimes){
-			var member = new Member();
-			aMember.push(member);
-			member.rxy = r_xy;
-			member.rz = r_z;
-			member.fTimes = fTimes;//回転倍率
-			return member;
-		};
-		Object.defineProperty(myXYZTrigonometry,'reposAll',{value:repositionizeAllMembers()});
-		function repositionizeAllMembers(){
-			var sumTime=0;
-			return function(dt){
-				sumTime+=dt;
-				for(var ii=0,len=aMember.length;ii<len;ii++){
-					aMember[ii].reposition(sumTime);
-				}
-			};
-		};
-
-
-	})();//trigonometric functions
-
-		//for using gravity, follow to gravity (between members only)
-	(function(){
-
-		myXYZGravity = { };
-
-		var aMember = [];
-		var Member = function(mass,x,y,z,vx,vy,vz){
-			SuperMember.call(this);	
-			this.m = mass;
-			this.x=x;
-			this.y=y;
-			this.z=z;
-			this.vx=vx;
-			this.vy=vy;
-			this.vz=vz;
-		};
-		inherits(Member,SuperMember);
-
-		Object.defineProperty(myXYZGravity,'length',{get:function(){return aMember.length;}});
-
-		Object.defineProperty(myXYZGravity,'member',{value:getMemberByIndex});
-		function getMemberByIndex(){
-			return function(num){
-				if(num>=aMember.length || num<0){
-					myInfo.caution('number is out of range. num='+num.toString());
-				}
-				return aMember[num];
-			};
-		};
-		Object.defineProperty(myXYZGravity,'createMember',{value:createMember});
-		function createMember(m,x,y,z,vx,vy,vz){
-			var mem =new Member(m,x,y,z,vx,vy,vz);
-			aMember.push(mem);
-			return mem;
-		};
-		Object.defineProperty(myXYZGravity,'reposAll',{value:repositionAll});
-		function repositionAll(dt){
-
-			dt=dt/50;
-			g=1/5;
-			var mem1,mem2,dist,force;
-			var sumFx,sumFy,sumFz;
-			var len = aMember.length;
-			for(var ii=0;ii<len;ii++){
-				sumFx=0;sumFy=0;sumFz=0;
-				mem1=aMember[ii];
-				for(var jj=0;jj<len;jj++){
-					if(ii==jj){
-						//nothing to do
-					}else{
-						mem2=aMember[jj];
-						dist = 1/((mem1.x-mem2.x)*(mem1.x-mem2.x)+(mem1.y-mem2.y)*(mem1.y-mem2.y)+(mem1.z-mem2.z)*(mem1.z-mem2.z));
-						force = -g*mem1.m*mem2.m*dist;
-//console.log("force=",force);
-						dist=Math.pow(dist,0.5);
-						sumFx += force * (mem1.x-mem2.x)*dist;
-						sumFy += force * (mem1.y-mem2.y)*dist;
-						sumFz += force * (mem1.z-mem2.z)*dist;
-					}
-				}
-
-				mem1.x+=mem1.vx*dt;
-				mem1.y+=mem1.vy*dt;
-				mem1.z+=mem1.vz*dt;
-				mem1.vx+=sumFx*dt/mem1.m;
-				mem1.vy+=sumFy*dt/mem1.m;
-				mem1.vz+=sumFz*dt/mem1.m;
-			}
-//			var mem;
-//			for(var kk=0;kk<aMember.length;kk++){
-//				mem = aMember[kk];
-//				console.log("mem["+kk.toString()+"] x:",mem.x,"y:",mem.y,"z:",mem.z);
-//			}
-		};
-	})();//gravity
-
-	//for translating and/or rotating members above
-	(function(){
-
-		/** global scope **/
-		AccumeMotionsXYZ = { };
-
-
-		/* for myXYZ object families */
-		Object.defineProperty(AccumeMotionsXYZ,'replaceView',{value:replaceCenterAndDirection});
-		function replaceCenterAndDirection(member){
-			return function(time){
-				myMat4.multiArray(member.matAccume);
-			};
-		};
-		Object.defineProperty(AccumeMotionsXYZ,'replaceViewNotTrans',{value:replaceCenterAndDirectionNotTranslated});
-		function replaceCenterAndDirectionNotTranslated(member){
-			return function(time){
-				myMat4.multiArray(member.matAccumeNotTranslated);
-			};
-		};
-		Object.defineProperty(AccumeMotionsXYZ,'replaceViewNotRotate',{value:replaceCenterAndDirectionNotRotated});
-		function replaceCenterAndDirectionNotRotated(member){
-			return function(time){
-				myMat4.multiArray(member.matAccumeNotRotated);
-			};
-		};
-		Object.defineProperty(AccumeMotionsXYZ,'trans',{value:translateXYZ});
-		function translateXYZ(member){
-			return function(time){
-				myMat4.trans(member.x,member.y,member.z);
-			};
-		};
-		Object.defineProperty(AccumeMotionsXYZ,'replaceOrigin',{value:replaceCenterToOriginOf});
-		function replaceCenterToOriginOf(member){
-			return function(time){
-				myMat4.trans(-member.x,-member.y,-member.z);
-			};
-		};
-	})();//motion
-})();
