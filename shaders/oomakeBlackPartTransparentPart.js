@@ -1,12 +1,26 @@
+/* */(function(){
+
+var sNameOfShader = "makeBlackPartTransparentPart";
+libFileRelationship.create(sNameOfShader);
+libFileRelationship[sNameOfShader].relatedTo='myShaders';
+libFileRelationship[sNameOfShader].relatedTo='myFBOs';
+libFileRelationship[sNameOfShader].relatedTo='mySendAttribUniform';
+libFileRelationship[sNameOfShader].relatedTo='mySendMatrix';
+libFileRelationship[sNameOfShader].relatedTo='myTextures';
+libFileRelationship[sNameOfShader].relatedTo='myMat4';
+libFileRelationship[sNameOfShader].relatedTo='UnitsToDraw';
+libFileRelationship[sNameOfShader].relatedTo='extMath';
+
+/* */	var c8 = Math.normalize8;
+/* */	var c24 = Math.normalize24;
+
 /*
  *	çïÇ¢ïîï™ÇìßñæÇ…ÇµÇƒï`âÊÇ∑ÇÈ
  *	To make black part of pixel transparent pixel to draw
 **/
 
 
-(function(){
 
-var sNameOfShader = "makeBlackPartTransparentPart";
 
 
 var fs = (function(){/*

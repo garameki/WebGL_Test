@@ -1,22 +1,28 @@
+/* */(function(){
+
+var sNameOfShader = "makeStencilFromTextureOnBlack";
+libFileRelationship.create(sNameOfShader);
+libFileRelationship[sNameOfShader].relatedTo='myShaders';
+libFileRelationship[sNameOfShader].relatedTo='myFBOs';
+libFileRelationship[sNameOfShader].relatedTo='mySendAttribUniform';
+libFileRelationship[sNameOfShader].relatedTo='mySendMatrix';
+libFileRelationship[sNameOfShader].relatedTo='myTextures';
+libFileRelationship[sNameOfShader].relatedTo='myMat4';
+libFileRelationship[sNameOfShader].relatedTo='UnitsToDraw';
+libFileRelationship[sNameOfShader].relatedTo='extMath';
+
+/* */	var c8 = Math.normalize8;
+/* */	var c24 = Math.normalize24;
+
 /*
  *	カッシーニ部分（黒色）を透明にして描画する
  *	To make black part of pixel transparent pixel to draw
 **/
 
 
-/* */(function(){
-/* */	var ccc8 = 1/0xFF;
-/* */	var c8 = function (a){
-/* */		return a*ccc8;
-/* */	};
-/* */	var ccc24 = 1/0xFFFFFF;
-/* */	var c24 = function (a){
-/* */		return a*ccc24;
-/* */	};
 
 /* customize below */
 
-var sNameOfShader = "makeStencilFromTextureOnBlack";
 var sModeOfFBO = "CTDNSN";//C[NTR]D[NTR]S[NTR]
 var colorBufferModeOfFBO = myFBOs.colorBufferModeIsR8ForStencil;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551, colorBufferModeIsALPHA or colorBufferModeIsR8ForStencil
 var controllBlendColorDepthStencilOfFBO = function(gl){

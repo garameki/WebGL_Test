@@ -1,10 +1,25 @@
+/* */(function(){
+
+var sNameOfShader = "drawPolygonOffStencil";
+libFileRelationship.create(sNameOfShader);
+libFileRelationship[sNameOfShader].relatedTo='myShaders';
+libFileRelationship[sNameOfShader].relatedTo='myFBOs';
+libFileRelationship[sNameOfShader].relatedTo='mySendAttribUniform';
+libFileRelationship[sNameOfShader].relatedTo='mySendMatrix';
+libFileRelationship[sNameOfShader].relatedTo='myTextures';
+libFileRelationship[sNameOfShader].relatedTo='myMat4';
+libFileRelationship[sNameOfShader].relatedTo='UnitsToDraw';
+libFileRelationship[sNameOfShader].relatedTo='extMath';
+
+
+
+
 /**
  *	デプスバッファを補正して、カラーとして表示します。
  *	To draw the texture of depth buffer as the texture of color buffer
 **/
 
 
-/* */(function(){
 /* */	var ccc8 = 1/0xFF;
 /* */	var c8 = function (a){
 /* */		return a*ccc8;
@@ -16,7 +31,6 @@
 
 /* customize below */
 
-var sNameOfShader = "drawPolygonOffStencil";
 var sModeOfFBO = "CTDTSN";//C[NTR]D[NTR]S[NTR]
 var colorBufferModeOfFBO = myFBOs.colorBufferModeIsRGBA4444;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551 or colorBufferModeIsALPHA
 var controllBlendColorDepthStencilOfFBO = function(gl){

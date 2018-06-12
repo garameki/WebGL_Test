@@ -1,3 +1,4 @@
+extString=null;//This is dummy.Because there is not 'extString' object.
 libFileRelationship.create('extString');
 
 

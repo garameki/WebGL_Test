@@ -1,3 +1,4 @@
+extArray=null;//This is dummy.Because there is not 'extArray' object.
 libFileRelationship.create('extArray');
 
 //extend Array class

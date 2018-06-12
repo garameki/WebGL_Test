@@ -1,3 +1,19 @@
+/* */(function(){
+
+var sNameOfShader = "mixTwoTexturesWithDepthes";
+libFileRelationship.create(sNameOfShader);
+libFileRelationship[sNameOfShader].relatedTo='myShaders';
+libFileRelationship[sNameOfShader].relatedTo='myFBOs';
+libFileRelationship[sNameOfShader].relatedTo='mySendAttribUniform';
+libFileRelationship[sNameOfShader].relatedTo='mySendMatrix';
+libFileRelationship[sNameOfShader].relatedTo='myTextures';
+libFileRelationship[sNameOfShader].relatedTo='myMat4';
+libFileRelationship[sNameOfShader].relatedTo='UnitsToDraw';
+libFileRelationship[sNameOfShader].relatedTo='extMath';
+
+/* */	var c8 = Math.normalize8;
+/* */	var c24 = Math.normalize24;
+
 /**
  *	二つのテクスチャーをデプステストありでクリップ空間に描く(それぞれのデプスバッファテクスチャーが必要です(24bit))
  *	To draw two textures with depth test (according to each depth texture(24bit) to 'depth test')
@@ -5,20 +21,9 @@
 
 
 
-(function(){
-
-	var ccc8 = 1/0xFF;
-	var c8 = function (a){
-		return a*ccc8;
-	};
-	var ccc24 = 1/0xFFFFFF;
-	var c24 = function (a){
-		return a*ccc24;
-	};
 
 	/* customize below */
 
-	var sNameOfShader = "mixTwoTexturesWithDepthes";
 	var sModeOfFBO = "CNDNSN";//to turn of the frame buffer //C[NTR]D[NTR]S[NTR]
 	var colorBufferModeOfFBO = myFBOs.none;//[none | colorBufferModeIsRGBA4444 | colorBufferModeIsRGBA5551 | colorBufferModeIsALPHA]
 	var controllColorDepthStencilOfFBO = function(gl){

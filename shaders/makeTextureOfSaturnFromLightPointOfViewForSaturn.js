@@ -1,21 +1,27 @@
+/* */(function(){
+
+var sNameOfShader = "makeTextureOfSaturnFromLightPointOfViewForSaturn";
+libFileRelationship.create(sNameOfShader);
+libFileRelationship[sNameOfShader].relatedTo='myShaders';
+libFileRelationship[sNameOfShader].relatedTo='myFBOs';
+libFileRelationship[sNameOfShader].relatedTo='mySendAttribUniform';
+libFileRelationship[sNameOfShader].relatedTo='mySendMatrix';
+libFileRelationship[sNameOfShader].relatedTo='myTextures';
+libFileRelationship[sNameOfShader].relatedTo='myMat4';
+libFileRelationship[sNameOfShader].relatedTo='UnitsToDraw';
+libFileRelationship[sNameOfShader].relatedTo='extMath';
+
+/* */	var c8 = Math.normalize8;
+/* */	var c24 = Math.normalize24;
+
 /**
  *	ある点(原点---移動すると原点も移動します)からある方向を見る(例えば、光源からある方向を見る)
  *	To look toward to arbitrary direction at a arbitrary position(e.g. the view of the Sun which is the emission of the ray)
 **/
 
-/* */(function(){
-/* */	var ccc8 = 1/0xFF;
-/* */	var c8 = function (a){
-/* */		return a*ccc8;
-/* */	};
-/* */	var ccc24 = 1/0xFFFFFF;
-/* */	var c24 = function (a){
-/* */		return a*ccc24;
-/* */	};
 
 /* customize below */
 
-var sNameOfShader = "makeTextureOfSaturnFromLightPointOfViewForSaturn";
 var sModeOfFBO = "CTDRSN";//C[NTR]D[NTR]S[NTR]
 var colorBufferModeOfFBO = myFBOs.colorBufferModeIsRGBA5551;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551 or colorBufferModeIsALPHA
 var controllBlendColorDepthStencilOfFBO = function(gl){

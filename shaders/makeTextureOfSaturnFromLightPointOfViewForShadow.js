@@ -1,3 +1,19 @@
+/* */(function(){
+
+var sNameOfShader = "makeTextureOfSaturnFromLightPointOfViewForShadow";
+libFileRelationship.create(sNameOfShader);
+libFileRelationship[sNameOfShader].relatedTo='myShaders';
+libFileRelationship[sNameOfShader].relatedTo='myFBOs';
+libFileRelationship[sNameOfShader].relatedTo='mySendAttribUniform';
+libFileRelationship[sNameOfShader].relatedTo='mySendMatrix';
+libFileRelationship[sNameOfShader].relatedTo='myTextures';
+libFileRelationship[sNameOfShader].relatedTo='myMat4';
+libFileRelationship[sNameOfShader].relatedTo='UnitsToDraw';
+libFileRelationship[sNameOfShader].relatedTo='extMath';
+
+/* */	var c8 = Math.normalize8;
+/* */	var c24 = Math.normalize24;
+
 /**
  *	土星に影を描くために、光源から見た土星に影を落とすためのシェーダーです。
  *	土星本体を描くmakeTextureOfSaturnFromLightPointOfViewForSaturnに続く、土星本体に影を落とすためのシェーダーです。
@@ -6,19 +22,8 @@
  *	
 **/
 
-/* */(function(){
-/* */	var ccc8 = 1/0xFF;
-/* */	var c8 = function (a){
-/* */		return a*ccc8;
-/* */	};
-/* */	var ccc24 = 1/0xFFFFFF;
-/* */	var c24 = function (a){
-/* */		return a*ccc24;
-/* */	};
-
 /* customize below */
 
-var sNameOfShader = "makeTextureOfSaturnFromLightPointOfViewForShadow";
 var sModeOfFBO = "CNDNSN";//C[NTR]D[NTR]S[NTR]//今回は使いません
 var colorBufferModeOfFBO = myFBOs.colorBufferModeIsRGBA5551;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551 or colorBufferModeIsALPHA
 var controllBlendColorDepthStencilOfFBO = function(gl){ };//使わない

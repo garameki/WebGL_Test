@@ -1,3 +1,16 @@
+/* */(function(){
+
+var sNameOfShader = "drawSaturnWithRectangleTextureOnDarkSide";
+libFileRelationship.create(sNameOfShader);
+libFileRelationship[sNameOfShader].relatedTo='myShaders';
+libFileRelationship[sNameOfShader].relatedTo='myFBOs';
+libFileRelationship[sNameOfShader].relatedTo='mySendAttribUniform';
+libFileRelationship[sNameOfShader].relatedTo='mySendMatrix';
+libFileRelationship[sNameOfShader].relatedTo='myTextures';
+libFileRelationship[sNameOfShader].relatedTo='myMat4';
+libFileRelationship[sNameOfShader].relatedTo='UnitsToDraw';
+libFileRelationship[sNameOfShader].relatedTo='extMath';
+
 /**
  *	四角い通常のテクスチャを用いて土星の影の部分の模様を描きます。
  *	To draw the surface not lit on the Saturn with its ordinary rectangle texture.
@@ -5,19 +18,11 @@
 **/
 
 
-/* */(function(){
-/* */	var ccc8 = 1/0xFF;
-/* */	var c8 = function (a){
-/* */		return a*ccc8;
-/* */	};
-/* */	var ccc24 = 1/0xFFFFFF;
-/* */	var c24 = function (a){
-/* */		return a*ccc24;
-/* */	};
+/* */	var c8 = Math.normalize8;
+/* */	var c24 = Math.normalize24;
 
 /* customize below */
 
-var sNameOfShader = "drawSaturnWithRectangleTextureOnDarkSide";
 var sModeOfFBO = "CNDNSN";//C[NTR]D[NTR]S[NTR]//画面に描きます
 var colorBufferModeOfFBO = myFBOs.colorBufferModeIsRGBA4444;//none , colorBufferModeIsRGBA4444 , colorBufferModeIsRGBA5551 or colorBufferModeIsALPHA
 var controllBlendColorDepthStencilOfFBO = function(gl){
