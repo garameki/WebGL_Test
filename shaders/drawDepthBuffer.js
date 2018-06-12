@@ -1,11 +1,16 @@
+/* */(function(){
+
+var sNameOfShader = "drawTextureOfDepthBuffer";
+libFileRelationship.create(sNameOfShader);
+libFileRelationship[sNameOfShader].relatedTo='myShaders';
+
+
+
 /**
  *	デプスバッファを補正して、カラーとして表示します。
  *	To draw the texture of depth buffer as the texture of color buffer
 **/
 
-(function(){
-
-var sNameOfShader = "drawTextureOfDepthBuffer";
 
 var fs = (function(){/*
 	uniform sampler2D uSampler;//color buffer
@@ -58,5 +63,5 @@ if('myShaders' in window){
 	},1);
 }
 
-})();
+/* */})();
 
