@@ -1,22 +1,26 @@
 ﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
 <link rel="stylesheet"		type="text/css"		href="./styleSheet.css"></link>
+<script type='text/javascript' src='libFileRelationship.js'></script>
 <script type="text/javascript"	src="./extString.js"></script><!--String object extension-->
 <script type="text/javascript"	src="./extArray.js"></script><!--Array object extension-->
 <script type="text/javascript"	src="./libElement.js"></script>
-<script type="text/javascript"	src="./accumeMotionsXYZ.js"></script>
+<script type="text/javascript"	src="./myXYZ.js"></script>
+<script type="text/javascript"	src="./myXYZManipulation.js"></script>
+<script type="text/javascript"	src="./myXYZTrigonometry.js"></script>
+<script type="text/javascript"	src="./myXYZGravity.js"></script>
 <script type="text/javascript"	src="./myMat4.js"></script>
 <script	type="text/javascript"	src="./myVec3.js"></script>
 <script	type="text/javascript"	src="./mySendMatrix.js"></script>
 <script	type="text/javascript"	src="./myShaders.js"></script>
 <script	type="text/javascript"	src="./mySendAttribUniform.js"></script>
 <script	type="text/javascript"	src="./myPlanetData.js"></script>
+<script	type="text/javascript"	src="./myInfo.js"></script>
 
 
 
 <script type="text/javascript"	src="./myColorName.js"></script>
 <script type="text/javascript"	src="./myLabel.js"></script>
 <script type="text/javascript"	src="./myShape.js"></script>
-<script type="text/javascript"	src="./accumeMotions.js"></script>
 <script type="text/javascript"	src="./myTextures.js"></script>
 <script type="text/javascript"	src="./myFBOs.js"></script>
 
@@ -24,120 +28,6 @@
 <!--******************************* SHADER PROGMRAMS *****************************************************-->
 
  
-<script type='text/javascript'>
-/**
- * print informations on html element
-**/
-(function(){
-//:myInfo
-	myInfo = { };
-
-	Object.defineProperty(myInfo,'create',{value:create,writable:true,enumerable:false,configurable:false});
-	function create(sName,nLeft,nTop){
-		Object.defineProperty(myInfo,sName,{value:new PrintText(sName,nLeft,nTop),writable:false,enumerable:true,configurable:false});
-		Object.defineProperty(myInfo[sName],'createLine',{value:createLine(sName),writable:false,enumerable:true,configurable:false});
-	};
-	function createLine(sName){
-		return function(sNameChild,sColor,sBackColor,nSize){
-			myInfo[sName].elep.innerHTML+="<span class='"+sName+sNameChild+"'></span><br>";
-			//https://stackoverflow.com/questions/30070865/event-that-occurs-after-appendchild
-			var targets,target,count=0;
-			var hoge = setInterval(function(){
-				targets = myInfo[sName].elep.getElementsByClassName(sName+sNameChild);
-				if(targets.length!=0){
-					clearInterval(hoge);
-					target = targets[0];
-					target.style.color = sColor;
-					target.style.backgroundColor = sBackColor;
-					target.style.fontSize = nSize;
-					if(myInfo[sName][sNameChild]!=void 0){
-						console.error("too early to use the setter 'myInfo."+sName+"."+sNameChild+"='");
-					}
-					Object.defineProperty(myInfo[sName],sNameChild,{set:function(str){
-						target.innerText=str;
-					},enumerable:true,configurable:false});
-				}else if(++count>100){
-					clearInterval(hoge);
-					console.error("myInfo."+sName+"."+sNameChild+" might be not able to attach withinto DOM.");
-				}
-			},0.001);
-		};
-	};
-	/** inner class **/
-	var body;
-	function PrintText(sName,nLeft,nTop){
-		body = document.getElementsByTagName('body');
-		if(body.length==0){
-			console.caution("DOM is not ready yet about 'myInfo."+sName+"', too early to use");
-			return null;
-		}
-		var elep = document.createElement('P');
-		body[0].appendChild(elep);
-		elep.style.position='absolute';
-//		elep.style.zIndex=10000;
-		elep.style.left=nLeft.toString()+'px';
-		elep.style.top=nTop.toString()+'px';
-		elep.style.padding='15px';
-		elep.style.borderStyle='dashed';
-		elep.style.borderColor='gold';
-		elep.style.borderWidth='8px';
-
-		this.elep = elep;
-
-		elep.innerHTML="<span style='padding-left:5px;padding-right:5px;color:white;background-color:blue;position:absolute;left:-15px;top:-10px;'>"+sName+"</span>";
-	};
-	Object.defineProperty(PrintText.prototype,'caution',{set:setterCaution,enumerable:true,configurable:false});
-	function setterCaution(str){
-		this.print(str,"black","yellow");
-	};
-	Object.defineProperty(PrintText.prototype,'error',{set:setterError,enumerable:true,configurable:false});
-	function setterError(str){
-		this.print(str,"white","red");
-	};
-	Object.defineProperty(PrintText.prototype,'info',{set:setterInformation,enumerable:true,configurable:false});
-	function setterInformation(str){
-		this.print(str,"white","blue");
-	};
-
-	/** inner function **/
-	var styleCommon = 'font-size:12px;padding-left:5px;padding-right:5px;';
-	PrintText.prototype.print = function(str,sFColor,sBColor){
-		this.elep.innerHTML+="<span style='color:"+sFColor+";background-color:"+sBColor+";"+styleCommon+"'>・"+str+"</span><br>";		
-	};
-
-
-})();
-/**
- *print text on html
-*/
-(function(){
-//:myline
-	myLine = { };
-	Object.defineProperty(myLine,'create',{value:create,writable:false,enumerable:false,configurable:false});
-	var body;
-	function create(sName,nLeft,nTop,sColor,sBackColor,nSize){
-		body = document.getElementsByTagName('body');
-		if(body.length==0){
-			console.error("DOM is not ready yet about 'myInfo."+sName+"'");
-			return null;
-		}
-		var elep = document.createElement('SPAN');
-		body[0].appendChild(elep);
-		elep.style.position='absolute';
-		elep.style.left=nLeft.toString()+'px';
-		elep.style.top=nTop.toString()+'px';
-		elep.style.color=sColor;
-		elep.style.backgroundColor=sBackColor;
-		elep.style.fontSize = nSize;
-		Object.defineProperty(myLine,sName,{set:function(str){
-			str = str.toDetoxification(str);//myLabel
-			elep.innerText=str;
-		},enumerable:true,configurable:false});
-	};
-})();
-
-
-</script>
 
 <!--*** shader programs, FBOs and controllers of CDF ***-->
 <script type="text/javascript" src="./shaders/spaceShip.js"></script>
@@ -155,13 +45,6 @@
 
 
 <script type='text/javascript'>
-
-var prestart = function(){
-
-	start();
-
-
-};
 
 
 //************************************** DRAW SCENE *************************************************
@@ -595,6 +478,41 @@ if(flagName){
 //*************************************** START ****************************************************************	
 
 
+var FR=libFileRelationship;
+FR.create('main');
+FR.main.relatedTo='myTextures';
+FR.main.relatedTo='myInfo';
+FR.main.relatedTo='myFBOs';
+FR.main.relatedTo='myShaders';
+FR.main.relatedTo='myColorName';
+
+
+onload=function(){
+
+	//Wait for all of file in use
+
+	let count = 0;
+	let flag = true;
+	let nameP,nameC,ii;
+	var hoge = setInterval(function(){
+		flag=true;
+		for(nameP in FR){
+			for(ii in FR[nameP].aAccounts){
+				nameC = FR[nameP].aAccounts[ii];
+				flag = flag && (nameC in window);
+				if(!flag)break;
+			}
+			if(!flag)break;
+		}
+		if(flag){
+			clearInterval(hoge);
+			start();
+		}else if(++count>30){
+			clearInterval(hoge);
+			console.error(nameP,"で使用する外部ファイル",nameC,"が読み込まれていません");
+		}
+	},100);
+};
 
 
 
@@ -891,11 +809,11 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var aAccumeUnits = [];
 //	if(_front_){
 	if(true){
-		aAccumeUnits.push(AccumeMotions.translate(0,0,-20));
+		aAccumeUnits.push(myXYZ.translate(0,0,-20));
 		myLabel.join('plane');
 		myLabel.plane.addText(0,-1,0,"ship",colorName);
 	} else {
-		aAccumeUnits.push(AccumeMotions.translate(0,0,10));
+		aAccumeUnits.push(myXYZ.translate(0,0,10));
 		myLabel.join('plane');
 		myLabel.plane.addText(0,-5,0,"",colorName);
 	};
@@ -911,35 +829,38 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myTextures.sun.readFile("sun.png");
 
 	var aAccumeLightingDirectionalSun = [];//平行光源
-	aAccumeLightingDirectionalSun.push(AccumeMotions.gotoOrigin());
+	aAccumeLightingDirectionalSun.push(myXYZ.gotoOrigin());
 	var aAccumeLightingPointSun = [];//点光源
-	aAccumeLightingPointSun.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeLightingPointSun.push(myXYZ.replaceView(xyzCenter));
 
 
 		//Sun
 	var r = myBall.sun.radius;
-//	var xyzSun = myXYZTrigonometry.createMember();
+//○	var xyzSun = myXYZTrigonometry.createMember();
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0.01,0));
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,0.01,0));
 
-//	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSun));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+//○	aAccumeUnits.push(myXYZ.trans(xyzSun));//revolution公転
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
 
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
-						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
-						//	aAccumeUnits.push(AccumeMotions.none());
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));
+						//	aAccumeUnits.push(myXYZ.rotate(0,1,0,    1,-1,0));
+						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));//center : sun
+						//	aAccumeUnits.push(myXYZ.none());
 	myLabel.join('sun');
 	myLabel.sun.addText(0,-5,0,"Sun",colorName);
 	var shape = myShape.sphere(gl,r);
 	UnitsToDraw.join(gl,"sun",shape,aAccumeUnits,myLabel.sun,nameTextureSun,aAccumeLightingDirectionalSun,aAccumeLightingPointSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
+
+
+
 	/** common **/
 	var aAccumeLightingDirectional = [];//平行光源
-	aAccumeLightingDirectional.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));//---uManipulatedNotTransMatrix//視点を置き換える行列の中で、translationを含まない行列
+	aAccumeLightingDirectional.push(myXYZ.replaceViewNotTrans(xyzCenter));//---uManipulatedNotTransMatrix//視点を置き換える行列の中で、translationを含まない行列
 	var aAccumeLightingPoint = [];//点光源
-	aAccumeLightingPoint.push(AccumeMotionsXYZ.replaceView(xyzCenter));//---uManipulatedMatrix
+	aAccumeLightingPoint.push(myXYZ.replaceView(xyzCenter));//---uManipulatedMatrix
 
 		//Earth
 	var nameTextureBase = "earth";
@@ -950,16 +871,16 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var r = myBall.earth.radius;
 	var xyzEarth = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));
 
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzEarth));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeUnits.push(myXYZ.trans(xyzEarth));//revolution公転
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
 
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
-						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
-						//	aAccumeUnits.push(AccumeMotions.none());
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));
+						//	aAccumeUnits.push(myXYZ.rotate(0,1,0,    1,-1,0));
+						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));//center : sun
+						//	aAccumeUnits.push(myXYZ.none());
 	myLabel.join('earth');
 	myLabel.earth.addText(0,-5,0,"Earth",colorName);
 	var shape = myShape.sphere(gl,r);
@@ -973,14 +894,14 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var r = myBall.earth.radius*1.05;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));
-//	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzEarth));//revolution公転
-//	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
-						//	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,    1,-1,0));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));//center : sun
-						//	aAccumeUnits.push(AccumeMotions.none());
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));
+//	aAccumeUnits.push(myXYZ.trans(xyzEarth));//revolution公転
+//	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));
+						//	aAccumeUnits.push(myXYZ.rotate(0,1,0,    1,-1,0));
+						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));//center : sun
+						//	aAccumeUnits.push(myXYZ.none());
 	myLabel.join("atomosphere");
 	myLabel.atomosphere.addText(0,-5,0,"",colorName);
 //	var shape = myShape.hexa(gl,r);
@@ -999,18 +920,18 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var r = myBall.jupiter.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
 	var aMatricesNotManipulatedJupiter = [];
-	aMatricesNotManipulatedJupiter.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aMatricesNotManipulatedJupiter.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulatedJupiter.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(AccumeMotions.axisY(1));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnits.push(AccumeMotions.none());
+	aMatricesNotManipulatedJupiter.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aMatricesNotManipulatedJupiter.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aMatricesNotManipulatedJupiter.push(myXYZ.trans(xyz));//revolution公転
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(myXYZ.axisY(1));
+						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
+						//	aAccumeUnits.push(myXYZ.none());
 	myLabel.join('jupiter');
 	myLabel.jupiter.addText(0,0,0,"Jupitor",colorName);//kkk
 	var shape = myShape.sphere(gl,r);
@@ -1018,9 +939,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	var aMatricesNotManipulatedCommon = [];
-	aMatricesNotManipulatedCommon.push(AccumeMotions.rotate(1,0,0,0,90));
-	aMatricesNotManipulatedCommon.push(AccumeMotions.rotate(0,1,0,1,0));
-	aMatricesNotManipulatedCommon.push(AccumeMotionsXYZ.trans(xyz));
+	aMatricesNotManipulatedCommon.push(myXYZ.rotate(1,0,0,0,90));
+	aMatricesNotManipulatedCommon.push(myXYZ.rotate(0,1,0,1,0));
+	aMatricesNotManipulatedCommon.push(myXYZ.trans(xyz));
 
 
 	/** Moon **/
@@ -1031,14 +952,14 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var r = myBall.moon.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(AccumeMotions.axisY(1));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnits.push(AccumeMotions.none());
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(myXYZ.axisY(1));
+						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
+						//	aAccumeUnits.push(myXYZ.none());
 	myLabel.join('moon');
 	myLabel.moon.addText(0,0,0,nameTextureMoon,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
@@ -1053,14 +974,14 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var r = myBall.uranus.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(AccumeMotions.axisY(1));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnits.push(AccumeMotions.none());
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(myXYZ.axisY(1));
+						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
+						//	aAccumeUnits.push(myXYZ.none());
 	myLabel.join('uranus');
 	myLabel.uranus.addText(0,0,0,nameTextureUranus,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
@@ -1075,14 +996,14 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var r = myBall.venus.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(AccumeMotions.axisY(1));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnits.push(AccumeMotions.none());
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(myXYZ.axisY(1));
+						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
+						//	aAccumeUnits.push(myXYZ.none());
 	myLabel.join('venus');
 	myLabel.venus.addText(0,0,0,nameTextureVenus,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
@@ -1097,14 +1018,14 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var r = myBall.mars.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(AccumeMotions.axisY(1));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnits.push(AccumeMotions.none());
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(myXYZ.axisY(1));
+						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
+						//	aAccumeUnits.push(myXYZ.none());
 
 	myLabel.join('mars');
 	myLabel.mars.addText(0,0,0,nameTextureMars,colorName);//kkk
@@ -1120,14 +1041,14 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var r = myBall.neptune.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(AccumeMotions.axisY(1));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnits.push(AccumeMotions.none());
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(myXYZ.axisY(1));
+						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
+						//	aAccumeUnits.push(myXYZ.none());
 	myLabel.join('neptune');
 	myLabel.neptune.addText(0,0,0,nameTextureNeptune,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
@@ -1142,14 +1063,14 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var r = myBall.mercury.radius;
 	var xyz = myXYZTrigonometry.createMember(800,600,1);
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(AccumeMotions.axisY(1));
-						//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnits.push(AccumeMotions.none());
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnits.push(myXYZ.axisY(1));
+						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
+						//	aAccumeUnits.push(myXYZ.none());
 	myLabel.join('mercury');
 	myLabel.mercury.addText(0,0,0,nameTextureMercury,colorName);//kkk
 	var shape = myShape.sphere(gl,r);
@@ -1158,9 +1079,6 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 
-
-//AccumeMotions-------> myMotionsOnce
-//AccumeMotionsXYZ ---> myMotionsContinuous
 
 //:tex
 		myTextures.join(gl,"lapetus");
@@ -1174,19 +1092,19 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var r = myBall.saturn.radius;
 	var xyzSaturn = myXYZTrigonometry.createMember(800,200,0.2);
 	var aAccumeUnitsSaturn = [];
-	aAccumeUnitsSaturn.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnitsSaturn.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnitsSaturn.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
-	aAccumeUnitsSaturn.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnitsSaturn.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnitsSaturn.push(AccumeMotions.axisY(1));
-						//	aAccumeUnitsSaturn.push(AccumeMotions.translate(0,0,-50));
-						//	aAccumeUnitsSaturn.push(AccumeMotions.none());
+	aAccumeUnitsSaturn.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnitsSaturn.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnitsSaturn.push(myXYZ.trans(xyzSaturn));//revolution公転
+	aAccumeUnitsSaturn.push(myXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnitsSaturn.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
+						//	aAccumeUnitsSaturn.push(myXYZ.axisY(1));
+						//	aAccumeUnitsSaturn.push(myXYZ.translate(0,0,-50));
+						//	aAccumeUnitsSaturn.push(myXYZ.none());
 
 	var aMatricesNotManipulatedSaturn = [];
-	aMatricesNotManipulatedSaturn.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aMatricesNotManipulatedSaturn.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulatedSaturn.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+	aMatricesNotManipulatedSaturn.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aMatricesNotManipulatedSaturn.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aMatricesNotManipulatedSaturn.push(myXYZ.trans(xyzSaturn));//revolution公転
 
 	myLabel.join('saturn');
 	myLabel.saturn.addText(0,0,0,nameTextureSaturn,colorName);//kkk
@@ -1221,21 +1139,21 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myTextures.titan.readFile("titan.png");
 
 	var radius = myBall.titan.radius;
-	var xyzTitan = myXYZTrigonometry.createMember(myBall.saturn.radius*3.7,5,3);
+	var xyz = myXYZTrigonometry.createMember(myBall.saturn.radius*3.7,5,3);
 
 	var aAccumeUnitsTitan = [];
-	aAccumeUnitsTitan.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnitsTitan.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnitsTitan.push(AccumeMotionsXYZ.trans(xyzTitan));//revolution公転
-	aAccumeUnitsTitan.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
-	aAccumeUnitsTitan.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnitsTitan.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+	aAccumeUnitsTitan.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnitsTitan.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnitsTitan.push(myXYZ.trans(xyz));//revolution公転
+	aAccumeUnitsTitan.push(myXYZ.trans(xyzSaturn));//revolution公転
+	aAccumeUnitsTitan.push(myXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnitsTitan.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
 
 	var aMatricesNotManipulatedTitan = [];
-	aMatricesNotManipulatedTitan.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aMatricesNotManipulatedTitan.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulatedTitan.push(AccumeMotionsXYZ.trans(xyzTitan));//revolution公転
-	aMatricesNotManipulatedTitan.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+	aMatricesNotManipulatedTitan.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aMatricesNotManipulatedTitan.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aMatricesNotManipulatedTitan.push(myXYZ.trans(xyz));//revolution公転
+	aMatricesNotManipulatedTitan.push(myXYZ.trans(xyzSaturn));//revolution公転
 
 	myLabel.join('titan');
 	myLabel.titan.addText(0,0,0,"titan",colorName);//kkk
@@ -1248,21 +1166,21 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myTextures.mimas.readFile("mimas.png");
 
 	var radius = myBall.mimas.radius;
-	var xyzMimas = myXYZTrigonometry.createMember(myBall.saturn.radius*2.9,5,4);
+	var xyz = myXYZTrigonometry.createMember(myBall.saturn.radius*2.9,5,4);
 
 	var aAccumeUnitsMimas = [];
-	aAccumeUnitsMimas.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnitsMimas.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnitsMimas.push(AccumeMotionsXYZ.trans(xyzMimas));//revolution公転
-	aAccumeUnitsMimas.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
-	aAccumeUnitsMimas.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnitsMimas.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+	aAccumeUnitsMimas.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnitsMimas.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnitsMimas.push(myXYZ.trans(xyz));//revolution公転
+	aAccumeUnitsMimas.push(myXYZ.trans(xyzSaturn));//revolution公転
+	aAccumeUnitsMimas.push(myXYZ.replaceView(xyzCenter));
+	if(_front_)aAccumeUnitsMimas.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
 
 	var aMatricesNotManipulatedMimas = [];
-	aMatricesNotManipulatedMimas.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aMatricesNotManipulatedMimas.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulatedMimas.push(AccumeMotionsXYZ.trans(xyzMimas));//revolution公転
-	aMatricesNotManipulatedMimas.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+	aMatricesNotManipulatedMimas.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aMatricesNotManipulatedMimas.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aMatricesNotManipulatedMimas.push(myXYZ.trans(xyz));//revolution公転
+	aMatricesNotManipulatedMimas.push(myXYZ.trans(xyzSaturn));//revolution公転
 
 	myLabel.join('mimas');
 	myLabel.mimas.addText(0,0,0,"mimas",colorName);//kkk
@@ -1278,18 +1196,18 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var xyz = myXYZTrigonometry.createMember(myBall.saturn.radius*1.2,5,7);
 
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(AccumeMotionsXYZ.trans(xyzSaturn));//center of revolution
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));//manipulate
-	if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
+	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
+	aAccumeUnits.push(myXYZ.trans(xyzSaturn));//center of revolution
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));//manipulate
+	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
 
 	var aMatricesNotManipulated = [];
-	aMatricesNotManipulated.push(AccumeMotions.rotate(1,0,0,0,90));//rotation自転
-	aMatricesNotManipulated.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulated.push(AccumeMotionsXYZ.trans(xyz));//center of revolution
-	aMatricesNotManipulated.push(AccumeMotionsXYZ.trans(xyzSaturn));//revolution公転
+	aMatricesNotManipulated.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
+	aMatricesNotManipulated.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+	aMatricesNotManipulated.push(myXYZ.trans(xyz));//center of revolution
+	aMatricesNotManipulated.push(myXYZ.trans(xyzSaturn));//revolution公転
 
 	myLabel.join('tethys');
 	myLabel.tethys.addText(0,0,0,"tethys",colorName);//kkk
@@ -1307,13 +1225,13 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 		var r = myBall.moon.radius;
 		var xyz = myXYZTrigonometry.createMember(800,600,1);???
 		var aAccumeUnits = [];
-		aAccumeUnits.push(AccumeMotions.rotate(0,1,0,1,0));//rotation自転
-			aAccumeUnits.push(AccumeMotionsXYZ.trans(xyz));//revolution公転
-			aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-			if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));//seen from the distance
-							//	aAccumeUnits.push(AccumeMotions.axisY(1));
-							//	aAccumeUnits.push(AccumeMotions.translate(0,0,-50));
-							//	aAccumeUnits.push(AccumeMotions.none());
+		aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+			aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
+			aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+			if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
+							//	aAccumeUnits.push(myXYZ.axisY(1));
+							//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
+							//	aAccumeUnits.push(myXYZ.none());
 		name="st"+hh.toString();
 		myLabel.join(name);
 		myLabel[name].addText(0,0,0,hh.toString(),colorName);//kkk
@@ -1328,8 +1246,8 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	/* In other words,they must be always lit brightly.(e.g. indicater , axes and so on) */
 	/** common **/
 	var aAccumeLightingDirectional = [];
-	aAccumeLightingDirectional.push(AccumeMotions.translate(1.0,1.0,1.0));//Light is put at (1 1 1)
-	aAccumeLightingDirectional.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));//always (1 1 1) as same relationship of positionning
+	aAccumeLightingDirectional.push(myXYZ.translate(1.0,1.0,1.0));//Light is put at (1 1 1)
+	aAccumeLightingDirectional.push(myXYZ.replaceViewNotTrans(xyzCenter));//always (1 1 1) as same relationship of positionning
 	aAccumeLightingPoint = [];
 
 	//stars far from planet
@@ -1342,8 +1260,8 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	var p1,r1,t1;
 	for(var hh=0;hh<100;hh++){
 		var aAccumeUnits=[];
-		aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
-		if(_front_)aAccumeUnits.push(AccumeMotions.translate(0,0,-_frontLength_));
+		aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+		if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));
 llllllllll		myLabel.join('');
 		//labels.addText(0,0,-10,"hexa",colorName);
 		r1 = 1000*Math.random()+1000;
@@ -1365,8 +1283,8 @@ llllllllll		myLabel.join('');
 //var shape = myShape.axes(gl,5,myColorName.white(1));// embeded three axes in one shape
 //
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceViewNotTrans(xyzCenter));
-	aAccumeUnits.push(AccumeMotions.translate(-15,-15,-30));
+	aAccumeUnits.push(myXYZ.replaceViewNotTrans(xyzCenter));
+	aAccumeUnits.push(myXYZ.translate(-15,-15,-30));
 	myLabel.join('back');
 	myLabel.back.addText(0,0,5,"back",colorName);
 	var shape = myShape.line(gl,[0,0,0],[0,0,5],myColorName.magenta(1));
@@ -1388,7 +1306,7 @@ llllllllll		myLabel.join('');
 	/** observer **/
 /*
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
 	myLabel.join('observer');
 	myLabel.addText(0,0,0,"origin",colorName);
 //	myLabel.addText(0,0,0,"origin",colorName);
@@ -1403,8 +1321,8 @@ llllllllll		myLabel.join('');
 	/** shadow **/
 /*
 	var aAccumeUnits = [];
-	aAccumeUnits.push(AccumeMotions.rotate(0,1,0,0,90));
-	aAccumeUnits.push(AccumeMotionsXYZ.replaceView(xyzCenter));
+	aAccumeUnits.push(myXYZ.rotate(0,1,0,0,90));
+	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
 	myLabel.join('');
 	myLabel.addText(0,0,0,"shadow",colorName);
 //	myLabel.addText(0,0,0,"origin",colorName);
@@ -1524,8 +1442,8 @@ llllllllll		myLabel.join('');
 </script>
 
 </head>
-<body style="overflow:hidden;" onload="prestart();">
-<!--body onload="prestart();"-->
+<body style="overflow:hidden;">
+<!--body-->
 <div>
 <div id="canvasContainer">
 	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:512px;height:512px;"></canvas>

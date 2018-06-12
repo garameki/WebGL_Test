@@ -1,4 +1,7 @@
-﻿	var drawStep = 10;//milli seconds
+﻿libFileRelationship.create('myXYZManipulation');
+libFileRelationship.myXYZManipulation.relatedTo='myMat4';
+
+	var drawStep = 10;//milli seconds
 
 //sum=0;
 

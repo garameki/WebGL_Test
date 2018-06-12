@@ -1,3 +1,7 @@
+libFileRelationship.create('myShaders');
+libFileRelationship.myShaders.relatedTo='myInfo';
+
+
 /**
  * make shader
 */

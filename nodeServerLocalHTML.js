@@ -53,6 +53,12 @@ http.createServer(function(req,res){
 			res.write(content);
 			res.end();
 			break;
+		case 'css':
+			res.writeHead(200,{'Content-Type':'text/css'});
+			content = fs.readFileSync('.'+url,'UTF-8');
+			res.write(content);
+			res.end();
+			break;
 		default:
 			console.log("Can't treat "+extension+" extension.");
 	}

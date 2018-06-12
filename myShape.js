@@ -1,4 +1,8 @@
-﻿(function(){
+﻿libFileRelationship.create('myShape');
+libFileRelationship.myShape.relatedTo='myColorName';
+libFileRelationship.myShape.relatedTo='myVec3';
+
+(function(){
 
 	
 

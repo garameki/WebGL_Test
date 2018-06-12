@@ -1,3 +1,7 @@
+libFileRelationship.create('mySendMatrix');
+libFileRelationship.mySendMatrix.relatedTo='myVec3';
+libFileRelationship.mySendMatrix.relatedTo='myMat4';
+
 //Å@There are 6 kind of matrices to be sended.
 //
 // + Quaternion

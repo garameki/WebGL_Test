@@ -1,4 +1,7 @@
-﻿		//for using gravity, follow to gravity (between members only)
+﻿libFileRelationship.create('myXYZGravity');
+libFileRelationship.myXYZGravity.relatedTo='myInfo';
+
+		//for using gravity, follow to gravity (between members only)
 	(function(){
 
 		myXYZGravity = { };

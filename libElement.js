@@ -1,4 +1,5 @@
-﻿(function(){
+﻿libFileRelationship.create('libElement');
+(function(){
 	//libElement
 	libElement = { };
 

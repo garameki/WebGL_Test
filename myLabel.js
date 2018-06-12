@@ -1,4 +1,5 @@
-﻿
+﻿libFileRelationship.create('myLabel');
+libFileRelationship.myLabel.relatedTo='myMat4';
 
 (function(){
 

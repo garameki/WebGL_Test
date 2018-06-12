@@ -1,4 +1,7 @@
-﻿	//for translating and/or rotating members above
+﻿libFileRelationship.create('myXYZ');
+libFileRelationship.myXYZ.relatedTo='myMat4';
+
+	//for translating and/or rotating members above
 
 	/**
 	 * @param {Object} memberXYZ  instance of myXYZManipulated,myXYZTrigonometry or myXYZGravity

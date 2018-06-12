@@ -1,4 +1,6 @@
-﻿
+﻿libFileRelationship.create('myXYZTrigonometry');
+libFileRelationship.myXYZTrigonometry.relatedTo='myMat4';
+
 	//for using trigonometric functions
 	(function(){//xyz follow to trigonometric functions
 

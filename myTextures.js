@@ -1,4 +1,7 @@
-﻿//******************************* TEXTURE ******************************************************
+﻿libFileRelationship.create('myTextures');
+libFileRelationship.myTextures.relatedTo='myInfo';
+
+//******************************* TEXTURE ******************************************************
 
 
 /**

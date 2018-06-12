@@ -1,3 +1,6 @@
+libFileRelationship.create('UnitsToDraw');
+
+
 /* all the things to be wanted to draw must be thrown into 'oModel',e.g. shape or text with its position x,y,z*/
 (function(){
 	UnitsToDraw = { };

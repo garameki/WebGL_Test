@@ -1,4 +1,6 @@
-﻿/**
+﻿libFileRelationship.create('myMat4');
+
+/**
 *define matrixes
  *
  * This is specifid for 4x4 Matrix computation.

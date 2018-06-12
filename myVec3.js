@@ -1,3 +1,5 @@
+libFileRelationship.create('myVec3');
+
 // GIVE FUNCTIONS TO CALCULATE 3D VECTOR
 
 // how to use

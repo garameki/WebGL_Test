@@ -1,3 +1,5 @@
+libFileRelationship.create('mySendAttribUniform');
+
 /* */(function(){
 
 
