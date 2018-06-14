@@ -8,12 +8,38 @@ libFileRelationship.myXYZ.relatedTo='myMat4';
 	**/
 
 (function(){
-
-
-
-
 	/** global scope **/
 	myXYZ = { };
+
+	Object.defineProperty(myXYZ,'inherits',{value:inherits,enumerable:false,configurable:false});	
+	function inherits(childCtor) {
+	  parentCtor =SuperMember;
+	  /** @constructor */
+	  function tempCtor() {};
+	  tempCtor.prototype = parentCtor.prototype;
+	  childCtor.superClass_ = parentCtor.prototype;
+	  childCtor.prototype = new tempCtor();
+	  /** @override */
+	  childCtor.prototype.constructor = childCtor;
+	};
+
+	//class
+	Object.defineProperty(myXYZ,'SuperMember',{value:SuperMember,enumerable:false,configurable:false});
+	function SuperMember(){
+
+	};
+	SuperMember.prototype.x = void 0;
+	SuperMember.prototype.y = void 0;
+	SuperMember.prototype.z = void 0;
+	SuperMember.prototype.reposition = function(time){
+		//interface to override
+		alert("In SuperMember reposition() was not overrided yet.  this=",this);
+	};
+	SuperMember.prototype.ratioTime = 1;
+
+
+
+
 
 
 	/* for myXYZ object families */

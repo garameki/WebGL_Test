@@ -9,7 +9,7 @@ function create(sName){
 function Relation(){
 	this.aAccounts = [];
 };
-Object.defineProperty(Relation.prototype,'relatedTo',{set:function(sName){this.aAccounts.push(sName);console.log("sName=",sName);},enumerable:false,configurable:false});
+Object.defineProperty(Relation.prototype,'relatedTo',{set:function(sName){this.aAccounts.push(sName);},enumerable:false,configurable:false});
 
 /* 
 //These lines below must be in main html and make start() in it ,too.

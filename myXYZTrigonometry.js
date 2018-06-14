@@ -1,4 +1,5 @@
 ﻿libFileRelationship.create('myXYZTrigonometry');
+libFileRelationship.myXYZTrigonometry.relatedTo='myXYZ';
 libFileRelationship.myXYZTrigonometry.relatedTo='myMat4';
 
 	//for using trigonometric functions
@@ -11,13 +12,13 @@ libFileRelationship.myXYZTrigonometry.relatedTo='myMat4';
 		/** inner class **/
 		var aMember = [];
 		var Member = function(){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
-			SuperMember.call(this);
+			myXYZ.SuperMember.call(this);
 //○			this.rxy = 600;//*(Math.random()-0.5);
 //○			this.rz  = 800;//0*(Math.random()-0.5);
 			this.alpha = 2*3.14*Math.random();
 			this.gamma = 2*3.14*Math.random();
 		};
-		inherits(Member,SuperMember);
+		myXYZ.inherits(Member);
 		//@override
 		Member.prototype.reposition = function(totalTime){
 			this.x=this.rxy * Math.cos(this.fTimes*this.ratioTime*totalTime+this.alpha);
@@ -27,6 +28,7 @@ libFileRelationship.myXYZTrigonometry.relatedTo='myMat4';
 		//@override
 		Member.prototype.ratioTime = Math.PI*0.00555555555*0.005;
 
+		/** outer functions **/
 		Object.defineProperty(myXYZTrigonometry,'createMember',{value:createMember});
 		function createMember(r_xy,r_z,fTimes){
 			var member = new Member();

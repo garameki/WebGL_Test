@@ -1,33 +1,55 @@
 libFileRelationship.create('UnitsToDraw');
+libFileRelationship['UnitsToDraw'].relatedTo='myLabel';
 
 
 /* all the things to be wanted to draw must be thrown into 'oModel',e.g. shape or text with its position x,y,z*/
 (function(){
+/*
+	UnitsToDraw-----+---------------(join)   <-function join     enumerable:false
+			|
+			+---------------plane    <-class Toolkit     enumerable:true
+			|
+			+---------------sun      <-class Toolkit     enumerable:true
+			|
+			+---------------earth    <-class Toolkit     enumerable:true
+			.
+			.
+			.
+*/
+
+
 	UnitsToDraw = { };
 	Object.defineProperty(UnitsToDraw,'join',{value:join,writable:false,enumerable:false,configurable:false});	
-	function join(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated){
-		Object.defineProperty(UnitsToDraw,sName,{value:new ToolBox(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightDirectionalMotions,aLightPointMotions,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated),writable:false,enumerable:true,configurable:false});
+	function join(gl,sName,sNameTexture,shape,oMatrices,oValues){
+		Object.defineProperty(UnitsToDraw,sName,{value:new ToolBox(gl,sName,sNameTexture,shape,oMatrices,oValues),writable:false,enumerable:true,configurable:false});
 	}
 
 
 	//
 	//@param {myShape.obj} shape in which there are points,color,normal vector,indeces and so on
 	//
-	function ToolBox(gl,sName,shape,aMotions,aLabels,sNameTexture,aLightsDirectional,aLightsPoint,brightness,alpha,fBaseLight,fCassiniFactor,aMatricesNotManipulated){//f means float
+	function ToolBox(gl,sName,sNameTexture,shape,oMatrices,oValues){
+
+		/** matrix */
+		this.aAccumeUnits = oMatrices.modelView;
+		this.aAccumeUnitsLightDirectional = oMatrices.manipulatedRotation;//aLightsDirectional;
+		this.aAccumeUnitsLightPoint = oMatrices.manipulated;//aLightsPoint;
+		this.aMatricesNotManipulated=oMatrices.notManipulated;//aMatricesNotManipulated;
+
+		/** value **/
+		this.brightness = oValues.brightness;
+		this.alpha = oValues.alpha;
+		this.baseLight = oValues.baseLight;
+		this.cassiniFactor = oValues.cassiniFactor;
+		/** label **/
+		this.labels = myLabel[sName];
+		/** texture **/
+		this.nameTexture = sNameTexture;
+		/** shape **/
 		this.draw = shape.draw;
 		this.buffers = createBuffers(gl,shape,sName);
-		this.aAccumeUnits = aMotions;
-		this.labels = aLabels;
-		this.nameTexture = sNameTexture;
 
-		this.aAccumeUnitsLightDirectional = aLightsDirectional;
-		this.aAccumeUnitsLightPoint = aLightsPoint;
-		this.brightness = brightness;
-		this.alpha = alpha;
-		this.baseLight = fBaseLight;
 
-		this.cassiniFactor = fCassiniFactor;
-		this.aMatricesNotManipulated=aMatricesNotManipulated;
 	};
 
 	/** inner function**/

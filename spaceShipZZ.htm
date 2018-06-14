@@ -47,7 +47,7 @@
 
 
 <script type='text/javascript'>
-
+//I like 'var'.
 
 //************************************** DRAW SCENE *************************************************
 
@@ -141,7 +141,8 @@ if(flagName){
 }
 	myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
 	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
-		var names = ["earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+		//var names = ["plane","up","back","right"];
+		var names = ["plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 		//var names = ["earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 		mySendAttribUniform[sNameShader](gl,names,angle);
 	myFBOs[sNameShader].inactivate();
@@ -174,7 +175,7 @@ if(flagName){
 }		myFBOs[sNameShaderSaturn].activate("CTDRSN");//使い終わったらinactivate()すること。viewportを元に戻す。メモリを解放し、frame bufferを切り離す。
 		myShaders[sNameShaderSaturn].activate();
 			var sNameSaturn = "saturn";//表面に影を落としたいアイテムの名前
-			var mats = mySendAttribUniform[sNameShaderSaturn](gl,sNameSaturn,angle);
+			var mats = mySendAttribUniform[sNameShaderSaturn](gl,sNameSaturn,angle,myFacts.planets.saturn.radius);
 		myShaders[sNameShaderShadow].activate();
 			var aNames = ["titan","mimas","tethys"];//,"ミマス","エンケラドス","カロン"];//影にしたいアイテムの名前
 				gl.disable(gl.BLEND);
@@ -207,7 +208,7 @@ if(flagName){
 			myShaders[sNameShader].uniform.uSamplerRounded.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 			myTextures["roundedTextureWithShadow"].activate(0);//上で作ったやつ
 		gl.enable(gl.DEPTH_TEST);
-			mySendAttribUniform[sNameShader](gl,sNameSaturn,angle);
+			mySendAttribUniform[sNameShader](gl,sNameSaturn,angle,myFacts.planets.saturn.radius);
 		//myFBOs[sNameShader].inactivate();
 		//	myTextures["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 		//	myTextures["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
@@ -234,7 +235,7 @@ if(flagName){
 			myShaders[sNameShader].uniform.uSamplerRectangle.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 			myTextures[sNameSaturn].activate(0);//通常のtexture
 		gl.enable(gl.DEPTH_TEST);
-			mySendAttribUniform[sNameShader](gl,angle,sNameSaturn);
+			mySendAttribUniform[sNameShader](gl,angle,sNameSaturn,myFacts.planets.saturn.radius);
 		//myFBOs[sNameShader].inactivate();
 		//	myTextures["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
 		//	myTextures["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
@@ -406,13 +407,6 @@ if(flagName){
 
 //うえのやつにDEPTHを加味した描画をさせる
 
-//myBallのradiusはUitToDrawに組み込んだ方がいい!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
-//kkkあとでmyTexturesのmemberをはずして、直接のpropertyにする
-
-//リングを遅延レンダリングして、screenに重ねて描画してみる.しかも、DEPTHありで。
 
 
 
@@ -697,8 +691,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myTextures.join(gl,nameTextureObserve);
 	myTextures.niku_stand2.readFile("niku_stand2.png");
 
-	var nameTextureWhite = "white";
-	var nameTextureAtomosphere = "white";
+	/** texture for axis and atomosphere **/
+	const nameTextureAxis = "white";
+	const nameTextureAtomosphere = "white";
 	myTextures.join(gl,nameTextureAtomosphere);
 	myTextures.white.readFile("white.png");
 
@@ -721,578 +716,1084 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	//エラー対策しておかないとどこをどう修正/追加すればよいのかわからず、後で使えなくなる恐れがある
 
 	var _front_=false;
-	var _frontLength_ = 60;
+	var _frontLength_ = 6;
 
 
 
 
 
 
-
+	/**
+	 * 惑星の大きさと質量を格納 collection of the size and the mass of planets
+	 * @param {number} minifyGravity    mass x mififyGravity -> new 'mass' that you can get by 'earthMass = myFacts.planets.earth.mass' 
+	 * 					The setter recalculate all mass of members in myFacts.planets
+	 * @param {number} minifySize	is as same as above
+	**/
 
 	(function(){
-		myBall = { };
 
-		/** inner class(closure) **/
-		var mag = 0.001;
-		var Ball = function(sName,rr){
-			this.name = sName;
-			this.rr=rr;
-		};
-		Object.defineProperty(Ball.prototype,'radius',{
-			get:function(){return this.rr*mag;},
-			set:function(value){this.rr=value;},
-			enumerable:true,configurable:false
+		dataPlanetJS=null;//dummy
+		libFileRelationship.create('dataPlanetJS');
+		libFileRelationship.dataPlanetJS.relatedTo='myFacts';
+//●
+		myFacts = { };
+//●
+
+		//'emumerable' property is very sufficient to fix bugs!!!!
+
+		let minifyGravity=1.0;//0.001 ~ 1
+		let minifySize=1.0;//000000000000000000????????????
+
+
+		Object.defineProperty(myFacts,'planets',{value:{ },writable:false,enumerable:true,configurable:false});
+
+		Object.defineProperty(myFacts.planets,'minifyGravity',{
+			get:function(){return minifyGravity;},
+			set:function(nn){
+				minifyGravity=nn;
+				for(let member in myFacts.planets)myFacts.planets[member].renewMass();
+			},
+			enumerable:false,configurable:false
 		});
 
-		/** class **/
-		Object.defineProperty(myBall,'join',{value:join,writable:false,enumerable:false,configurable:false});
-		function join(sName,radius){
-			Object.defineProperty(myBall,sName,{value:new Ball(sName,radius),writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(myFacts.planets,'minifySize',{
+			get:function(){return minifySize;},
+			set:function(nn){
+				minifySize=nn;
+				for(let member in myFacts.planets)myFacts.planets[member].renewRadius();
+			},
+			enumerable:false,configurable:false
+		});
+
+		Object.defineProperty(myFacts.planets,'exports',{
+			set:function(sName){
+				Object.defineProperty(myFacts.planets,sName,{value:new Planet(sName),writable:false,enumerable:true,configurable:false});
+			},
+			enumerable:false,configurable:false
+		});
+
+		//class
+		function Planet(sName){
+				this.name = sName;
+				this.rr;//radius
+				this.mm;//mass
+				this.revrr;//average revolution radius
+				this.rr_now;
+				this.mm_now;
+				this.revrr_now;
 		};
+		Object.defineProperty(Planet.prototype,'radius',{
+			get:function(){return this.rr_now;},
+			set:function(nn){this.rr = nn;this.rr_now = nn * minifySize},
+			enumerable:false,configurable:false
+		});
+		Object.defineProperty(Planet.prototype,'mass',{
+			get:function(){return this.mm_now;},
+			set:function(nn){this.mm = nn;this.mm_now = nn * minifyGravity},
+			enumerable:false,configurable:false
+		});
+		Object.defineProperty(Planet.prototype,'revRadius',{
+			get:function(){return this.revrr_now;},
+			set:function(nn){this.revrr = nn;this.revrr_now = nn * minifySize},
+			enumerable:false,configurable:false
+		});
+		Planet.prototype.renewRadius = function(){
+			this.rr_now = this.rr * minifySize;
+			this.revrr_now = this.revrr * minifySize;
+		};
+		Planet.prototype.renewMass = function(){
+			this.mm_now = this.mm * minifyGravity;
+		};
+		
 	})();
 
-	
-//	myBall.join("sun",695508);
-	myBall.join("sun",695508);//dummy
-
-	myBall.join("jupiter",71492);
-	myBall.join("saturn",60268);
-		myBall.join("titan",5000);
-		myBall.join("mimas",6000);
-		myBall.join("tethys",7000);
-		myBall.join("lapetus",8000);
 
 
-	myBall.join("uranus",25559);
-	myBall.join("neptune",24764);
-	myBall.join("earth",6378);
-	myBall.join("venus",6051);
-	myBall.join("mars",3396);
-	myBall.join("mercury",2439);
-	myBall.join("moon",1738);
-	myBall.join("pluto",1195);
+	const planets = {
+		"sun":{
+			"revRadius":0,
+			"parent":"",
+			"radius":695508,
+			"mass":1.9891e+9
+		},
+		"jupiter":{
+			"revRadius":77830e+4,
+			"parent":"sun",
+			"radius":69911,
+			"mass":1.8986e+6
+		},
+		"saturn":{
+			"revRadius":142700e+4,
+			"parent":"sun",
+			"radius":58232,
+			"mass":5.683e+5
+		},
+		"uranus":{
+			"revRadius":286900e+4,
+			"parent":"sun",
+			"radius":25362,
+			"mass":86832
+		},
+		"neptune":{
+			"revRadius":44960e+4,
+			"parent":"sun",
+			"radius":24622,
+			"mass":102430
+		},
+		"earth":{
+			"revRadius":14960e+4,
+			"parent":"sun",
+			"radius":6371,
+			"mass":5973
+		},
+		"venus":{
+			"revRadius":10800e+4,
+			"parent":"sun",
+			"radius":6051,
+			"mass":4868
+		},
+		"mars":{
+			"revRadius":22790e+4,
+			"parent":"sun",
+			"radius":3390,
+			"mass":641
+		},
+		"ganymede":{
+			"revRadius":1070000,
+			"parent":"jupiter",
+			"radius":2631,
+			"mass":148
+		},
+		"titan":{
+			"revRadius":1221930,
+			"parent":"saturn",
+			"radius":2576,
+			"mass":134
+		},
+		"mercury":{
+			"revRadius":5790e+4,
+			"parent":"sun",
+			"radius":2439,
+			"mass":330
+		},
+		"kallisto":{
+			"revRadius":1883000,
+			"parent":"jupiter",
+			"radius":2410,
+			"mass":107
+		},
+		"io":{
+			"revRadius":421600,
+			"parent":"jupiter",
+			"radius":1821,
+			"mass":89
+		},
+		"moon":{
+			"revRadius":384400,
+			"parent":"earth",
+			"radius":1737,
+			"mass":73
+		},
+		"europa":{
+			"revRadius":670900,
+			"parent":"jupiter",
+			"radius":1561,
+			"mass":48
+		},
+		"triton":{
+			"revRadius":354800,
+			"parent":"neptune",
+			"radius":1353,
+			"mass":21
+		},
+		"pluto":{
+			"revRadius":591300,
+			"parent":"sun",
+			"radius":1185,
+			"mass":13
+		},
+		"iapetus":{
+			"revRadius":3560820,
+			"parent":"saturn",
+			"radius":736,
+			"mass":2
+		},
+		"tethys":{
+			"revRadius":294619,
+			"parent":"saturn",
+			"radius":533,
+			"mass":0.62
+		},
+		"mimas":{
+			"revRadius":185404,
+			"parent":"saturn",
+			"radius":198,
+			"mass":0.037
+		},
+	};
+
+const aa = 0.001;
+	myFacts.planets.minifyGravity = 1.0;
+	myFacts.planets.minifySize = aa;
 
 
+	let name;
+	for(let name in planets){
+		myFacts.planets.exports = name;
+		myFacts.planets[name].revRadius = planets[name].revRadius;
+		myFacts.planets[name].radius = planets[name].radius;
+		myFacts.planets[name].mass = planets[name].mass;
+		myFacts.planets[name].parent = planets[name].parent;
+	}
 
 
-	/** common **/
-	var brightnessCommon = 1.0;
-	var brightnessAtomosphere = 1.0;
-	var brightnessSun = 1.1;
-	var brightnessRing = 0.9;
-	var alphaCommon = 1.0;
-	var alphaAtomosphere = 0.3;
-	var alphaRing = 0.6;
+const bbb = 0.05 * planets["earth"].radius;
 
-	var cassiniFactorCommon = 0.0;
-	var cassiniFactorRing = 1.0;
 
-	var baseLightCommon = 0.0;
-	var baseLightSun = 1.0;
 
 	var colorName = myColorName.white(0.5);
+	const xyz = { };
 
-	var aMatricesNotManipulatedCommon = [];
+////////////////////////////////////// SPACE SHIP ////////////////////////////////////////////////////////
+
+//**************** PLANE ********************************************************************
+	name = "plane";
+	var namePlane = name;
+	xyz[name] = myXYZManipulation.createMember();
 
 
-		//plane
-	var xyzCenter = myXYZManipulation.createMember();
-	var aAccumeUnits = [];
-//	if(_front_){
-	if(true){
-		aAccumeUnits.push(myXYZ.translate(0,0,-20));
-		myLabel.join('plane');
-		myLabel.plane.addText(0,-1,0,"ship",colorName);
-	} else {
-		aAccumeUnits.push(myXYZ.translate(0,0,10));
-		myLabel.join('plane');
-		myLabel.plane.addText(0,-5,0,"",colorName);
+	/** matrix **/
+	var m1 = myXYZ.translate(0,0,-_frontLength_);
+	var oMatrices = {
+		modelView:[m1],		//all matrices
+		manipulatedRotation:[],	//rotation matrices in manipulated matrices
+		manipulated:[],		//all manipulated matrices
+		notManipulated:[]	//not manipulated matrices
 	};
-	var shape = myShape.hexa(gl,500);
-	UnitsToDraw.join(gl,"plane",shape,aAccumeUnits,myLabel.plane,nameTextureBase,[],[],brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+
+	/** shape **/
+	var shape = myShape.hexa(gl,0.1);
+
+	/** value **/
+	var oValuesForShader = {
+		name:name,
+		brightness:1.1,		//intensity of Sun light
+		alpha:1.,		//alpha
+		baseLight:1.,		//emmision
+		cassiniFactor:0.,	//whether ring or not
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//********************************************************************************************************
+
+///////////////////////////////////////////// SUN //////////////////////////////////////////////////////////////////////////////
+
+//**************** SUN ***********************************************************************************
+	name = "sun";
+	var nameSun = name;
+	xyz[name] = new (function(){this.x=0;this.y=0;this.z=0});//do nothing instance
+
+	/** matrix **/
+	var m1 = myXYZ.rotate(1,0,0,0,90);
+	var m2 = myXYZ.rotate(0,1,0,0.01,0);
+	var m3 = myXYZ.trans(xyz[name]);
+	var m4 = myXYZ.replaceView(xyz[namePlane]);
+	var m5 = myXYZ.translate(0,0,-_frontLength_);
+	var m6 = myXYZ.gotoOrigin();
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5],				//all matrices
+		manipulatedRotation:[m6],				//rotation matrices in manipulated matrices
+		manipulated:[m4],			//all manipulated matrices
+		notManipulated:[m1,m2,m3]		//not manipulated matrices
+	};
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	/** value **/
+	var oValuesForShader = {
+		name:name,
+		brightness:1.1,		//reflection of Sun light
+		alpha:1.,		//alpha
+		baseLight:1.,		//emmision
+		cassiniFactor:0.,	//whether ring or not
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//***********************************************************************************************
+
+////////////////////////////////////////// PLANETS /////////////////////////////////////////////////////////////
+
+{
+let m1,m2,m3,m4,m5,m6,m7;
+
+//**************** JUPITER *****************************************************************
+	name = "jupiter";
+	var nameJupiter = name;//the Jupiter has sattelites
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/planets[name].revRadius);
+
+	/** matrix **/
+	m1 = myXYZ.rotate(1,0,0,0,90);
+	m2 = myXYZ.rotate(0,1,0,1,0);
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	m4 = myXYZ.trans(xyz[nameSun]);//revolution公転
+console.log("xyz[name]=",xyz[name]);
+console.log("xyz[nameSun]=",xyz[nameSun]);
+	m5 = myXYZ.replaceView(xyz[namePlane]);//manipulate
+	m6 = myXYZ.translate(0,0,-_frontLength_);
+	m7 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
+	};
+
+	/** value **/
+	var oValuesForShader = {
+		name:name,
+		brightness:1.1,		//intensity of Sun light
+		alpha:1.,		//alpha
+		baseLight:0.,		//emmision
+		cassiniFactor:0.,	//whether ring or not
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,0,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** URANUS *****************************************************************
+	name = "uranus";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/planets[name].revRadius);
+
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** SATURN *****************************************************************
+	name = "saturn";
+	var nameSaturn = name;//the Uranus has sattelites
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/planets[name].revRadius);
+
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** NEPTUNE *****************************************************************
+	name = "neptune";
+	var nameNeptune = name;//the Uranus has sattelites
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/planets[name].revRadius);
+
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** EARTH ***********************************************************************************
+	name = "earth";
+	var nameEarth = name;
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/planets[name].revRadius);
+
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** VENUS ***********************************************************************************
+	name = "venus";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/planets[name].revRadius);
+
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** MARS ***********************************************************************************
+	name = "mars";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/planets[name].revRadius);
+
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** MERCURY ***********************************************************************************
+	name = "mercury";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/planets[name].revRadius);
+
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** PLUTO ***********************************************************************************
+	name = "pluto";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/planets[name].revRadius);
+
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+}
+
+///////////////////////////////////// sattelites ///////////////////////////////////////////////////////////////
+
+{
+let m1,m2,m3,m4,m5,m6,m7,m8;
+
+//**************** MOON OF EARTH *****************************************************************
+	name = "moon";
+	var revRadius = myFacts.planets[name].revRadius*0.1;;
+	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,0.5);
+
+	/** matrix **/
+	m1 = myXYZ.rotate(1,0,0,0,90);
+	m2 = myXYZ.rotate(0,1,0,1,0);
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	m4 = myXYZ.trans(xyz[nameEarth]);//revolution公転
+	m5 = myXYZ.trans(xyz[nameSun]);//revolution公転
+	m6 = myXYZ.replaceView(xyz[namePlane]);//manipulate
+	m7 = myXYZ.translate(0,0,-_frontLength_);
+	m8 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
+		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m6],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4,m5]	//not manipulated matrices // not necessary
+	};
+
+	/** value **/
+	var oValuesForShader = {
+		name:name,
+		brightness:1.1,		//intensity of Sun light
+		alpha:1.0,		//alpha
+		baseLight:0.,		//emmision
+		cassiniFactor:0.,	//whether ring or not
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
 
 
 
+//**************** TITAN OF SATURN *****************************************************************
+	name = "titan";
+	var revRadius = myFacts.planets[name].revRadius*0.1;
+	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,1);
 
-	/** for Sun **/
-	var nameTextureSun = "sun";
-	myTextures.join(gl,nameTextureSun);
-	myTextures.sun.readFile("sun.png");
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	m4 = myXYZ.trans(xyz[nameSaturn]);//revolution公転//var is necessary not to overwrite pointer * and to assign new memory
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
+		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m6],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4,m5]	//not manipulated matrices // not necessary
+	};
 
-	var aAccumeLightingDirectionalSun = [];//平行光源
-	aAccumeLightingDirectionalSun.push(myXYZ.gotoOrigin());
-	var aAccumeLightingPointSun = [];//点光源
-	aAccumeLightingPointSun.push(myXYZ.replaceView(xyzCenter));
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
 
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
 
-		//Sun
-	var r = myBall.sun.radius;
-//○	var xyzSun = myXYZTrigonometry.createMember();
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,0.01,0));
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius*5);
 
-//○	aAccumeUnits.push(myXYZ.trans(xyzSun));//revolution公転
-	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
 
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));
-						//	aAccumeUnits.push(myXYZ.rotate(0,1,0,    1,-1,0));
-						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));//center : sun
-						//	aAccumeUnits.push(myXYZ.none());
-	myLabel.join('sun');
-	myLabel.sun.addText(0,-5,0,"Sun",colorName);
-	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"sun",shape,aAccumeUnits,myLabel.sun,nameTextureSun,aAccumeLightingDirectionalSun,aAccumeLightingPointSun,brightnessSun,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+//****************************************************************************************
 
+//**************** MIMAS OF SATURN *****************************************************************
+	name = "mimas";
+	var revRadius = myFacts.planets[name].revRadius*0.5;
+	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,1);
 
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
+		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m6],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4,m5]	//not manipulated matrices // not necessary
+	};
 
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
 
-	/** common **/
-	var aAccumeLightingDirectional = [];//平行光源
-	aAccumeLightingDirectional.push(myXYZ.replaceViewNotTrans(xyzCenter));//---uManipulatedNotTransMatrix//視点を置き換える行列の中で、translationを含まない行列
-	var aAccumeLightingPoint = [];//点光源
-	aAccumeLightingPoint.push(myXYZ.replaceView(xyzCenter));//---uManipulatedMatrix
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
 
-		//Earth
-	var nameTextureBase = "earth";
-	myTextures.join(gl,nameTextureBase);
-	myTextures.earth.readFile("earth.png");
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius*5);
 
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
 
-	var r = myBall.earth.radius;
-	var xyzEarth = myXYZTrigonometry.createMember(800,600,1);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));
+//****************************************************************************************
 
-	aAccumeUnits.push(myXYZ.trans(xyzEarth));//revolution公転
-	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+//**************** TETHYS OF SATURN *****************************************************************
+	name = "tethys";
+	var revRadius = myFacts.planets[name].revRadius*0.4;
+	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,1);
 
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));
-						//	aAccumeUnits.push(myXYZ.rotate(0,1,0,    1,-1,0));
-						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));//center : sun
-						//	aAccumeUnits.push(myXYZ.none());
-	myLabel.join('earth');
-	myLabel.earth.addText(0,-5,0,"Earth",colorName);
-	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"earth",shape,aAccumeUnits,myLabel.earth,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
+		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m6],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4,m5]	//not manipulated matrices // not necessary
+	};
 
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
 
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
 
-	/** Atomosphere of Earth **/
-/*
-	//not texture but color
-	var r = myBall.earth.radius*1.05;
-	var xyz = myXYZTrigonometry.createMember(800,600,1);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));
-//	aAccumeUnits.push(myXYZ.trans(xyzEarth));//revolution公転
-//	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));
-						//	aAccumeUnits.push(myXYZ.rotate(0,1,0,    1,-1,0));
-						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));//center : sun
-						//	aAccumeUnits.push(myXYZ.none());
-	myLabel.join("atomosphere");
-	myLabel.atomosphere.addText(0,-5,0,"",colorName);
-//	var shape = myShape.hexa(gl,r);
-	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"atmosphere",shape,aAccumeUnits,myLabel.atomosphere,nameTextureAtomosphere,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessAtomosphere,alphaAtomosphere);
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius*20);
 
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
 
-*/
-
-
-	/** Jupiter **/
-	var nameTextureJupiter = "jupiter";
-	myTextures.join(gl,nameTextureJupiter);
-	myTextures.jupiter.readFile("jupiter.png");
-
-	var r = myBall.jupiter.radius;
-	var xyz = myXYZTrigonometry.createMember(800,600,1);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
-	var aMatricesNotManipulatedJupiter = [];
-	aMatricesNotManipulatedJupiter.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aMatricesNotManipulatedJupiter.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulatedJupiter.push(myXYZ.trans(xyz));//revolution公転
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(myXYZ.axisY(1));
-						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
-						//	aAccumeUnits.push(myXYZ.none());
-	myLabel.join('jupiter');
-	myLabel.jupiter.addText(0,0,0,"Jupitor",colorName);//kkk
-	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"jupiter",shape,aAccumeUnits,myLabel.jupiter,nameTextureJupiter,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedJupiter);
+//****************************************************************************************
 
 
-	var aMatricesNotManipulatedCommon = [];
-	aMatricesNotManipulatedCommon.push(myXYZ.rotate(1,0,0,0,90));
-	aMatricesNotManipulatedCommon.push(myXYZ.rotate(0,1,0,1,0));
-	aMatricesNotManipulatedCommon.push(myXYZ.trans(xyz));
+//**************** IAPETUS OF SATURN *****************************************************************
+	name = "iapetus";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/planets[name].revRadius);
 
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
+		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m6],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4,m5]	//not manipulated matrices // not necessary
+	};
 
-	/** Moon **/
-	var nameTextureMoon = "moon";
-	myTextures.join(gl,nameTextureMoon);
-	myTextures.moon.readFile("moon.png");
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
 
-	var r = myBall.moon.radius;
-	var xyz = myXYZTrigonometry.createMember(800,600,1);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(myXYZ.axisY(1));
-						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
-						//	aAccumeUnits.push(myXYZ.none());
-	myLabel.join('moon');
-	myLabel.moon.addText(0,0,0,nameTextureMoon,colorName);//kkk
-	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"moon",shape,aAccumeUnits,myLabel.moon,nameTextureMoon,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
 
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
 
-	/** Uranus **/
-	var nameTextureUranus = "uranus";
-	myTextures.join(gl,nameTextureUranus);
-	myTextures.uranus.readFile("uranus.png");
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
 
-	var r = myBall.uranus.radius;
-	var xyz = myXYZTrigonometry.createMember(800,600,1);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(myXYZ.axisY(1));
-						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
-						//	aAccumeUnits.push(myXYZ.none());
-	myLabel.join('uranus');
-	myLabel.uranus.addText(0,0,0,nameTextureUranus,colorName);//kkk
-	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"uranus",shape,aAccumeUnits,myLabel.uranus,nameTextureUranus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+//****************************************************************************************
 
+//**************** TRITON OF NEPTUNE *****************************************************************
+	name = "triton";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/planets[name].revRadius);
 
-	/** Venus **/
-	var nameTextureVenus = "venus";
-	myTextures.join(gl,nameTextureVenus);
-	myTextures.venus.readFile("venus.png");
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	m4 = myXYZ.trans(xyz[nameNeptune]);//revolution公転//var is necessary not to overwrite pointer * and to assign new memory
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
+		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m6],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4,m5]	//not manipulated matrices // not necessary
+	};
 
-	var r = myBall.venus.radius;
-	var xyz = myXYZTrigonometry.createMember(800,600,1);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(myXYZ.axisY(1));
-						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
-						//	aAccumeUnits.push(myXYZ.none());
-	myLabel.join('venus');
-	myLabel.venus.addText(0,0,0,nameTextureVenus,colorName);//kkk
-	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"venus",shape,aAccumeUnits,myLabel.venus,nameTextureVenus,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
 
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
 
-	/** Mars **/
-	var nameTextureMars = "mars";
-	myTextures.join(gl,nameTextureMars);
-	myTextures.mars.readFile("mars.png");
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
 
-	var r = myBall.mars.radius;
-	var xyz = myXYZTrigonometry.createMember(800,600,1);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(myXYZ.axisY(1));
-						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
-						//	aAccumeUnits.push(myXYZ.none());
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
 
-	myLabel.join('mars');
-	myLabel.mars.addText(0,0,0,nameTextureMars,colorName);//kkk
-	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"mars",shape,aAccumeUnits,myLabel.mars,nameTextureMars,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+//****************************************************************************************
 
+//**************** GANYMEDE OF JUPITER *****************************************************************
+	name = "ganymede";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/planets[name].revRadius);
 
-	/** Neptune **/
-	var nameTextureNeptune = "neptune";
-	myTextures.join(gl,nameTextureNeptune);
-	myTextures.neptune.readFile("neptune.png");
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	m4 = myXYZ.trans(xyz[nameJupiter]);//revolution公転//var is necessary not to overwrite pointer * and to assign new memory
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
+		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m6],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4,m5]	//not manipulated matrices // not necessary
+	};
 
-	var r = myBall.neptune.radius;
-	var xyz = myXYZTrigonometry.createMember(800,600,1);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(myXYZ.axisY(1));
-						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
-						//	aAccumeUnits.push(myXYZ.none());
-	myLabel.join('neptune');
-	myLabel.neptune.addText(0,0,0,nameTextureNeptune,colorName);//kkk
-	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"neptune",shape,aAccumeUnits,myLabel.neptune,nameTextureNeptune,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
 
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
 
-	/** Mercury **/
-	var nameTextureMercury = "mercury";
-	myTextures.join(gl,nameTextureMercury);
-	myTextures.mercury.readFile("mercury.png");
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
 
-	var r = myBall.mercury.radius;
-	var xyz = myXYZTrigonometry.createMember(800,600,1);
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnits.push(myXYZ.axisY(1));
-						//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
-						//	aAccumeUnits.push(myXYZ.none());
-	myLabel.join('mercury');
-	myLabel.mercury.addText(0,0,0,nameTextureMercury,colorName);//kkk
-	var shape = myShape.sphere(gl,r);
-	UnitsToDraw.join(gl,"mercury",shape,aAccumeUnits,myLabel.mercury,nameTextureMercury,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
 
+//****************************************************************************************
 
+//**************** KALLISTO OF JUPITER *****************************************************************
+	name = "kallisto";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/planets[name].revRadius);
 
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
+		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m6],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4,m5]	//not manipulated matrices // not necessary
+	};
 
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
 
-//:tex
-		myTextures.join(gl,"lapetus");
-		myTextures.lapetus.readFile("lapetus.png");
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
 
-	/** Saturn **/
-	var nameTextureSaturn = "saturn";
-	myTextures.join(gl,nameTextureSaturn);
-	myTextures.saturn.readFile("saturn.png");
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
 
-	var r = myBall.saturn.radius;
-	var xyzSaturn = myXYZTrigonometry.createMember(800,200,0.2);
-	var aAccumeUnitsSaturn = [];
-	aAccumeUnitsSaturn.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnitsSaturn.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnitsSaturn.push(myXYZ.trans(xyzSaturn));//revolution公転
-	aAccumeUnitsSaturn.push(myXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnitsSaturn.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-						//	aAccumeUnitsSaturn.push(myXYZ.axisY(1));
-						//	aAccumeUnitsSaturn.push(myXYZ.translate(0,0,-50));
-						//	aAccumeUnitsSaturn.push(myXYZ.none());
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
 
-	var aMatricesNotManipulatedSaturn = [];
-	aMatricesNotManipulatedSaturn.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aMatricesNotManipulatedSaturn.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulatedSaturn.push(myXYZ.trans(xyzSaturn));//revolution公転
+//****************************************************************************************
 
-	myLabel.join('saturn');
-	myLabel.saturn.addText(0,0,0,nameTextureSaturn,colorName);//kkk
+//**************** IO OF JUPITER *****************************************************************
+	name = "io";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/planets[name].revRadius);
 
-//●for shape test
-//	var shape = myShape.sphere(gl,r);
-//	var shape = myShape.tetra(gl,r);
-//	var shape = myShape.cylindricalCalumn(gl,r,r);
-//	var shape = myShape.hexa(gl,r);
-	var shape = myShape.triangle(gl,[10,10,130],[150,100,100],[-100,-150,-100],[1,1,1,1]);
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
+		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m6],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4,m5]	//not manipulated matrices // not necessary
+	};
 
-	UnitsToDraw.join(gl,"saturn",shape,aAccumeUnitsSaturn,myLabel.saturn,nameTextureSaturn,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedSaturn);
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
 
-	/** Ring **/
-	var nameTextureRing = "ring";
-	myTextures.join(gl,nameTextureRing);
-	myTextures.ring.readFile("ring.png");
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
 
-	var rOut = myBall.saturn.radius*2.327;
-	var rIn = myBall.saturn.radius*1.116086;
-	var aAccumeUnitsRing = aAccumeUnitsSaturn;
-	var aMatricesNotManipulatedRing = aMatricesNotManipulatedSaturn;
-	myLabel.join('ring');
-	myLabel.ring.addText(0,0,0,"",colorName);//kkk
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+
+//****************************************************************************************
+
+//**************** EUROPA OF JUPITER *****************************************************************
+	name = "europa";
+	var revRadius = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/planets[name].revRadius);
+
+	/** matrices **/
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
+		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m6],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4,m5]	//not manipulated matrices // not necessary
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+
+//****************************************************************************************
+}
+
+///////////////////////////////////////////////////// RING OF SATURN /////////////////////////////////////////////////////////////////
+{
+
+//**************RING OF SATURN *****************************************************************
+	name = "ring";
+//	xyz[name] = myXYZTrigonometry.createMember(0,0,bbb/planets[name].revRadius);
+
+	/** matrix **/
+	let m1 = myXYZ.rotate(1,0,0,0,90);
+	let m2 = myXYZ.rotate(0.2,1,0.2,0.5,0);
+	let m3 = myXYZ.trans(xyz[nameSaturn]);//revolution公転
+	let m4 = myXYZ.trans(xyz[nameSun]);//revolution of the Sun
+	let m5 = myXYZ.replaceView(xyz[namePlane]);//manipulate
+	let m6 = myXYZ.translate(0,0,-_frontLength_);
+	let m7 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]		//not manipulated matrices // not necessary
+	};
+
+	/** value **/
+	var oValuesForShader = {
+		name:name,
+		brightness:.9,		//intensity of Sun light
+		alpha:.6,		//alpha
+		baseLight:1.,		//emmision ??????????????????????????????????????
+		cassiniFactor:1.,	//whether ring or not
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(10,-5,0,name,colorName);
+
+	/** shape **/
+	var radius = myFacts.planets[nameSaturn].radius;
+	var rOut = radius*2.327;
+	var rIn = radius*1.116086;
 	var shape = myShape.ring(gl,rIn,rOut);
-	UnitsToDraw.join(gl,"ring",shape,aAccumeUnitsRing,myLabel.ring,nameTextureRing,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessRing,alphaRing,baseLightSun,cassiniFactorRing,aMatricesNotManipulatedRing);
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+}
+//****************************************************************************************
 
 
-	/** Titan **/
-	var nameTextureTitan = "titan";
-	myTextures.join(gl,nameTextureTitan);
-	myTextures.titan.readFile("titan.png");
-
-	var radius = myBall.titan.radius;
-	var xyz = myXYZTrigonometry.createMember(myBall.saturn.radius*3.7,5,3);
-
-	var aAccumeUnitsTitan = [];
-	aAccumeUnitsTitan.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnitsTitan.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnitsTitan.push(myXYZ.trans(xyz));//revolution公転
-	aAccumeUnitsTitan.push(myXYZ.trans(xyzSaturn));//revolution公転
-	aAccumeUnitsTitan.push(myXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnitsTitan.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-
-	var aMatricesNotManipulatedTitan = [];
-	aMatricesNotManipulatedTitan.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aMatricesNotManipulatedTitan.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulatedTitan.push(myXYZ.trans(xyz));//revolution公転
-	aMatricesNotManipulatedTitan.push(myXYZ.trans(xyzSaturn));//revolution公転
-
-	myLabel.join('titan');
-	myLabel.titan.addText(0,0,0,"titan",colorName);//kkk
-	var shape = myShape.sphere(gl,radius);
-	UnitsToDraw.join(gl,"titan",shape,aAccumeUnitsTitan,myLabel.titan,nameTextureTitan,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedTitan);
-
-	/** Mimas **/
-	var nameTextureMimas = "mimas";
-	myTextures.join(gl,nameTextureMimas);
-	myTextures.mimas.readFile("mimas.png");
-
-	var radius = myBall.mimas.radius;
-	var xyz = myXYZTrigonometry.createMember(myBall.saturn.radius*2.9,5,4);
-
-	var aAccumeUnitsMimas = [];
-	aAccumeUnitsMimas.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnitsMimas.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnitsMimas.push(myXYZ.trans(xyz));//revolution公転
-	aAccumeUnitsMimas.push(myXYZ.trans(xyzSaturn));//revolution公転
-	aAccumeUnitsMimas.push(myXYZ.replaceView(xyzCenter));
-	if(_front_)aAccumeUnitsMimas.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-
-	var aMatricesNotManipulatedMimas = [];
-	aMatricesNotManipulatedMimas.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aMatricesNotManipulatedMimas.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulatedMimas.push(myXYZ.trans(xyz));//revolution公転
-	aMatricesNotManipulatedMimas.push(myXYZ.trans(xyzSaturn));//revolution公転
-
-	myLabel.join('mimas');
-	myLabel.mimas.addText(0,0,0,"mimas",colorName);//kkk
-	var shape = myShape.sphere(gl,radius);
-	UnitsToDraw.join(gl,"mimas",shape,aAccumeUnitsMimas,myLabel.mimas,nameTextureMimas,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedMimas);
-
-	/** Tethys **/
-	var nameTextureTethys = "tethys";
-	myTextures.join(gl,nameTextureTethys);
-	myTextures.tethys.readFile("tethys.png");
-
-	var radius = myBall.tethys.radius;
-	var xyz = myXYZTrigonometry.createMember(myBall.saturn.radius*1.2,5,7);
-
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
-	aAccumeUnits.push(myXYZ.trans(xyzSaturn));//center of revolution
-	aAccumeUnits.push(myXYZ.replaceView(xyzCenter));//manipulate
-	if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-
-	var aMatricesNotManipulated = [];
-	aMatricesNotManipulated.push(myXYZ.rotate(1,0,0,0,90));//rotation自転
-	aMatricesNotManipulated.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-	aMatricesNotManipulated.push(myXYZ.trans(xyz));//center of revolution
-	aMatricesNotManipulated.push(myXYZ.trans(xyzSaturn));//revolution公転
-
-	myLabel.join('tethys');
-	myLabel.tethys.addText(0,0,0,"tethys",colorName);//kkk
-	var shape = myShape.sphere(gl,radius);
-	UnitsToDraw.join(gl,"tethys",shape,aAccumeUnits,myLabel.tethys,nameTextureTethys,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorRing,aMatricesNotManipulated);
+///////////////////////////// ATOMOSPHERE OF EARTH /////////////////////////////////////////////////////////////////////////////////////
 
 
+//**************** ATOMOSPHERE *****************************************************************
+{
+	name = "atomosphere";
+//	xyz[name] = myXYZTrigonometry.createMember(500,500,bbb/planets[name].revRadius);
 
-
-	/** asteroids thrown in various random directions **/
-/*
-
-	var name;
-	for(var hh=0;hh<10;hh++){
-		var r = myBall.moon.radius;
-		var xyz = myXYZTrigonometry.createMember(800,600,1);???
-		var aAccumeUnits = [];
-		aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
-			aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
-			aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
-			if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
-							//	aAccumeUnits.push(myXYZ.axisY(1));
-							//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
-							//	aAccumeUnits.push(myXYZ.none());
-		name="st"+hh.toString();
-		myLabel.join(name);
-		myLabel[name].addText(0,0,0,hh.toString(),colorName);//kkk
-		var shape = myShape.sphere(gl,r);
-		UnitsToDraw.join(gl,name,shape,aAccumeUnits,myLabel[name],nameTextureAsteroid,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	/** matrix **/
+	let m1 = myXYZ.rotate(1,0,0,0,90);
+	let m2 = myXYZ.rotate(0,1,0,1,0);
+	let m3 = myXYZ.trans(xyz[nameEarth]);//revolution公転
+	let m4 = myXYZ.trans(xyz[nameSun]);//revolution of the Sun
+	let m5 = myXYZ.replaceView(xyz[namePlane]);//manipulate
+	let m6 = myXYZ.translate(0,0,-_frontLength_);
+	let m7 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]		//not manipulated matrices // not necessary
 	};
 
-*/
+	/** value **/
+	var oValuesForShader = {
+		name:name,
+		brightness:1.1,		//intensity of Sun light
+		alpha:.3,		//alpha
+		baseLight:1.,		//emmision
+		cassiniFactor:0.,	//whether ring or not
+	};
 
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
 
-	/* These two kinds of objects below must always be lit from right(90 degree) angle ,so that they are lighten most brightly*/
-	/* In other words,they must be always lit brightly.(e.g. indicater , axes and so on) */
-	/** common **/
-	var aAccumeLightingDirectional = [];
-	aAccumeLightingDirectional.push(myXYZ.translate(1.0,1.0,1.0));//Light is put at (1 1 1)
-	aAccumeLightingDirectional.push(myXYZ.replaceViewNotTrans(xyzCenter));//always (1 1 1) as same relationship of positionning
-	aAccumeLightingPoint = [];
+	/** shape **/
+	var radius = myFacts.planets[nameEarth].radius * 1.05;
+	var shape = myShape.sphere(gl,radius);
 
-	//stars far from planet
-/*
+	UnitsToDraw.join(gl,name,nameTextureAtomosphere,shape,oMatrices,oValuesForShader);
+}
+//****************************************************************************************
 
-//use cube map
+//////////////////////////////////////////////////////// axes ////////////////////////////////////////////////////////
+/* These two kinds of objects below must always be lit from right(90 degree) angle ,so that they are lighten most brightly*/
+/* In other words,they must be always lit brightly.(e.g. indicater , axes and so on) */
+{
+	let m1,m2;
+//**************** BACK *****************************************************************
+	name = "back";
 
+	/** matrix **/
+	m1 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	m2 = myXYZ.translate(-15,-15,-30);
+	var oMatrices = {
+		modelView:[m1,m2],	//all matrices
+		manipulatedRotation:[],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[]		//not manipulated matrices // not necessary
+	};
 
-	var spread=100;
-	var p1,r1,t1;
-	for(var hh=0;hh<100;hh++){
-		var aAccumeUnits=[];
-		aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
-		if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));
-llllllllll		myLabel.join('');
-		//labels.addText(0,0,-10,"hexa",colorName);
-		r1 = 1000*Math.random()+1000;
-		t1 = 3.141592653*2*Math.random();
-		t2 = 3.141592653*Math.random()-1.5707963265;
-		r2 = r1*Math.cos(t2);
-		p1 = [r2*Math.cos(t1),r2*Math.sin(t1),r1*Math.sin(t2)];
-		var shape = myShape.point(gl,p1,myColorName.purple(1));
-		UnitsToDraw.join(gl,"star"+hh.toString(),shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
-	}
-*/
+	/** value **/
+	var oValuesForShader = {
+		name:name,
+		brightness:1.1,		//intensity of Sun light
+		alpha:1.,		//alpha
+		baseLight:1.,		//emmision
+		cassiniFactor:0.,	//whether ring or not
+	};
 
-	/** x,y,z axes **/
-//feature
-//myLabel.join('axes');
-//	myLabel.back.addText(0,0,5,"back",colorName);
-//	myLabel.up.axes.addText(0,5,0,"up",colorName);
-//	myLabel.axes.addText(5,0,0,"right",colorName);
-//var shape = myShape.axes(gl,5,myColorName.white(1));// embeded three axes in one shape
-//
-	var aAccumeUnits = [];
-	aAccumeUnits.push(myXYZ.replaceViewNotTrans(xyzCenter));
-	aAccumeUnits.push(myXYZ.translate(-15,-15,-30));
-	myLabel.join('back');
-	myLabel.back.addText(0,0,5,"back",colorName);
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,0,5,name,colorName);
+
+	/** shape **/
 	var shape = myShape.line(gl,[0,0,0],[0,0,5],myColorName.magenta(1));
-		UnitsToDraw.join(gl,"back",shape,aAccumeUnits,myLabel.back,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
-	myLabel.join('up');
-	myLabel.up.addText(0,5,0,"up",colorName);
+
+	UnitsToDraw.join(gl,name,nameTextureAxis,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** UP *****************************************************************
+	name = "up";
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,5,0,name,colorName);
+
+	/** shape **/
 	var shape = myShape.line(gl,[0,0,0],[0,5,0],myColorName.magenta(1));
-		UnitsToDraw.join(gl,"up",shape,aAccumeUnits,myLabel.up,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
-	myLabel.join('right');
-	myLabel.right.addText(5,0,0,"right",colorName);
+
+	UnitsToDraw.join(gl,name,nameTextureAxis,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** RIGHT *****************************************************************
+	name = "right";
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(5,0,0,name,colorName);
+
+	/** shape **/
 	var shape = myShape.line(gl,[0,0,0],[5,0,0],myColorName.magenta(1));
-		UnitsToDraw.join(gl,"right",shape,aAccumeUnits,myLabel.right,nameTextureWhite,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightSun,cassiniFactorCommon,aMatricesNotManipulatedCommon);
 
+	UnitsToDraw.join(gl,name,nameTextureAxis,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+}
 
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	/** observer **/
@@ -1323,6 +1824,53 @@ llllllllll		myLabel.join('');
 */
 
 
+	/** asteroids thrown in various random directions **/
+/*
+
+	var name;
+	for(var hh=0;hh<10;hh++){
+		var r = myFacts.planets.moon.radius;
+		var xyz = myXYZTrigonometry.createMember(800,600,1);???
+		var aAccumeUnits = [];
+		aAccumeUnits.push(myXYZ.rotate(0,1,0,1,0));//rotation自転
+			aAccumeUnits.push(myXYZ.trans(xyz));//revolution公転
+			aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+			if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));//seen from the distance
+							//	aAccumeUnits.push(myXYZ.axisY(1));
+							//	aAccumeUnits.push(myXYZ.translate(0,0,-50));
+							//	aAccumeUnits.push(myXYZ.none());
+		name="st"+hh.toString();
+		myLabel.join(name);
+		myLabel[name].addText(0,0,0,hh.toString(),colorName);//kkk
+		var shape = myShape.sphere(gl,r);
+		UnitsToDraw.join(gl,name,name,shape,aAccumeUnits,myLabel[name],nameTextureAsteroid,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	};
+
+*/
+
+
+/*
+
+//use cube map
+
+
+	var spread=100;
+	var p1,r1,t1;
+	for(var hh=0;hh<100;hh++){
+		var aAccumeUnits=[];
+		aAccumeUnits.push(myXYZ.replaceView(xyzCenter));
+		if(_front_)aAccumeUnits.push(myXYZ.translate(0,0,-_frontLength_));
+llllllllll		myLabel.join('');
+		//labels.addText(0,0,-10,"hexa",colorName);
+		r1 = 1000*Math.random()+1000;
+		t1 = 3.141592653*2*Math.random();
+		t2 = 3.141592653*Math.random()-1.5707963265;
+		r2 = r1*Math.cos(t2);
+		p1 = [r2*Math.cos(t1),r2*Math.sin(t1),r1*Math.sin(t2)];
+		var shape = myShape.point(gl,p1,myColorName.purple(1));
+		UnitsToDraw.join(gl,"star"+hh.toString(),shape,aAccumeUnits,labels,nameTextureBase,aAccumeLightingDirectional,aAccumeLightingPoint,brightnessCommon,alphaCommon,baseLightCommon,cassiniFactorCommon,aMatricesNotManipulatedCommon);
+	}
+*/
 
 
 

@@ -177,7 +177,7 @@ var aUniforms = [
 // ************************************************************************************************************************************************
 
 //drawSaturnWithRectangleTextureOnDarkSide:function(gl,sNameSaturn,angle,sNameShader){
-var auFunction = function(gl,angle,sNameSaturn){
+var auFunction = function(gl,angle,sNameSaturn,radiusOfSaturn){    //to draw full of saturn on screen
 
 		var member,pmat,mvmat,nmmat;
 		member = UnitsToDraw[sNameSaturn];
@@ -194,7 +194,7 @@ var auFunction = function(gl,angle,sNameSaturn){
 		mySendMatrix.modelViewInversedTransposed(myShaders[sNameOfShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
 		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
 
-		myShaders[sNameOfShader].uniform.uRadiusOfSaturn.sendFloat(myBall[sNameSaturn].radius);//kkk to check
+		myShaders[sNameOfShader].uniform.uRadiusOfSaturn.sendFloat(radiusOfSaturn);//kkk to check
 
 		myShaders[sNameOfShader].uniform.uBaseLight.sendFloat(member.baseLight);
 		/** Tofragment shader **/

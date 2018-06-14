@@ -259,7 +259,7 @@ var aUniforms = [
 
 
 //drawSaturnWithRoundedTextureOnLightSide:function(gl,sNameSaturn,angle,sNameShader){
-var auFunction = function(gl,sNameSaturn,angle){
+var auFunction = function(gl,sNameSaturn,angle,radiusOfSaturn){
 
 	var member,pmat,mvmat,nmmat;
 		member = UnitsToDraw[sNameSaturn];
@@ -275,7 +275,7 @@ var auFunction = function(gl,sNameSaturn,angle){
 		mySendMatrix.modelViewInversedTransposed(myShaders[sNameOfShader].uniform.uModelViewMatrixInversedTransposed,mvmat);
 		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
 		nmmat = myMat4.arr;
-		mySendMatrix.perspectiveForShadow(gl,myShaders[sNameOfShader].uniform.uPerspectiveMatrixForShadow,myBall[sNameSaturn].radius,nmmat);
+		mySendMatrix.perspectiveForShadow(gl,myShaders[sNameOfShader].uniform.uPerspectiveMatrixForShadow,radiusOfSaturn,nmmat);
 		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uManipulatedMatrix,member.aAccumeUnitsLightPoint,angle);
 		myShaders[sNameOfShader].uniform.uBaseLight.sendFloat(member.baseLight);
 		/** Tofragment shader **/

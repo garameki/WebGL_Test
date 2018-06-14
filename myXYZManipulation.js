@@ -1,32 +1,10 @@
 ﻿libFileRelationship.create('myXYZManipulation');
 libFileRelationship.myXYZManipulation.relatedTo='myMat4';
+libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
+
 
 	var drawStep = 10;//milli seconds
 
-//sum=0;
-
-	var inherits = function(childCtor, parentCtor) {
-	  /** @constructor */
-	  function tempCtor() {};
-	  tempCtor.prototype = parentCtor.prototype;
-	  childCtor.superClass_ = parentCtor.prototype;
-	  childCtor.prototype = new tempCtor();
-	  /** @override */
-	  childCtor.prototype.constructor = childCtor;
-	};
-
-	//class
-	function SuperMember(){
-
-	};
-	SuperMember.prototype.x = void 0;
-	SuperMember.prototype.y = void 0;
-	SuperMember.prototype.z = void 0;
-	SuperMember.prototype.reposition = function(time){
-		//interface to override
-		alert("In SuperMember reposition() was not overrided yet.  this=",this);
-	};
-	SuperMember.prototype.ratioTime = 1;
 
 	//for using under controlled space ship, follow to key board
 	(function(){
@@ -61,7 +39,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myMat4';
 		var gQ=false;
 
 		var Member = function(){
-			SuperMember.call(this);
+			myXYZ.SuperMember.call(this);
 			this.x=0;
 			this.y=0;
 			this.z=0;
@@ -92,7 +70,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myMat4';
 			this.matAccumeNotTranslated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 			this.matAccumeNotRotated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 		};
-		inherits(Member,SuperMember);
+		myXYZ.inherits(Member);
 		Object.defineProperty(Member.prototype,'thetaLR',{get:function(){return gDTurnLR*this.ratioR;}});
 		Object.defineProperty(Member.prototype,'thetaUD',{get:function(){return gDTurnUD*this.ratioR;}});
 		Object.defineProperty(Member.prototype,'thetaRoll',{get:function(){return gDRoll*this.ratioR;}});

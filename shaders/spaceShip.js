@@ -117,6 +117,7 @@ var vs = (function(){/*
 		//位置ベクトル....移動できる　回転できる
 		//方向ベクトル....回転できる
 
+//壱
 //		// How to simulate 1 directional and ambient light
 //		// prepare Normal
 //		vec4 transformedNormal = uModelViewMatrixInversedTransposed * vec4(aVertexNormal,1.0);
@@ -131,6 +132,11 @@ var vs = (function(){/*
 //		vec3 ambientLight = vec3(0.1,0.1,0.1);//This is not the direction but the intensity of color.It does not have relationship with Normal Vector in vertex data.It relates with only 'gl_Color'.
 //		//calc total
 //		vNTimesEachRGB = ambientLight + (directionalLightColor * quantity);
+
+
+
+
+//弐
 //	// a effect    please go inside of planets
 //		vec4 transformedNormal = uModelViewMatrixInversedTransposed * vec4(aVertexNormal,1.0);
 //		vec4 directional = uModelViewMatrixInversedTransposed * vec4(aVertexPosition,1.0);
@@ -139,9 +145,11 @@ var vs = (function(){/*
 //		vec3 directionalLightColor = vec3(1,1,1);//RGB intensity
 //		vec3 ambientLight = vec3(0.1,0.1,0.1);//This is not the direction but the intensity of color.It does not have relationship with Normal Vector in vertex data.It relates with only 'gl_Color'.
 //		vNTimesEachRGB = ambientLight + (directionalLightColor * quantity);
+
+
+
+
 	//point lighting
-		//prepare Normal
-		vec4 transformedNormal = uModelViewMatrixInversedTransposed * vec4(aVertexNormal,1.0);
 		
 //原点の移動後の位置を引く必要がある-->移動(by manipulation)する前の位置が、その位置
 		//prepare light vectorg
@@ -156,6 +164,9 @@ var vs = (function(){/*
 //		vec directional = vec3(2.0) * normalize(uModelViewMatrix * vec4(directional,1.0)).xyz;//(intension of light)*2//a new position of the light
 //		vec directional = normalize(uManipulatedRotationMatrix * vec4(directional,1.0)).xyz;//brightness*2//a new position of the light
 		
+
+		//prepare Normal
+		vec4 transformedNormal = uModelViewMatrixInversedTransposed * vec4(aVertexNormal,1.0);
 
 		//intensity of surface
 		float quantity = max(dot(normalize(transformedNormal.xyz),directional.xyz),uBaseLight);//scalar quantity as the light intensity

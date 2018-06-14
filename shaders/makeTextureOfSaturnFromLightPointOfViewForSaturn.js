@@ -169,7 +169,7 @@ var aUniforms = [
 ];
 
 //makeTextureOfSaturnFromLightPointOfViewForSaturn:function(gl,sNameSaturn,angle,sNameShader){
-var auFunction = function(gl,sNameSaturn,angle){
+var auFunction = function(gl,sNameSaturn,angle,radiusOfSaturn){		//radiusOFSaturn is 1/2 of screen width to be drawn âÊñ Ç¢Ç¡ÇœÇ¢Ç…ìyêØÇï`Ç≠
 	var notManipulatedMatrix,perspectiveForShadowMatrix;
 	var member;
 
@@ -183,9 +183,9 @@ var auFunction = function(gl,sNameSaturn,angle){
 //for test	mySendMatrix.perspective(gl,myShaders[sNameOfShader].uniform.uPerspectiveMatrix);
 		mySendMatrix.accumeration(myShaders[sNameOfShader].uniform.uNotManipulatedMatrix,member.aMatricesNotManipulated,angle);
 		notManipulatedMatrix = myMat4.arr;
-		mySendMatrix.perspectiveForShadow(gl,myShaders[sNameOfShader].uniform.uPerspectiveMatrixForShadow,myBall[sNameSaturn].radius,notManipulatedMatrix);
+		mySendMatrix.perspectiveForShadow(gl,myShaders[sNameOfShader].uniform.uPerspectiveMatrixForShadow,radiusOfSaturn,notManipulatedMatrix);
 		perspectiveMatrixForShadow = myMat4.arr;
-		myShaders[sNameOfShader].uniform.uRadiusOfSaturn.sendFloat(myBall[sNameSaturn].radius);//kkk to check
+		myShaders[sNameOfShader].uniform.uRadiusOfSaturn.sendFloat(radiusOfSaturn);//kkk to check
 		// To fragment shader
 		myShaders[sNameOfShader].uniform.uSampler.sendInt(0);//gl.TEXTURE0<---variable if you prepared another texture as gl.TEXTURE1, you can use it by setting uSampler as 1.
 		myTextures[member.nameTexture].activate(0);
