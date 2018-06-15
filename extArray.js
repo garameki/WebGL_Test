@@ -22,5 +22,11 @@ libFileRelationship.create('extArray');
 		this[1] = -this[1];
 		this[2] = -this[2];
 	};
+	Object.defineProperty(Array.prototype,'mag3D',{value:mag3D,writable:false,enumerable:false,configurable:false});
+	function mag3D(nn){
+		this[0] = this[0] * nn;
+		this[1] = this[1] * nn;
+		this[2] = this[2] * nn;
+	};
 
 /* */})();

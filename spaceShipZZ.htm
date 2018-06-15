@@ -142,7 +142,7 @@ if(flagName){
 	myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
 	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
 		//var names = ["plane","up","back","right"];
-		var names = ["plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+		var names = ["velocity","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 		//var names = ["earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 		mySendAttribUniform[sNameShader](gl,names,angle);
 	myFBOs[sNameShader].inactivate();
@@ -692,10 +692,13 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	myTextures.niku_stand2.readFile("niku_stand2.png");
 
 	/** texture for axis and atomosphere **/
-	const nameTextureAxis = "white";
-	const nameTextureAtomosphere = "white";
-	myTextures.join(gl,nameTextureAtomosphere);
+	const nameTextureWhite = "white";
+	myTextures.join(gl,nameTextureWhite);
 	myTextures.white.readFile("white.png");
+
+	const nameTextureGreen = "green";
+	myTextures.join(gl,nameTextureGreen);
+	myTextures.green.readFile("green.png");
 
 	//void textures for mixing textures in shader of mixTwoTexturesWithDepthes
 	myTextures.join(gl,"ringColorBuffer");//the object be going to be drawn//こういうのが増えるといまのままでは意味もなくサーバーに負担をかけてしまうな
@@ -1725,7 +1728,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	var radius = myFacts.planets[nameEarth].radius * 1.05;
 	var shape = myShape.sphere(gl,radius);
 
-	UnitsToDraw.join(gl,name,nameTextureAtomosphere,shape,oMatrices,oValuesForShader);
+	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
 }
 //****************************************************************************************
 
@@ -1741,7 +1744,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	m1 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
 	m2 = myXYZ.translate(-15,-15,-30);
 	var oMatrices = {
-		modelView:[m1,m2],	//all matrices
+		modelView:[m2],	//all matrices
 		manipulatedRotation:[],	//accumeLightDirectional  rotation matrices in manipulated matrices
 		manipulated:[],		//accumeLightPoint        all manipulated matrices
 		notManipulated:[]		//not manipulated matrices // not necessary
@@ -1763,7 +1766,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	/** shape **/
 	var shape = myShape.line(gl,[0,0,0],[0,0,5],myColorName.magenta(1));
 
-	UnitsToDraw.join(gl,name,nameTextureAxis,shape,oMatrices,oValuesForShader);
+	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
 //****************************************************************************************
 
 //**************** UP *****************************************************************
@@ -1776,7 +1779,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	/** shape **/
 	var shape = myShape.line(gl,[0,0,0],[0,5,0],myColorName.magenta(1));
 
-	UnitsToDraw.join(gl,name,nameTextureAxis,shape,oMatrices,oValuesForShader);
+	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
 //****************************************************************************************
 
 //**************** RIGHT *****************************************************************
@@ -1789,12 +1792,43 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	/** shape **/
 	var shape = myShape.line(gl,[0,0,0],[5,0,0],myColorName.magenta(1));
 
-	UnitsToDraw.join(gl,name,nameTextureAxis,shape,oMatrices,oValuesForShader);
+	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
 //****************************************************************************************
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// INDICATOR ///////////////////////////////////////////////////////////////////////
 
+//**************** ARROW *****************************************************************
+	name = "velocity";
+
+	// this arrow is calculated at animation
+	/** matrix **/
+	m1 = myXYZ.translate(-15,-15,-30);
+	var oMatrices = {
+		modelView:[m1],	//all matrices
+		manipulatedRotation:[],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[]		//not manipulated matrices // not necessary
+	};
+
+	/** value **/
+	var oValuesForShader = {
+		name:name,
+		brightness:1.1,		//intensity of Sun light
+		alpha:1.,		//alpha
+		baseLight:1.,		//emmision
+		cassiniFactor:0.,	//whether ring or not
+	};
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,0,5,name,colorName);
+
+	/** shape **/
+	var shape = myShape.line(gl,[5,0,0],[0,0,5],myColorName.magenta(1));
+
+	UnitsToDraw.join(gl,name,nameTextureGreen,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
 
 	/** observer **/
 /*
@@ -1888,6 +1922,9 @@ llllllllll		myLabel.join('');
 			myInfo.main.span = "span="+(Math.floor(span)).toString();
 			myXYZTrigonometry.reposAll(dt);
 			myXYZManipulation.move(dt);
+			/** change shapes **/
+			UnitsToDraw.velocity.changeShape(myShape.line(gl,[0,0,0],[xyz[namePlane].speed.x*5,xyz[namePlane].speed.y*5,xyz[namePlane].speed.z*5],myColorName.magenta(1)));
+
 //			drawScene(gl,oShader.spaceShip,span);
 			drawScene(gl,span);
 			timeBefore = timeStamp;

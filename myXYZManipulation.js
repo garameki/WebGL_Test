@@ -45,13 +45,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 			this.z=0;
 
 
-			this.speed = 0;
-
-			this.speedX = 0;
-			this.speedY = 0;
-			this.speedZ = 0;
-
-
+			this.speed = [0,0,-0.3];
 
 			//axiz to rotate
 			this.frontX = 0;
@@ -71,79 +65,24 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 			this.matAccumeNotRotated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 		};
 		myXYZ.inherits(Member);
-		Object.defineProperty(Member.prototype,'thetaLR',{get:function(){return gDTurnLR*this.ratioR;}});
-		Object.defineProperty(Member.prototype,'thetaUD',{get:function(){return gDTurnUD*this.ratioR;}});
-		Object.defineProperty(Member.prototype,'thetaRoll',{get:function(){return gDRoll*this.ratioR;}});
-//		Member.prototype.upToDate = function(){
-//			this.thetaLR  =gDTurnLR*this.ratioR;
-//			this.thetaUD  =gDTurnUD*this.ratioR;
-//			this.thetaRoll=gDRoll  *this.ratioR;
-//		};
-		Member.prototype.goForward = function(){
-//accelarate		if(gDSpeed>0)this.speed+=gDSpeed*0.0001;
-//accelarate		else if(gDSpeed<0)this.speed+=gDSpeed*0.0005;
-
-//move
-			this.speed=gDSpeed*0.0001;
-//move			
-			if(this.speed>0.001)this.speed=0.001;
-			else if(this.speed<-0.001)this.speed=-0.001;
-//			else if(Math.abs(this.speed)<0.0002)this.speed=0;
-
-			var length = 1/Math.pow(this.frontX*this.frontX+this.frontY*this.frontY+this.frontZ*this.frontZ,0.5);
-		//	this.x+=this.frontX*length*this.speed;
-		//	this.y+=this.frontY*length*this.speed;
-		//	this.z-=gDSpeed*0.0001;//this.frontZ*length*this.speed;
-		//●	this.z-=gDSpeed*0.01;//this.frontZ*length*this.speed;
-			this.z-=gDSpeed*0.01;//this.frontZ*length*this.speed;
-		};
-		Member.prototype.turnLR = function(){
-			var theta = gDTurnLR*this.ratioR;
-/*
-			var theta = -gDTurnLR*this.ratioR;
-			var point = myMat4.rotXYZ(this.topX,this.topY,this.topZ,theta,this.frontX,this.frontY,this.frontZ)
-			this.frontX=point[0];
-			this.frontY=point[1];
-			this.frontZ=point[2];
-			var ux=this.frontX,uy=this.frontY,uz=this.frontZ,vx=this.topX,vy=this.topY,vz=this.topZ;
-			this.rightX=uy*vz-uz*vy;
-			this.rightY=uz*vx-ux*vz;
-			this.rightZ=ux*vy-uy*vx;
-*/
-		};
-		Member.prototype.turnUD = function(){
-			var theta = -gDTurnUD*this.ratioR;
-/*
-			var theta = -gDTurnUD*this.ratioR;
-			var point = myMat4.rotXYZ(this.rightX,this.rightY,this.rightZ,theta,this.frontX,this.frontY,this.frontZ)
-			this.frontX=point[0];
-			this.frontY=point[1];
-			this.frontZ=point[2];
-			var ux=this.rightX,uy=this.rightY,uz=this.rightZ,vx=this.frontX,vy=this.frontY,vz=this.frontZ;
-			this.topX=uy*vz-uz*vy;
-			this.topY=uz*vx-ux*vz;
-			this.topZ=ux*vy-uy*vx;
-*/
-		};
-		Member.prototype.roll = function(){
-			var theta = gDRoll*this.ratioR;
-/*
-			var point = myMat4.rotXYZ(this.frontX,this.frontY,this.frontZ,theta,this.topX,this.topY,this.topZ)
-			this.topX=point[0];
-			this.topY=point[1];
-			this.topZ=point[2];
-			var ux=this.frontX,uy=this.frontY,uz=this.frontZ,vx=this.topX,vy=this.topY,vz=this.topZ;
-			this.rightX=uy*vz-uz*vy;
-			this.rightY=uz*vx-ux*vz;
-			this.rightZ=ux*vy-uy*vx;
-*/
+		Member.prototype.upToDate = function(){
+			this.speed[2] += gDSpeed * 0.01;
+			this.thetaLR  = -gDTurnLR*this.ratioR;
+			this.thetaUD  = -gDTurnUD*this.ratioR;
+			this.thetaRoll=  gDRoll  *this.ratioR;
 		};
 
 		var hero = new Member();//only one member is allowed to be made
-
+		var flagSeatReserved = false;
 		Object.defineProperty(myXYZMani,'createMember',{value:createMember});
 		function createMember(){
-			return hero;
+			if(!flagSeatReserved){
+				flagSeatReserved = true;
+				return hero;
+			}else{
+				 console.error("myXYZManipulation.createMember() can't be done.The seat have already been reserved.");
+				return null;
+			}
 		};
 
 		Object.defineProperty(myXYZMani,'move',{value:move(hero)});
@@ -154,52 +93,50 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 				var n = Math.floor(sumRemainder/drawStep);//何回移動させるか
 				sumRemainder=sumRemainder%drawStep;
 
+
 				//accumerate all motions
-				myMat4.load(member.matAccume);
 				for(var ii=0;ii<n;ii++){
-					member.goForward();//_a is not used
 
-					myMat4.trans(-member.x,-member.y,-member.z);//これがなければいつも前に表示される//ここでvecz=vecz+this.zが行われる
-//sum+=member.y;
-//console.log("accumeMotionsXYZ.js sum=",sum);
-					member.turnUD();//_a is not used
-					myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
-					member.turnLR();//_a is not used
-					myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
-					member.roll();// _a is not used
-					myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
+
+					member.upToDate();
+	
+					myMat4.load(member.matAccume);
+						myMat4.trans(-member.speed.x,-member.speed.y,-member.speed.z);//これがなければいつも前に表示される
+						myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
+						myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
+						myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
+					myMat4.storeTo(member.matAccume);
+
+					//accumerate rotation only
+					myMat4.load(member.matAccumeNotTranslated);
+						//myMat4.trans(-member.speedX,-member.speedY,-member.speedZ);//これがなければいつも前に表示される
+						myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
+						myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
+						myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
+					myMat4.storeTo(member.matAccumeNotTranslated);
+	
+					//accumerate translation only
+					myMat4.load(member.matAccumeNotRotated);
+						myMat4.trans(-member.speedX,-member.speedY,-member.speedZ);//これがなければいつも前に表示される
+						//myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
+						//myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
+						//myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
+					myMat4.storeTo(member.matAccumeNotRotated);
+
+					myMat4.loadIdentity();
+						myMat4.rot(member.rightX,member.rightY,member.rightZ,-member.thetaUD);
+						myMat4.rot(member.topX,member.topY,member.topZ,-member.thetaLR);
+						myMat4.rot(member.frontX,member.frontY,member.frontZ,-member.thetaRoll);
+					
+						const len = member.speed.length3D;
+						const x = member.speed.x;const y = member.speed.y;const z = member.speed.z;
+						const a=myMat4.arr;
+						member.speed.x = a[0]*x+a[1]*y+a[2]*z+a[3];
+						member.speed.y = a[4]*x+a[5]*y+a[6]*z+a[7];
+						member.speed.z = a[8]*x+a[9]*y+a[10]*z+a[11];
+						member.speed.normalize3D();
+						member.speed.mag3D(len);
 				}
-				myMat4.storeTo(member.matAccume);
-
-				//accumerate rotation only
-				myMat4.load(member.matAccumeNotTranslated);
-				for(var ii=0;ii<n;ii++){
-					//member.goForward();
-					//myMat4.trans(-member.x,-member.y,-member.z);//これがなければいつも前に表示される
-					myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
-					//member.turnUD();
-					myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
-					//member.turnLR();
-					myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
-					//member.roll();
-				}
-				myMat4.storeTo(member.matAccumeNotTranslated);
-
-				//accumerate translation only
-				myMat4.load(member.matAccumeNotRotated);
-				for(var ii=0;ii<n;ii++){
-					//member.goForward();
-					myMat4.trans(-member.x,-member.y,-member.z);//これがなければいつも前に表示される
-					//member.turnUD();
-					//myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
-					//member.turnLR();
-					//myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
-					//member.roll();
-					//myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
-				}
-				myMat4.storeTo(member.matAccumeNotRotated);
-
-
 			};
 		};
 

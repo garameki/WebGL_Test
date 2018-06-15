@@ -29,6 +29,8 @@ libFileRelationship['UnitsToDraw'].relatedTo='myLabel';
 	//@param {myShape.obj} shape in which there are points,color,normal vector,indeces and so on
 	//
 	function ToolBox(gl,sName,sNameTexture,shape,oMatrices,oValues){
+		this.sName = sName;
+		this.gl = gl;
 
 		/** matrix */
 		this.aAccumeUnits = oMatrices.modelView;
@@ -50,6 +52,10 @@ libFileRelationship['UnitsToDraw'].relatedTo='myLabel';
 		this.buffers = createBuffers(gl,shape,sName);
 
 
+	};
+	ToolBox.prototype.changeShape = function(shape){
+		this.draw = shape.draw;
+		this.buffers = createBuffers(this.gl,shape,this.sName);
 	};
 
 	/** inner function**/

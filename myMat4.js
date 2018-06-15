@@ -217,7 +217,7 @@
 
 	
 
-		var len=1/Math.pow(vx*vx+vy*vy+vz*vz,.5);
+		var len=1/Math.sqrt(vx*vx+vy*vy+vz*vz);
 		var vx=vx*len,vy=vy*len,vz=vz*len;
 
 		var cos = Math.cos(-theta*0.5);
@@ -354,11 +354,11 @@
 
 	Object.defineProperty(myMat4,'rotXYZ',{value:rotateXYZ});//no use of accumerator'_a'
 	function rotateXYZ(axisX,axisY,axisZ,theta,x,y,z){
-		var len=1/Math.pow(axisX*axisX+axisY*axisY+axisZ*axisZ,0.5);
+		var len=1/Math.sqrt(axisX*axisX+axisY*axisY+axisZ*axisZ);
 		var vx=axisX*len,vy=axisY*len,vz=axisZ*len;
 
-		var cos = Math.cos(-theta);
-		var sin = Math.sin(-theta);
+		var cos = Math.cos(-theta*0.5);
+		var sin = Math.sin(-theta*0.5);
 
 		var q0=cos;
 		var q1=vx*sin;
