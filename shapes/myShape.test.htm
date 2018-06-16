@@ -1,7 +1,11 @@
 ﻿<!DOCTYPE html><html lang="jp"><head><meta charset="utf-8"><title>WebGL Demo</title>
 <link rel="sylesheet" href="">
-<script type='text/javascript' src="./myColorName.js"></script>
+<script type='text/javascript' src="../libFileRelationship.js"></script>
+<script type='text/javascript' src="../extMath.js"></script>
+<script type='text/javascript' src="../myColorName.js"></script>
 <script type='text/javascript' src="./myShape.js"></script>
+<script type='text/javascript' src="./flame.js"></script>
+
 <!--Fragment shader program-->
 <script id="shader-fs" type="x-shader/x-fragment">
 	varying lowp vec4 vColor;
@@ -58,16 +62,32 @@ function start(){
 //    gl.clearColor(1.0, 1.0, 0.0, 1.0);
 //    gl.clear(gl.COLOR_BUFFER_BIT);
 }
-
-
-
-
 	var oShader = initShaders(gl);
 
 	var aModels = [];
 	var oModel = { };
 
 	_MOVE_=true;
+
+
+//******************************************** MODELS ****************************************************************************************************
+
+
+	//flame
+	var shape =myShape.flame(gl,5,2);
+	console.log("shape=",shape);
+
+	oModel.base = {
+		n:shape.n/3/2*4,
+		pos:shape.pos,
+		col:shape.col
+	};
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();
+	aModels.push(oModel);
+
+
+
 
 /*
 {
@@ -121,7 +141,7 @@ function start(){
 	aModels.push(oModel);
 */
 
-
+/*
 	//ring
 	var shape =myShape.ring(gl,5,30);
 	console.log("shape=",shape);
@@ -134,7 +154,7 @@ function start(){
 	oModel.buffers = setModelToBuffer(gl,oModel);
 	oModel.mvMat = new mvMat_random();
 	aModels.push(oModel);
-
+*/
 
 
 /*default

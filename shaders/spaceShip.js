@@ -110,6 +110,7 @@ var vs = (function(){/*
 	void main(void) {
 //Åúkkk
 		gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
+		gl_PointSize = 3.0;
 
 		vTextureCoord = aTextureCoord;
 

@@ -45,7 +45,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 			this.z=0;
 
 
-			this.speed = [0,0,-0.3];
+			this.speed = [0,0,0];
 
 			//axiz to rotate
 			this.frontX = 0;
@@ -84,6 +84,10 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 				return null;
 			}
 		};
+
+	
+	
+
 
 		Object.defineProperty(myXYZMani,'move',{value:move(hero)});
 		function move(member){
@@ -124,10 +128,12 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 					myMat4.storeTo(member.matAccumeNotRotated);
 
 					myMat4.loadIdentity();
-						myMat4.rot(member.rightX,member.rightY,member.rightZ,-member.thetaUD);
-						myMat4.rot(member.topX,member.topY,member.topZ,-member.thetaLR);
-						myMat4.rot(member.frontX,member.frontY,member.frontZ,-member.thetaRoll);
-					
+						//don't touch here
+							myMat4.rot(member.rightX,member.rightY,member.rightZ,member.thetaUD);
+							myMat4.rot(member.topX,member.topY,member.topZ,member.thetaLR);
+							myMat4.rot(member.frontX,member.frontY,member.frontZ,member.thetaRoll);
+						//
+
 						const len = member.speed.length3D;
 						const x = member.speed.x;const y = member.speed.y;const z = member.speed.z;
 						const a=myMat4.arr;
@@ -136,9 +142,43 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 						member.speed.z = a[8]*x+a[9]*y+a[10]*z+a[11];
 						member.speed.normalize3D();
 						member.speed.mag3D(len);
+
 				}
 			};
 		};
+
+		Object.defineProperty(myXYZMani,'accordingToKeyFlame',{value:accordingToKeyFlame});
+		function accordingToKeyFlame(){
+
+			return function(time){
+			//touch from here
+
+				if(false){
+					//nothing
+				
+				}else if(gR == 1){
+					myXYZ.rotate(0,0,1,0,-90)(time);
+					myXYZ.translate(0.1,0,0)(time);
+				}else if(gL == 1){
+					myXYZ.rotate(0,0,1,0,90)(time);
+					myXYZ.translate(-0.1,0,0)(time);
+				}else if(gU == 1){
+					myXYZ.rotate(1,0,0,0,0)(time);
+					myXYZ.translate(0,0.1,0)(time);
+				}else if(gD == 1){
+					myXYZ.rotate(1,0,0,0,180)(time);
+					myXYZ.translate(0,-0.1,0)(time);
+				}else if(gA == 1){
+					myXYZ.rotate(1,0,0,0,-90)(time);
+				}else if(gZ == 1){
+					myXYZ.rotate(1,0,0,0,90)(time);
+				}else{
+					 myXYZ.translate(0,0,1000)(time);
+				}
+			// to here
+			};
+		};
+
 
 		window.addEventListener('keydown',keydown,false);
 		function keydown(event){
