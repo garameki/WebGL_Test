@@ -142,10 +142,12 @@ if(flagName){
 }
 	myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
 	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
-		//var names = ["plane","up","back","right"];
-		var names = ["flame","plane"];
-		//var names = ["flame","pluto","velocity"];//,"plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
-		//var names = ["earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+		//var names = ["flame","plane","up","back","right","velocity"];
+		//var names = ["flame","plane"];
+		//var names = ["pluto","velocity","plane"];//,"earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+
+		//var names = ["velocity","flame","sun","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+
 		mySendAttribUniform[sNameShader](gl,names,angle);
 	myFBOs[sNameShader].inactivate();
 	//	myTextures["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
