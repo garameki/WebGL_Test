@@ -146,7 +146,7 @@ if(flagName){
 		//var names = ["flame","plane"];
 		//var names = ["pluto","velocity","plane"];//,"earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 
-		//var names = ["velocity","flame","sun","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+		var names = ["velocity","flame","sun","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 
 		mySendAttribUniform[sNameShader](gl,names,angle);
 	myFBOs[sNameShader].inactivate();
@@ -1058,7 +1058,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 
 	/** matrix **/
 	m1 = myXYZ.rotate(1,0,0,0,90);
-	m2 = myXYZ.rotate(0,1,0,1,0);
+	m2 = myXYZ.rotate(0,1,0,0.2,0);
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
 	m4 = myXYZ.trans(xyz[nameSun]);//revolution公転
 	m5 = myXYZ.replaceView(xyz[namePlane]);//manipulate

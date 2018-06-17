@@ -166,7 +166,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 					myMat4.loadIdentity();
 						//don't touch here
 							myMat4.rot(0,1,0,-member.thetaLR);
-							myMat4.rot(1,0,0,-member.thetaUD);
+							myMat4.rot(1,0,0,member.thetaUD);
 							myMat4.rot(0,0,1,member.thetaRoll);
 						//
 
