@@ -7,9 +7,8 @@ What's New
 ===========  
 nothing is changed to see screen  
   
-*Add Uniform Linear Motion* 
-*Change Key Assignments*
-
+*Add Uniform Linear Motion*  
+*Change Key Assignments*  
   
 INSTALL  
 -------  
