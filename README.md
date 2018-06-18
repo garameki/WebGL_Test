@@ -1,15 +1,14 @@
 SPACE SHIP  
 =======
-WebGL_Test version 1.1.11  
+WebGL_Test version 1.1.20   
 ======================  
   
 What's New  
 ===========  
 nothing is changed to see screen  
   
-only few things is changed  
-1.Add new file myLabel.js which is from old myClass.js removed now.  
-2.Rename myColor.js to myColorName.js : no contents is changed.  
+*Add Uniform Linear Motion* 
+*Change Key Assignments*
 
   
 INSTALL  
@@ -20,11 +19,13 @@ $npm start
 ```
   
 SHIP OPERATION  
-------------  
-A key----accelarate  
-Z key----decelarate  
-W key----rotate clockwise  
-Q key----rotate unclockwise  
-direction keys-----turn direction  
+------------
+Injection
+  A key----Front  
+  Z key----Back
+  arrow keys-----Up,Down,Left,Right
 
-
+Turn
+  W key----rotate clockwise  
+  Q key----rotate unclockwise  
+  Shift + arrow keys----Turn to Up,Down,Left,Right
