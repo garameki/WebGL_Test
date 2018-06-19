@@ -1,6 +1,8 @@
 ﻿libFileRelationship.create('myXYZManipulation');
 libFileRelationship.myXYZManipulation.relatedTo='myMat4';
 libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
+libFileRelationship.myXYZManipulation.relatedTo='myFacts';//defined in spaceShipZZ.htm
+
 
 
 	var drawStep = 10;//milli seconds
@@ -69,17 +71,46 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 		};
 		myXYZ.inherits(Member);
 		Member.prototype.upToDate = function(){
-			this.speed.x = this.speed.x + gInjectLR;
-			this.speed.y = this.speed.y + gInjectUD;
-			this.speed.z = this.speed.z + gInjectFB;
 
-	//		this.speed[2] += gDSpeed * 0.01;
+			//惑星の重心と引力の計算太陽の子のみ
+			let sumFx = 0;
+			let sumFy = 0;
+			let sumFz = 0;
+			const G = myFacts.planets.gravity;
+
+//console.log(myXYZTrigonometry.aMembers);
+console.log(myFacts.planets);
+
+			let aMemTs = myXYZTrigonometry.aMembers;
+			let oMemPs = myFacts.planets;
+			for(let ii in oMemPs){
+
+				let memT = aMemTs[name];
+				let memP = aMemPs[name];
+
+				if(memP.parent == "sun"){
+					let len = 1/Math.sqrt((memT.x - this.x)*(memT.x - this.x) + (memT.y -this.y)*(memT.y -this.y) + (memT.z - this.z)*(memT.z - this.z));
+					let force = -G * memP.mass * len * len * 0.0001;
+console.log("force=",force);
+					sumFx += force * len *(memT.x - this.x);
+					sumFy += force * len *(memT.y - this.y);
+					sumFz += force * len *(memT.z - this.z);
+				}
+			}
+
+
+			//calculate axes
+			this.turnLR();
+			this.turnUD();
+			this.roll();
+
+			this.speed.x = this.speed.x + gInjectLR + (this.rightAxis.x+this.topAxis.x+this.frontAxis.x)*sumFx;
+			this.speed.y = this.speed.y + gInjectUD + (this.rightAxis.y+this.topAxis.y+this.frontAxis.z)*sumFy;
+			this.speed.z = this.speed.z + gInjectFB + (this.rightAxis.z+this.topAxis.z+this.frontAxis.z)*sumFz;
+
 			this.thetaLR  = gTurnAxY;
 			this.thetaUD  = gTurnAxX;
 			this.thetaRoll= gTurnAxZ;
-	///		this.turnLR();
-	///		this.turnUD();
-	///		this.roll();
 		};
 		Member.prototype.turnLR = function(){
 			this.frontAxis = myMat4.rotXYZ(0,1,0,this.thetaLR,this.frontAxis.x,this.frontAxis.y,this.frontAxis.z)

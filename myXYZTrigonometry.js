@@ -10,7 +10,7 @@ libFileRelationship.myXYZTrigonometry.relatedTo='myMat4';
 
 
 		/** inner class **/
-		var aMember = [];
+		var aMembers = [];
 		var Member = function(){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
 			myXYZ.SuperMember.call(this);
 //○			this.rxy = 600;//*(Math.random()-0.5);
@@ -29,25 +29,26 @@ libFileRelationship.myXYZTrigonometry.relatedTo='myMat4';
 		Member.prototype.ratioTime = Math.PI*0.00555555555*0.005;
 
 		/** outer functions **/
-		Object.defineProperty(myXYZTrigonometry,'createMember',{value:createMember});
+		Object.defineProperty(myXYZTrigonometry,'createMember',{value:createMember,writable:false,enumerable:false,configurable:false});
 		function createMember(r_xy,r_z,fTimes){
 			var member = new Member();
-			aMember.push(member);
+			aMembers.push(member);
 			member.rxy = r_xy;//radius on x-y plane
 			member.rz = r_z;//radius on (x or y)-z plane
 			member.fTimes = fTimes;//回転倍率
 			return member;
 		};
-		Object.defineProperty(myXYZTrigonometry,'reposAll',{value:repositionizeAllMembers()});
+		Object.defineProperty(myXYZTrigonometry,'reposAll',{value:repositionizeAllMembers(),writable:false,enumerable:false,configurable:false});
 		function repositionizeAllMembers(){
 			var sumTime=0;
 			return function(dt){
 				sumTime+=dt;
-				for(var ii in aMember){
-					aMember[ii].reposition(sumTime);
+				for(var ii in aMembers){
+					aMembers[ii].reposition(sumTime);
 				}
 			};
 		};
+		Object.defineProperty(myXYZTrigonometry,'aMembers',{get:function(){return aMembers;}});
 
 
 	})();//trigonometric functionsotion
