@@ -1,30 +1,26 @@
 SPACE SHIP  
-=======
-WebGL_Test version 1.1.20   
-======================  
+==========
+WebGL_Test version 1.1.21   
+=========================  
   
 What's New  
 ===========  
-nothing is changed to see screen  
-  
-*Add Uniform Linear Motion*  
-*Change Key Assignments*  
+Add Gravity Effect from planets    
   
 INSTALL  
 -------  
-```
-$npm install
-$npm start
-```
+  
+1.```npm install```  
+2.```npm start```  
   
 SHIP OPERATION  
 ------------
-Injection
+Injection  
   A key----Front  
   Z key----Back
   arrow keys-----Up,Down,Left,Right
 
-Turn
+Turn  
   W key----rotate clockwise  
   Q key----rotate unclockwise  
   Shift + arrow keys----Turn to Up,Down,Left,Right
