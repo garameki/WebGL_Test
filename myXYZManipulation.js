@@ -1,12 +1,13 @@
 ﻿libFileRelationship.create('myXYZManipulation');
 libFileRelationship.myXYZManipulation.relatedTo='myMat4';
 libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
-libFileRelationship.myXYZManipulation.relatedTo='myFacts';//defined in spaceShipZZ.htm
+libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 
 
 
 	var drawStep = 10;//milli seconds
 
+	let gg,pp;
 
 	//for using under controlled space ship, follow to key board
 	(function(){
@@ -52,90 +53,139 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';//defined in spaceShip
 
 		var Member = function(){
 			myXYZ.SuperMember.call(this);
-			this.x=0;
-			this.y=0;
-			this.z=0;
+			this.posX=0;
+			this.posY=0;
+			this.posZ=0;
 
 
-			this.speed = [0,0,0];
-
-			//axiz to rotate
-			this.frontAxis = [0, 0,-1];
-			this.topAxis   = [0, 1, 0];
-			this.rightAxis = [1, 0, 0];
+			this.speedX = 0;
+			this.speedY = 0;
+			this.speedZ = 0;
 
 
 			this.matAccume=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 			this.matAccumeNotTranslated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 			this.matAccumeNotRotated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
+var hoge = setInterval(function(){
+	gg = document.getElementsByTagName('body')[0];
+	if(gg){
+		clearInterval(hoge);
+		pp = document.createElement('p');
+		pp.style.position = "absolute";
+		pp.style.top = "0px";
+		pp.style.left = "50px";
+		pp.style.color = "white";
+		gg.appendChild(pp);
+		pp.innerText = "Hello World";
+	}
+},100);
+
 		};
 		myXYZ.inherits(Member);
-		Member.prototype.upToDate = function(){
+		Member.prototype.updateAccumes = function(){
+			//********** 視線の転回と移動に関する計算 ************
+			//角度のアップデート
+			this.thetaLR  = gTurnAxY;
+			this.thetaUD  = gTurnAxX;
+			this.thetaRoll= gTurnAxZ;
 
-			//惑星の重心と引力の計算太陽の子のみ
+
+			//各マトリックスの計算
+			myMat4.load(this.matAccume);
+				myMat4.trans(-this.speedX,-this.speedY,-this.speedZ);//これがなければいつも前に表示される
+				myMat4.rot(0,1,0,this.thetaLR);
+				myMat4.rot(1,0,0,this.thetaUD);
+				myMat4.rot(0,0,1,this.thetaRoll);
+			myMat4.storeTo(this.matAccume);
+
+			//accumerate rotation only
+			myMat4.load(this.matAccumeNotTranslated);
+				//myMat4.trans(-this.speedX,-this.speedY,-this.speedZ);//これがなければいつも前に表示される
+				myMat4.rot(0,1,0,this.thetaLR);
+				myMat4.rot(1,0,0,this.thetaUD);
+				myMat4.rot(0,0,1,this.thetaRoll);
+			myMat4.storeTo(this.matAccumeNotTranslated);
+
+			//accumerate translation only
+			myMat4.load(this.matAccumeNotRotated);
+				myMat4.trans(-this.speedX,-this.speedY,-this.speedZ);//これがなければいつも前に表示される
+				//myMat4.rot(0,1,0,this.thetaLR);
+				//myMat4.rot(1,0,0,this.thetaUD);
+				//myMat4.rot(0,0,1,this.thetaRoll);
+			myMat4.storeTo(this.matAccumeNotRotated);
+		};
+		Member.prototype.updatePosition = function(){
+			//力の計算
 			let sumFx = 0;
 			let sumFy = 0;
 			let sumFz = 0;
 			const G = myFacts.planets.gravity;
 
-//console.log(myXYZTrigonometry.aMembers);
-console.log(myFacts.planets);
 
-			let aMemTs = myXYZTrigonometry.aMembers;
-			let oMemPs = myFacts.planets;
-			for(let ii in oMemPs){
+			const aNames = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury"];
 
-				let memT = aMemTs[name];
-				let memP = aMemPs[name];
+			for(let ii in aNames){
 
-				if(memP.parent == "sun"){
-					let len = 1/Math.sqrt((memT.x - this.x)*(memT.x - this.x) + (memT.y -this.y)*(memT.y -this.y) + (memT.z - this.z)*(memT.z - this.z));
-					let force = -G * memP.mass * len * len * 0.0001;
-console.log("force=",force);
-					sumFx += force * len *(memT.x - this.x);
-					sumFy += force * len *(memT.y - this.y);
-					sumFz += force * len *(memT.z - this.z);
-				}
+				let memT = myXYZTrigonometry[aNames[ii]];
+				let tx = memT.x;
+				let ty = memT.y;
+				let tz = memT.z;
+				const ta =this.matAccume;
+				let memTX = tx*ta[0]+ty*ta[4]+tz*ta[8]+ta[12];
+				let memTY = tx*ta[1]+ty*ta[5]+tz*ta[9]+ta[13];
+				let memTZ = tx*ta[2]+ty*ta[6]+tz*ta[10]+ta[14];
+
+				let len = 1/Math.sqrt(memTX*memTX + memTY*memTY + memTZ*memTZ);
+				let force = -G * myFacts.planets[aNames[ii]].mass * len * len * 0.00001;
+				sumFx -= force * len *memTX;
+				sumFy -= force * len *memTY;
+				sumFz -= force * len *memTZ;
 			}
 
+if(pp)pp.innerHTML = "x:"+Math.floor(this.posX*100)/100+" y:"+Math.floor(this.posY*100)/100+" z:"+Math.floor(this.posZ*100)/100+"<br>"+
+		     "x:"+Math.floor(this.speedX*100)/100+" y:"+Math.floor(this.speedY*100)/100+" z:"+Math.floor(this.speedZ*100)/100+"<br>"+
+		     "x:"+Math.floor(sumFx*10000)+" y:"+Math.floor(sumFy*10000)+" z:"+Math.floor(sumFz*10000)+"<br>";
 
-			//calculate axes
-			this.turnLR();
-			this.turnUD();
-			this.roll();
 
-			this.speed.x = this.speed.x + gInjectLR + (this.rightAxis.x+this.topAxis.x+this.frontAxis.x)*sumFx;
-			this.speed.y = this.speed.y + gInjectUD + (this.rightAxis.y+this.topAxis.y+this.frontAxis.z)*sumFy;
-			this.speed.z = this.speed.z + gInjectFB + (this.rightAxis.z+this.topAxis.z+this.frontAxis.z)*sumFz;
 
-			this.thetaLR  = gTurnAxY;
-			this.thetaUD  = gTurnAxX;
-			this.thetaRoll= gTurnAxZ;
+
+			//スピードの計算
+			myMat4.loadIdentity();
+				myMat4.rot(0,1,0,this.thetaLR);
+				myMat4.rot(1,0,0,this.thetaUD);
+				myMat4.rot(0,0,1,this.thetaRoll);
+			const sx = this.speedX;const sy = this.speedY;const sz = this.speedZ;
+			const sa = myMat4.arr;
+			this.speedX = sa[0]*sx+sa[4]*sy+sa[8]*sz+sa[12];
+			this.speedY = sa[1]*sx+sa[5]*sy+sa[9]*sz+sa[13];
+			this.speedZ = sa[2]*sx+sa[6]*sy+sa[10]*sz+sa[14];
+
+			this.speedX +=  gInjectLR + sumFx;
+			this.speedY +=  gInjectUD + sumFy;
+			this.speedZ +=  gInjectFB + sumFz;
+
+
+			//位置の計算
+//			//recalculation of position of Unit Linear Motion
+//			myMat4.loadIdentity();
+//	//決まり
+//				myMat4.trans(this.speedX,this.speedY,this.speedZ);
+//	//
+//	//			myMat4.rot(0,1,0,this.thetaLR);
+//	//			myMat4.rot(1,0,0,this.thetaUD);
+//	//				myMat4.rot(0,0,1,this.thetaRoll);
+//			const px = this.posX;
+//			const py = this.posY;
+//			const pz = this.posZ;
+//			const pa = myMat4.arr;
+//			this.posX = pa[0]*px+pa[4]*py+pa[8]*pz+pa[12];
+//			this.posY = pa[1]*px+pa[5]*py+pa[9]*pz+pa[13];
+//			this.posZ = pa[2]*px+pa[6]*py+pa[10]*pz+pa[14];
+			this.posX += this.speedX;
+			this.posY += this.speedY;
+			this.posZ += this.speedZ;
+
 		};
-		Member.prototype.turnLR = function(){
-			this.frontAxis = myMat4.rotXYZ(0,1,0,this.thetaLR,this.frontAxis.x,this.frontAxis.y,this.frontAxis.z)
-			var ux=this.frontAxis.x,uy=this.frontAxis.y,uz=this.frontAxis.z,vx=this.topAxis.x,vy=this.topAxis.y,vz=this.topAxis.z;
-			this.rightAxis.x=uy*vz-uz*vy;
-			this.rightAxis.y=uz*vx-ux*vz;
-			this.rightAxis.z=ux*vy-uy*vx;
-		};
-		Member.prototype.turnUD = function(){
-			this.forntAxis = myMat4.rotXYZ(1,0,0,this.thetaUD,this.frontAxis.x,this.frontAxis.y,this.frontAxis.z)
-			var ux=this.rightAxis.x,uy=this.rightAxis.y,uz=this.rightAxis.z,vx=this.frontAxis.x,vy=this.frontAxis.y,vz=this.frontAxis.z;
-			this.topAxis.x=uy*vz-uz*vy;
-			this.topAxis.y=uz*vx-ux*vz;
-			this.topAxis.z=ux*vy-uy*vx;
-		};
-		Member.prototype.roll = function(){
-
-			var topAxis = myMat4.rotXYZ(0,0,1,this.thetaRoll,0,this.topAxis.y,this.topAxis.z)
-			var ux=this.frontAxis.x,uy=this.frontAxis.y,uz=this.frontAxis.z,vx=this.topAxis.x,vy=this.topAxis.y,vz=this.topAxis.z;
-			this.rightAxis.x=uy*vz-uz*vy;
-			this.rightAxis.y=uz*vx-ux*vz;
-			this.rightAxis.z=ux*vy-uy*vx;
-
-		};
-
 
 
 
@@ -164,53 +214,16 @@ console.log("force=",force);
 				var n = Math.floor(sumRemainder/drawStep);//何回移動させるか
 				sumRemainder=sumRemainder%drawStep;
 
-				//accumerate all motions
 				for(var ii=0;ii<n;ii++){
 
-					member.upToDate();
-	
-					myMat4.load(member.matAccume);
-						myMat4.trans(-member.speed.x,-member.speed.y,-member.speed.z);//これがなければいつも前に表示される
-						myMat4.rot(0,1,0,member.thetaLR);
-						myMat4.rot(1,0,0,member.thetaUD);
-						myMat4.rot(0,0,1,member.thetaRoll);
-					myMat4.storeTo(member.matAccume);
+					member.updateAccumes();
 
-					//accumerate rotation only
-					myMat4.load(member.matAccumeNotTranslated);
-						//myMat4.trans(-member.speed.x,-member.speed.y,-member.speed.z);//これがなければいつも前に表示される
-						myMat4.rot(0,1,0,member.thetaLR);
-						myMat4.rot(1,0,0,member.thetaUD);
-						myMat4.rot(0,0,1,member.thetaRoll);
-					myMat4.storeTo(member.matAccumeNotTranslated);
+					member.updatePosition();
 
-
-	
-					//accumerate translation only
-					myMat4.load(member.matAccumeNotRotated);
-						myMat4.trans(-member.speed.x,-member.speed.y,-member.speed.z);//これがなければいつも前に表示される
-						//myMat4.rot(0,1,0,member.thetaLR);
-						//myMat4.rot(1,0,0,member.thetaUD);
-						//myMat4.rot(0,0,1,member.thetaRoll);
-					myMat4.storeTo(member.matAccumeNotRotated);
-
-					myMat4.loadIdentity();
-						//don't touch here
-							myMat4.rot(0,1,0,-member.thetaLR);
-							myMat4.rot(1,0,0,member.thetaUD);
-							myMat4.rot(0,0,1,member.thetaRoll);
-						//
-
-						//const len = member.speed.length3D;
-						const x = member.speed.x;const y = member.speed.y;const z = member.speed.z;
-						const a = myMat4.arr;
-						member.speed.x = a[0]*x+a[1]*y+a[2]*z+a[3];
-						member.speed.y = a[4]*x+a[5]*y+a[6]*z+a[7];
-						member.speed.z = a[8]*x+a[9]*y+a[10]*z+a[11];
-						//member.speed.normalize3D();//length3Dでspeed.x=speed.y=speed.z=0となるのでNaNになる
-						//member.speed.mag3D(len);
 
 				}
+
+
 			};
 		};
 

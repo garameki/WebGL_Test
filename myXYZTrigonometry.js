@@ -9,12 +9,14 @@ libFileRelationship.myXYZTrigonometry.relatedTo='myMat4';
 		myXYZTrigonometry = { };
 
 
+
+
 		/** inner class **/
-		var aMembers = [];
-		var Member = function(){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
+		var Member = function(r_xy,r_z,fTimes){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
 			myXYZ.SuperMember.call(this);
-//○			this.rxy = 600;//*(Math.random()-0.5);
-//○			this.rz  = 800;//0*(Math.random()-0.5);
+			this.rxy = r_xy;//radius on x-y plane
+			this.rz = r_z;//radius on (x or y)-z plane
+			this.fTimes = fTimes;//回転倍率
 			this.alpha = 2*3.14*Math.random();
 			this.gamma = 2*3.14*Math.random();
 		};
@@ -28,14 +30,13 @@ libFileRelationship.myXYZTrigonometry.relatedTo='myMat4';
 		//@override
 		Member.prototype.ratioTime = Math.PI*0.00555555555*0.005;
 
+		const TRUE = true;
+console
 		/** outer functions **/
 		Object.defineProperty(myXYZTrigonometry,'createMember',{value:createMember,writable:false,enumerable:false,configurable:false});
-		function createMember(r_xy,r_z,fTimes){
-			var member = new Member();
-			aMembers.push(member);
-			member.rxy = r_xy;//radius on x-y plane
-			member.rz = r_z;//radius on (x or y)-z plane
-			member.fTimes = fTimes;//回転倍率
+		function createMember(sName,r_xy,r_z,fTimes){
+			var member = new Member(r_xy,r_z,fTimes);
+			Object.defineProperty(myXYZTrigonometry,sName,{value:member,writable:false,enumerable:TRUE,configurable:false});
 			return member;
 		};
 		Object.defineProperty(myXYZTrigonometry,'reposAll',{value:repositionizeAllMembers(),writable:false,enumerable:false,configurable:false});
@@ -43,12 +44,11 @@ libFileRelationship.myXYZTrigonometry.relatedTo='myMat4';
 			var sumTime=0;
 			return function(dt){
 				sumTime+=dt;
-				for(var ii in aMembers){
-					aMembers[ii].reposition(sumTime);
+				for(let name in myXYZTrigonometry){
+					myXYZTrigonometry[name].reposition(sumTime);
 				}
 			};
 		};
-		Object.defineProperty(myXYZTrigonometry,'aMembers',{get:function(){return aMembers;}});
 
 
 	})();//trigonometric functionsotion

@@ -835,7 +835,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 	name = "jupiter";
 	var nameJupiter = name;//the Jupiter has sattelites
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
 
 	/** matrix **/
 	m1 = myXYZ.rotate(1,0,0,0,90);
@@ -878,7 +878,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 //**************** URANUS *****************************************************************
 	name = "uranus";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -907,7 +907,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 	name = "saturn";
 	var nameSaturn = name;//the Uranus has sattelites
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -936,7 +936,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 	name = "neptune";
 	var nameNeptune = name;//the Uranus has sattelites
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -965,7 +965,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 	name = "earth";
 	var nameEarth = name;
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -993,7 +993,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 //**************** VENUS ***********************************************************************************
 	name = "venus";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1021,7 +1021,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 //**************** MARS ***********************************************************************************
 	name = "mars";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1049,7 +1049,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 //**************** MERCURY ***********************************************************************************
 	name = "mercury";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1077,7 +1077,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 //**************** PLUTO ***********************************************************************************
 	name = "pluto";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(1000,1000,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1105,7 +1105,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 
 //**************** FLAME ***********************************************************************************
 	name = "flame";
-	xyz[name] = myXYZTrigonometry.createMember(1,1,0.1);
+	xyz[name] = myXYZTrigonometry.createMember(name,1,1,0.1);
 
 	/** matrices **/
 	m1 = myXYZManipulation.accordingToKeyFlame();
@@ -1152,7 +1152,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** MOON OF EARTH *****************************************************************
 	name = "moon";
 	var revRadius = myFacts.planets[name].revRadius*0.1;;
-	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,0.5);
+	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,0.5);
 
 	/** matrix **/
 	m1 = myXYZ.rotate(1,0,0,0,90);
@@ -1198,7 +1198,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** TITAN OF SATURN *****************************************************************
 	name = "titan";
 	var revRadius = myFacts.planets[name].revRadius*0.1;
-	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,1);
+	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,1);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1228,7 +1228,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** MIMAS OF SATURN *****************************************************************
 	name = "mimas";
 	var revRadius = myFacts.planets[name].revRadius*0.5;
-	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,1);
+	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,1);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1257,7 +1257,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** TETHYS OF SATURN *****************************************************************
 	name = "tethys";
 	var revRadius = myFacts.planets[name].revRadius*0.4;
-	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,1);
+	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,1);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1287,7 +1287,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** IAPETUS OF SATURN *****************************************************************
 	name = "iapetus";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1316,7 +1316,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** TRITON OF NEPTUNE *****************************************************************
 	name = "triton";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1346,7 +1346,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** GANYMEDE OF JUPITER *****************************************************************
 	name = "ganymede";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1376,7 +1376,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** KALLISTO OF JUPITER *****************************************************************
 	name = "kallisto";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1405,7 +1405,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** IO OF JUPITER *****************************************************************
 	name = "io";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1434,7 +1434,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** EUROPA OF JUPITER *****************************************************************
 	name = "europa";
 	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1466,7 +1466,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************RING OF SATURN *****************************************************************
 	name = "ring";
-//	xyz[name] = myXYZTrigonometry.createMember(0,0,bbb/myFacts.planets[name].revRadius);
+//	xyz[name] = myXYZTrigonometry.createMember(name,0,0,bbb/myFacts.planets[name].revRadius);
 
 	/** matrix **/
 	let m1 = myXYZ.rotate(1,0,0,0,90);
@@ -1517,7 +1517,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 //**************** ATOMOSPHERE *****************************************************************
 {
 	name = "atomosphere";
-//	xyz[name] = myXYZTrigonometry.createMember(500,500,bbb/myFacts.planets[name].revRadius);
+//	xyz[name] = myXYZTrigonometry.createMember(name,500,500,bbb/myFacts.planets[name].revRadius);
 
 	/** matrix **/
 	let m1 = myXYZ.rotate(1,0,0,0,90);
@@ -1746,7 +1746,7 @@ llllllllll		myLabel.join('');
 			myXYZTrigonometry.reposAll(dt);//次の.move(dt)で位置を使うのでmyXYZManipulationよりも先に計算しておくこと
 			myXYZManipulation.move(dt);
 			/** change shapes **/
-			UnitsToDraw.velocity.changeShape(myShape.line(gl,[0,0,0],[xyz[namePlane].speed.x*5,xyz[namePlane].speed.y*5,xyz[namePlane].speed.z*5],myColorName.magenta(1)));
+			UnitsToDraw.velocity.changeShape(myShape.line(gl,[0,0,0],[xyz[namePlane].speedX*5,xyz[namePlane].speedY*5,xyz[namePlane].speedZ*5],myColorName.magenta(1)));
 			UnitsToDraw.flame.changeShape(myShape.flame(gl,1,1));
 
 //			drawScene(gl,oShader.spaceShip,span);
