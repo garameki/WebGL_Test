@@ -1,21 +1,17 @@
-SPACECRAFT  
-==========
+# SPACECRAFT  
+## latest version  
+### ```1.1.21```  
+* Add Gravity Effect  
   
-Using  
------
-```Node.js``` to set up local server  
+## Requirement  
+```Node.js```  
+```chrome```or other browser probably like ```firefox```  
   
-Information  
------------
+## Information  
 This is a simple spacecraft simulator with planets and more.  
 I would like you to see the shadows on the Saturn and its ring.  
 It was so difficult for practicing webgl.  
-Pay attention that your spacecraft might be affected by the gravity and might get much velocity as swing-by.  
-  
-Branches to clone
------------------
-```latest``` ```1.1.21``` Implement Gravity Effect of planets
-  
-How to play 
------------
-Please see README.md in each version. 
+Pay attention to only one thing called swing-by by which your spacecraft might be thrown far a way.  
+   
+## How to play 
+Please see ```README.md``` in each version. 
