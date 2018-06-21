@@ -2,6 +2,7 @@
 ## latest version  
 ### ```1.1.21```  
 * Add Gravity Effect  
+> note: ` master `  branch is not latest
   
 ## Requirement  
 ```Node.js```  
