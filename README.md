@@ -1,12 +1,12 @@
 # SPACECRAFT  
 ## latest version  
-### ```1.1.21```  
+### ```release_v1.1.21```  
 * Add Gravity Effect  
 > note: ` master `  branch is not latest
   
 ## Requirement  
 ```Node.js```  
-```chrome```or other browser probably like ```firefox```  
+```google chrome```or other browser probably like ```firefox```  
   
 ## Information  
 This is a simple spacecraft simulator with planets and more.  
