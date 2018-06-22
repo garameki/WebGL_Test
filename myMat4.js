@@ -35,6 +35,33 @@
 	Object.defineProperty(myMat4,'transpose'	,{value:transposeAM,writable:false,enumerable:true,configurable:false});
 
 	Object.defineProperty(myMat4,'get2D'		,{value:getNew2DPosition,writable:false,enumerable:true,configurable:false});
+
+
+	Object.defineProperty(myMat4,'get3D'		,{value:getNew3DPosition,writable:false,enumerable:true,configurable:false});
+	function getNew3DPosition(x,y,z){
+		var w=1;
+
+		// P・_A = P`
+		_x11=_a11*x+_a21*y+_a31*z+_a41*w;
+		_x12=_a12*x+_a22*y+_a32*z+_a42*w;
+		_x13=_a13*x+_a23*y+_a33*z+_a43*w;
+		_x14=_a14*x+_a24*y+_a34*z+_a44*w;
+		return [_x11,_x12,_x13];
+/*
+
+		// _A・P = P'
+		_x11=_a11*x+_a12*y+_a13*z+_a14*w;
+		_x21=_a21*x+_a22*y+_a23*z+_a24*w;
+		_x31=_a31*x+_a32*y+_a33*z+_a34*w;
+		_x41=_a41*x+_a42*y+_a43*z+_a44*w;
+		_x11=_x11/_x41;
+		_x21=_x21/_x41;
+		_x31=_x31/_x41;
+		return [_x11,_x21,_x31];
+*/
+	};
+
+
 	function getNew2DPosition(x,y,z){
 		var w=1;
 

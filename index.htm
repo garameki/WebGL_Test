@@ -150,7 +150,7 @@ if(flagName){
 		//var names = ["pluto","velocity","plane"];//,"earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 
 		var names = ["footMark","velocity","flame","sun","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
-		//sun無し　var names = ["footMark","velocity","flame","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+		//var names = ["footMark","velocity","flame","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 
 		mySendAttribUniform[sNameShader](gl,names,angle);
 	myFBOs[sNameShader].inactivate();
@@ -483,7 +483,16 @@ FR.main.relatedTo='myColorName';
 
 onload=function(){
 
-	//Wait for all of file in use
+	///////////// infomation window only for index.htm ///////////////
+	const pp = document.createElement('p');
+	document.getElementsByTagName('body')[0].appendChild(pp);
+	pp.style.position ='absolute';
+	pp.style.left = '100px';
+	pp.style.top = '50px';
+	pp.style.color = 'purple';
+
+
+	//////////// Wait for all of file in use /////////////////////
 
 	let count = 0;
 	let flag = true;
@@ -500,12 +509,13 @@ onload=function(){
 		}
 		if(flag){
 			clearInterval(hoge);
-			start();
+			start(pp);
 		}else if(++count>30){
 			clearInterval(hoge);
 			console.error(nameP,"で使用する外部ファイル",nameC,"が読み込まれていません");
 		}
 	},100);
+
 };
 
 
@@ -514,7 +524,7 @@ onload=function(){
 
 
 //:start
-function start(){
+function start(infoWindowP){
 
 	/** write information on sub screen **/
 
@@ -847,7 +857,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 	m4 = myXYZ.trans(xyz[nameSun]);//revolution公転
 	m5 = myXYZ.replaceView(xyz[namePlane]);//manipulate
 	m6 = myXYZ.translate(0,0,-_frontLength_);
-	m7 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	m7 = myXYZ.replaceViewNotTranslated(xyz[namePlane]);
 	var oMatrices = {
 		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
 		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
@@ -1117,7 +1127,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 	m4 = myXYZ.trans(xyz[nameSun]);//revolution公転
 	m5 = myXYZ.replaceView(xyz[namePlane]);//manipulate
 	m6 = myXYZ.translate(0,0,-_frontLength_);
-	m7 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	m7 = myXYZ.replaceViewNotTranslated(xyz[namePlane]);
 	var oMatrices = {
 		modelView:[m1,m6],	//all matrices
 		manipulatedRotation:[],	//accumeLightDirectional  rotation matrices in manipulated matrices
@@ -1165,7 +1175,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	m5 = myXYZ.trans(xyz[nameSun]);//revolution公転
 	m6 = myXYZ.replaceView(xyz[namePlane]);//manipulate
 	m7 = myXYZ.translate(0,0,-_frontLength_);
-	m8 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	m8 = myXYZ.replaceViewNotTranslated(xyz[namePlane]);
 	var oMatrices = {
 		modelView:[m1,m2,m3,m4,m5,m6,m7],	//all matrices
 		manipulatedRotation:[m8],	//accumeLightDirectional  rotation matrices in manipulated matrices
@@ -1478,7 +1488,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	let m4 = myXYZ.trans(xyz[nameSun]);//revolution of the Sun
 	let m5 = myXYZ.replaceView(xyz[namePlane]);//manipulate
 	let m6 = myXYZ.translate(0,0,-_frontLength_);
-	let m7 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	let m7 = myXYZ.replaceViewNotTranslated(xyz[namePlane]);
 	var oMatrices = {
 		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
 		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
@@ -1529,7 +1539,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	let m4 = myXYZ.trans(xyz[nameSun]);//revolution of the Sun
 	let m5 = myXYZ.replaceView(xyz[namePlane]);//manipulate
 	let m6 = myXYZ.translate(0,0,-_frontLength_);
-	let m7 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	let m7 = myXYZ.replaceViewNotTranslated(xyz[namePlane]);
 	var oMatrices = {
 		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
 		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
@@ -1567,7 +1577,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	name = "back";
 
 	/** matrix **/
-	m1 = myXYZ.replaceViewNotTrans(xyz[namePlane]);
+	m1 = myXYZ.replaceViewNotTranslated(xyz[namePlane]);
 	m2 = myXYZ.translate(-15,-15,-30);
 	var oMatrices = {
 		modelView:[m2],	//all matrices
@@ -1629,9 +1639,10 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 	// this arrow is calculated at animation
 	/** matrix **/
-	m1 = myXYZ.translate(-15,-15,-30);
+	m1 = myXYZ.replaceViewNotTranslated(xyz[namePlane]);
+	m2 = myXYZ.translate(-15,-15,-30);
 	var oMatrices = {
-		modelView:[m1],	//all matrices
+		modelView:[m1,m2],	//all matrices
 		manipulatedRotation:[],	//accumeLightDirectional  rotation matrices in manipulated matrices
 		manipulated:[],		//accumeLightPoint        all manipulated matrices
 		notManipulated:[]		//not manipulated matrices // not necessary
@@ -1661,9 +1672,10 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 	// this footMark is calculated at animation()
 	/** matrix **/
-	m1 = myXYZ.replaceViewNotRotate(xyz[namePlane]);
+	m1 = myXYZ.replaceView(xyz[namePlane]);
+	m2 = myXYZ.translate(0,0,-_frontLength_);
 	var oMatrices = {
-		modelView:[m1],	//all matrices
+		modelView:[m1,m2],	//all matrices
 		manipulatedRotation:[],	//accumeLightDirectional  rotation matrices in manipulated matrices
 		manipulated:[],		//accumeLightPoint        all manipulated matrices
 		notManipulated:[]		//not manipulated matrices // not necessary
@@ -1683,7 +1695,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	myLabel[name].addText(0,0,5,name,colorName);
 
 	/** shape **/
-	var shape = myShape.lines(gl,[0,0,0],[0,0,5]);
+	var shape = myShape.lines(gl,[0,0,0]);
 
 	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
 //****************************************************************************************
@@ -1790,7 +1802,8 @@ llllllllll		myLabel.join('');
 
 //●
 			UnitsToDraw.footMark.changeShape(UnitsToDraw.footMark.shape.addPoint([xyz["plane"].posX,xyz["plane"].posY,xyz["plane"].posZ]));
-
+//const plane = xyz["plane"];
+//infoWindowP.innerText = "plane:x"+Math.floor(plane.posX*1000)/1000+" y:"+Math.floor(plane.posY*1000)/1000+" z:"+Math.floor(plane.posZ*1000)/1000;
 //			drawScene(gl,oShader.spaceShip,span);
 			drawScene(gl,span);
 			timeBefore = timeStamp;

@@ -15,6 +15,7 @@ libFileRelationship.myShape_linesJS.relatedTo='extMath';
 		let textureCoordinate = [];
 		let indices = [];
 		let obj = {
+			name:"lines",
 			n:0,
 			pos:position,
 			nor:normal,
@@ -24,28 +25,32 @@ libFileRelationship.myShape_linesJS.relatedTo='extMath';
 		}
 		obj = addPoint(arr,obj);
 		obj.draw=function() {
-			gl.drawElements(gl.LINE_STRIP,obj.n,gl.UNSIGNED_SHORT,0);//to do
+
+			gl.drawArrays(gl.LINE_STRIP, 1, obj.n-2);
+//			gl.drawElements(gl.LINE_STRIP,obj.n,gl.UNSIGNED_SHORT,0);//to do
 		},
 		obj.addPoint=function(arr) {
-//console.log("lines.js obj=",obj);
 			obj = addPoint(arr,obj);
 			return obj;
 		};
 		return obj;
 	};
 
+
+
 	/** inner function **/
 	function addPoint(arr,obj) {
 		if(arr.length<3)console.error("myShape_linesJS: short length of array in addPoint()");
-		if(obj.pos.length>999){
+		if(obj.n>10000){
 			obj.pos.splice(0,3);
 			obj.pos = obj.pos.concat(arr);
 		}else{
+			obj.n++;
 			obj.pos = obj.pos.concat(arr);
 			obj.nor.push(1,1,1);
 			obj.col.push(1,1,1,1);
 			obj.tex.push(0,0);
-			obj.ind.push(obj.n++);
+			obj.ind.push(obj.n);
 		}
 		return obj;
 	};

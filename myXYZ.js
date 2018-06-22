@@ -49,13 +49,13 @@ libFileRelationship.myXYZ.relatedTo='myMat4';
 			myMat4.multiArray(memberXYZ.matAccume);
 		};
 	};
-	Object.defineProperty(myXYZ,'replaceViewNotTrans',{value:replaceCenterAndDirectionNotTranslated});
+	Object.defineProperty(myXYZ,'replaceViewNotTranslated',{value:replaceCenterAndDirectionNotTranslated});
 	function replaceCenterAndDirectionNotTranslated(memberXYZ){
 		return function(time){
 			myMat4.multiArray(memberXYZ.matAccumeNotTranslated);
 		};
 	};
-	Object.defineProperty(myXYZ,'replaceViewNotRotate',{value:replaceCenterAndDirectionNotRotated});
+	Object.defineProperty(myXYZ,'replaceViewNotRotated',{value:replaceCenterAndDirectionNotRotated});
 	function replaceCenterAndDirectionNotRotated(memberXYZ){
 		return function(time){
 			myMat4.multiArray(memberXYZ.matAccumeNotRotated);

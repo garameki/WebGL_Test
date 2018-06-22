@@ -141,10 +141,25 @@ if(pp)pp.innerHTML = "x:"+Math.floor(this.posX*100)/100+" y:"+Math.floor(this.po
 		     "x:"+Math.floor(memTSaturn.x)+" y:"+Math.floor(memTSaturn.y)+" z:"+Math.floor(memTSaturn.z)+"<br>";
 
 
+			//calc injection force
+			let ix = gInjectLR;
+			let iy = gInjectUD;
+			let iz = gInjectFB;
+			let ai = this.matAccumeNotTranslated;
+			let injx = ai[0]*ix+ai[1]*iy+ai[2]*iz+ai[3];
+			let injy = ai[4]*ix+ai[5]*iy+ai[6]*iz+ai[7];
+			let injz = ai[8]*ix+ai[9]*iy+ai[10]*iz+ai[11];
+pp.innerHTML += injx.toString()+"<br>";
+pp.innerHTML += injy.toString()+"<br>";
+pp.innerHTML += injz.toString()+"<br>";
 			//calc velocity vector スピードの計算
-			this.speedX += gInjectLR + sumFx;
-			this.speedY += gInjectUD + sumFy;
-			this.speedZ += gInjectFB + sumFz;
+			this.speedX += injx + sumFx;
+			this.speedY += injy + sumFy;
+			this.speedZ += injz + sumFz;
+
+//this.speedX = 1;
+//this.speedY = 0;
+//this.speedZ = 0;
 
 
 
