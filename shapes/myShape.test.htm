@@ -4,7 +4,7 @@
 <script type='text/javascript' src="../extMath.js"></script>
 <script type='text/javascript' src="../myColorName.js"></script>
 <script type='text/javascript' src="./myShape.js"></script>
-<script type='text/javascript' src="./flame.js"></script>
+<script type='text/javascript' src="./lines.js"></script>
 
 <!--Fragment shader program-->
 <script id="shader-fs" type="x-shader/x-fragment">
@@ -36,6 +36,9 @@
 <script type='text/javascript'>
 
 function start(){
+
+	
+
 	var canvas = document.getElementById('glcanvas');
 	canvas.width=canvas.clientWidth;//necessary
 	canvas.height=canvas.clientHeight;//necessary
@@ -70,9 +73,30 @@ function start(){
 	_MOVE_=true;
 
 
+
+
+
 //******************************************** MODELS ****************************************************************************************************
 
 
+
+	//lines
+	var shape =myShape.lines(gl,[0,0,0]);
+	console.log("shape=",shape);
+
+	oModel.base = {
+		n:shape.n,
+		pos:shape.pos,
+		col:shape.col
+	};
+	oModel.buffers = setModelToBuffer(gl,oModel);
+	oModel.mvMat = new mvMat_random();
+	aModels.push(oModel);
+
+	//SEE BELOW at ANIMATION part
+
+
+/*
 	//flame
 	var shape =myShape.flame(gl,5,2);
 	console.log("shape=",shape);
@@ -85,7 +109,7 @@ function start(){
 	oModel.buffers = setModelToBuffer(gl,oModel);
 	oModel.mvMat = new mvMat_random();
 	aModels.push(oModel);
-
+*/
 
 
 
@@ -182,14 +206,34 @@ console.log(oModel);
 console.log(oModel);
 */
 
+//lines
+	let rrr=0;
+//lines
+	
 	var timeBefore=0;
 	var angle=0;
 	function render(timeStamp){
 		if(timeStamp - timeBefore>10){
 			angle+=1;
 			angle=Math.floor(angle*10)/10;
-			if(angle>360)angle=0;
+			//if(angle>360)angle=0;
 			PRINT_INFO.innerText=angle.toString();
+
+//lines	
+	rrr=10*Math.cos(angle*3.14/180);
+	shape.addPoint([rrr*Math.cos(angle*3.14/180),rrr*Math.sin(angle*3.14/180),rrr*Math.cos(angle*3.14/180)*Math.sin(0.2*angle*3.14/180)]);		
+
+	oModel.base = {
+		n:shape.n,
+		pos:shape.pos,
+		col:shape.col
+	};
+	oModel.buffers = setModelToBuffer(gl,oModel);
+//	oModel.mvMat = new mvMat_random();
+	aModels.push(oModel);
+//lines 
+
+
 			drawScene(gl,oShader,aModels,angle);
 			timeBefore = timeStamp;
 		}
@@ -197,45 +241,6 @@ console.log(oModel);
 	}
 	window.requestAnimationFrame(render);
 }
-function sphere(){
-
-	var rad = Math.PI / 180;
-	var alpha;//latitude
-	var gamma;//longitude
-	var rr=2.0;//radius
-	var dal=72;//diffential of alpha
-	var dgam=90;//differential of gamma
-
-	var positions = new Array();
-	var x,y,z;
-
-	for(gamma=-90;gamma<=90;gamma+=dgam){
-		for(alpha=-180;alpha<=180;alpha+=dal){
-
-			x=rr * Math.cos(rad * gamma) * Math.cos(rad * alpha);
-			y=rr * Math.cos(rad * gamma) * Math.sin(rad * alpha);
-			z=rr * Math.sin(rad * gamma);
-			positions.push(x);
-			positions.push(y);
-			positions.push(z);
-
-		}
-	}
-	var colors = [];
-	for(var ii=0,len=2000;ii<len;ii++){
-		colors.push(1.0);
-		colors.push(0.5);
-		colors.push(1.0);
-		colors.push(0.9);
-	};
-
-	return {
-		n:positions.length/3,
-		pos:positions,
-		col:colors
-	}
-}
-
 
 function setModelToBuffer(gl,oModel){
 	//生成したバッファをWebGLBufferにバインドしたら、
@@ -352,151 +357,6 @@ function getShader(gl,id){
 	}
 
 	return shader;
-}
-
-function regularTetrahedron(){
-	//create tetrahedron
-	var ra=1.0;
-	var rb=2*Math.pow(2,0.5)/3*ra;
-	var x1=0,y1=0,z1=ra;
-	var x2=0,y2=rb,z2=-ra/4;
-	var x3=rb*Math.sin(120*Math.PI/180),y3=rb*Math.cos(120*Math.PI/180),z3=-ra/4;
-	var x4=rb*Math.sin(240*Math.PI/180),y4=rb*Math.cos(240*Math.PI/180),z4=-ra/4;
-
-	//頂点の位置情報をバッファを作ってそこに入れる
-	var positions = [
-		x1,y1,z1,
-		x2,y2,z2,
-		x3,y3,z3,
-		x1,y1,z1,
-		x2,y2,z2,
-		x4,y4,z4,
-		x1,y1,z1,
-		x3,y3,z3,
-		x4,y4,z4,
-		x2,y2,z2,
-		x3,y3,z3,
-		x4,y4,z4
-	];
-
-	//頂点の色情報をバッファを作ってそこに入れる
-	var colors = [
-		1.0, 1.0, 1.0, 1.0,
-		0.0,0.0,0.9,1.0,
-		0.9,0.1,0.1,1.0,
-		1.0, 1.0, 1.0, 1.0,
-		0.0,0.0,0.9,1.0,
-		0.1,1.0,0.2,1.0,
-		1.0, 1.0, 1.0, 1.0,
-		0.9,0.1,0.1,1.0,
-		0.1,1.0,0.2,1.0,
-		0.0,0.0,0.9,1.0,
-		0.9,0.1,0.1,1.0,
-		0.1,1.0,0.2,1.0,
-	];
-
-	return {
-		n:positions.length/3,
-		pos:positions,
-		col:colors
-	}
-}
-
-function regularHexahedron(){
-		//regular hexahedron
-	var positions = [
-		1.0,1.0,1.0,
-		-1.0,1.0,1.0,
-		-1.0,-1.0,1.0,
-		1.0,1.0,1.0,
-		-1.0,-1.0,1.0,
-		1.0,-1.0,1.0,	
-
-		1.0,1.0,1.0,
-		-1.0,1.0,1.0,
-		-1.0,1.0,-1.0,
-		1.0,1.0,1.0,
-		-1.0,1.0,-1.0,
-		1.0,1.0,-1.0,
-
-		1.0,1.0,1.0,
-		1.0,-1.0,1.0,
-		1.0,-1.0,-1.0,
-		1.0,1.0,1.0,
-		1.0,-1.0,-1.0,
-		1.0,1.0,-1.0,
-
-		1.0,1.0,-1.0,
-		-1.0,1.0,-1.0,
-		-1.0,-1.0,-1.0,
-		1.0,1.0,-1.0,
-		-1.0,-1.0,-1.0,
-		1.0,-1.0,-1.0,	
-
-		1.0,-1.0,1.0,
-		-1.0,-1.0,1.0,
-		-1.0,-1.0,-1.0,
-		1.0,-1.0,1.0,
-		-1.0,-1.0,-1.0,
-		1.0,-1.0,-1.0,
-
-		-1.0,1.0,1.0,
-		-1.0,-1.0,1.0,
-		-1.0,-1.0,-1.0,
-		-1.0,1.0,1.0,
-		-1.0,-1.0,-1.0,
-		-1.0,1.0,-1.0
-	];
-
-	var colors = [
-		0.3,1.0,1.0,0.1,
-		0.3,1.0,1.0,0.1,
-		0.3,1.0,1.0,0.1,
-		0.3,1.0,1.0,0.1,
-		0.3,1.0,1.0,0.1,
-		0.3,1.0,1.0,0.1,
-
-		1.0,0.2,0.5,0.5,
-		1.0,0.2,0.5,0.5,
-		1.0,0.2,0.5,0.5,
-		1.0,0.2,0.5,0.5,
-		1.0,0.2,0.5,0.5,
-		1.0,0.2,0.5,0.5,
-
-		0.7,0.3,0.8,0.9,
-		0.7,0.3,0.8,0.9,
-		0.7,0.3,0.8,0.9,
-		0.7,0.3,0.8,0.9,
-		0.7,0.3,0.8,0.9,
-		0.7,0.3,0.8,0.9,
-
-		0.6,1.0,0.6,0.9,
-		0.6,1.0,0.6,0.9,
-		0.6,1.0,0.6,0.9,
-		0.6,1.0,0.6,0.9,
-		0.6,1.0,0.6,0.9,
-		0.6,1.0,0.6,0.9,
-
-		0.4,0.2,0.1,0.9,
-		0.4,0.2,0.1,0.9,
-		0.4,0.2,0.1,0.9,
-		0.4,0.2,0.1,0.9,
-		0.4,0.2,0.1,0.9,
-		0.4,0.2,0.1,0.9,
-
-		1.0,1.0,0.1,0.9,
-		1.0,1.0,0.1,0.9,
-		1.0,1.0,0.1,0.9,
-		1.0,1.0,0.1,0.9,
-		1.0,1.0,0.1,0.9,
-		1.0,1.0,0.1,0.9
-	];
-
-	return {
-		n:positions.length/3,
-		pos:positions,
-		col:colors
-	}
 }
 
 function setModelToBuffer(gl,oModel){

@@ -53,12 +53,12 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 
 		var Member = function(){
 			myXYZ.SuperMember.call(this);
-			this.posX=0;
+			this.posX=0;//absolute coordinate
 			this.posY=0;
 			this.posZ=0;
 
 
-			this.speedX = 0;
+			this.speedX = 0;//absolute coordinate
 			this.speedY = 0;
 			this.speedZ = 0;
 
@@ -84,103 +84,70 @@ var hoge = setInterval(function(){
 		myXYZ.inherits(Member);
 		Member.prototype.updateAccumes = function(){
 			//********** 視線の転回と移動に関する計算 ************
-			//角度のアップデート
-			this.thetaLR  = gTurnAxY;
-			this.thetaUD  = gTurnAxX;
-			this.thetaRoll= gTurnAxZ;
 
+			//produce 3 matrices
 
-			//各マトリックスの計算
-			myMat4.load(this.matAccume);
-				myMat4.trans(-this.speedX,-this.speedY,-this.speedZ);//これがなければいつも前に表示される
-				myMat4.rot(0,1,0,this.thetaLR);
-				myMat4.rot(1,0,0,this.thetaUD);
-				myMat4.rot(0,0,1,this.thetaRoll);
-			myMat4.storeTo(this.matAccume);
-
-			//accumerate rotation only
+			//1.produce matAccuemNotTranslated
 			myMat4.load(this.matAccumeNotTranslated);
-				//myMat4.trans(-this.speedX,-this.speedY,-this.speedZ);//これがなければいつも前に表示される
-				myMat4.rot(0,1,0,this.thetaLR);
-				myMat4.rot(1,0,0,this.thetaUD);
-				myMat4.rot(0,0,1,this.thetaRoll);
+				myMat4.rot(0,1,0,gTurnAxY);//gTurnAx*...angle
+				myMat4.rot(1,0,0,gTurnAxX);
+				myMat4.rot(0,0,1,gTurnAxZ);
 			myMat4.storeTo(this.matAccumeNotTranslated);
 
-			//accumerate translation only
-			myMat4.load(this.matAccumeNotRotated);
-				myMat4.trans(-this.speedX,-this.speedY,-this.speedZ);//これがなければいつも前に表示される
-				//myMat4.rot(0,1,0,this.thetaLR);
-				//myMat4.rot(1,0,0,this.thetaUD);
-				//myMat4.rot(0,0,1,this.thetaRoll);
+			//2.produce matAccrmeNotRotated
+			myMat4.loadIdentity();
+				myMat4.trans(-this.posX,-this.posY,-this.posZ);//これがなければいつも前に表示される
 			myMat4.storeTo(this.matAccumeNotRotated);
+
+			//3.produce matAccume(using myMat4 continuously)
+			myMat4.multiArray(this.matAccumeNotTranslated);
+			myMat4.storeTo(this.matAccume);
+
 		};
+
+
 		Member.prototype.updatePosition = function(){
-			//力の計算
-			let sumFx = 0;
+
+			//All positions,velocities and forces are in absolute coordinate.
+
+			//calc FORCE
+			let sumFx = 0;//absolute coordinate
 			let sumFy = 0;
 			let sumFz = 0;
 			const G = myFacts.planets.gravity;
 
 
-			const aNames = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury"];
+			const aNames = ["saturn"];//,"jupiter","neptune","uranus","earth","mars","venus","mercury"];
 
+			//spacecraft ... origin ( this.posX this.posY this.posZ )
+			//target planet ... ( memT.x memT.y memT.z )
+			let memT,dx,dy,dz,len,force;
 			for(let ii in aNames){
+				memT = myXYZTrigonometry[aNames[ii]];//absolute coordinate
+				dx = memT.x - this.posX;
+				dy = memT.y - this.posY;
+				dz = memT.z - this.posZ;
 
-				let memT = myXYZTrigonometry[aNames[ii]];
-				let tx = memT.x;
-				let ty = memT.y;
-				let tz = memT.z;
-				const ta =this.matAccume;
-				let memTX = tx*ta[0]+ty*ta[4]+tz*ta[8]+ta[12];
-				let memTY = tx*ta[1]+ty*ta[5]+tz*ta[9]+ta[13];
-				let memTZ = tx*ta[2]+ty*ta[6]+tz*ta[10]+ta[14];
-
-				let len = 1/Math.sqrt(memTX*memTX + memTY*memTY + memTZ*memTZ);
-				let force = -G * myFacts.planets[aNames[ii]].mass * len * len * 0.00001;
-				sumFx -= force * len *memTX;
-				sumFy -= force * len *memTY;
-				sumFz -= force * len *memTZ;
+				len = 1/Math.sqrt(dx*dx+dy*dy+dz*dz);
+				force = -G * myFacts.planets[aNames[ii]].mass * len * len * 0.0001;
+				sumFx -= force * len * dx;
+				sumFy -= force * len * dy;
+				sumFz -= force * len * dz;
 			}
-
+const memTSaturn = myXYZTrigonometry["saturn"];
 if(pp)pp.innerHTML = "x:"+Math.floor(this.posX*100)/100+" y:"+Math.floor(this.posY*100)/100+" z:"+Math.floor(this.posZ*100)/100+"<br>"+
 		     "x:"+Math.floor(this.speedX*100)/100+" y:"+Math.floor(this.speedY*100)/100+" z:"+Math.floor(this.speedZ*100)/100+"<br>"+
-		     "x:"+Math.floor(sumFx*10000)+" y:"+Math.floor(sumFy*10000)+" z:"+Math.floor(sumFz*10000)+"<br>";
+		     "x:"+Math.floor(sumFx*10000)+" y:"+Math.floor(sumFy*10000)+" z:"+Math.floor(sumFz*10000)+"<br>"+
+		     "x:"+Math.floor(memTSaturn.x)+" y:"+Math.floor(memTSaturn.y)+" z:"+Math.floor(memTSaturn.z)+"<br>";
+
+
+			//calc velocity vector スピードの計算
+			this.speedX += gInjectLR + sumFx;
+			this.speedY += gInjectUD + sumFy;
+			this.speedZ += gInjectFB + sumFz;
 
 
 
-
-			//スピードの計算
-			myMat4.loadIdentity();
-				myMat4.rot(0,1,0,this.thetaLR);
-				myMat4.rot(1,0,0,this.thetaUD);
-				myMat4.rot(0,0,1,this.thetaRoll);
-			const sx = this.speedX;const sy = this.speedY;const sz = this.speedZ;
-			const sa = myMat4.arr;
-			this.speedX = sa[0]*sx+sa[4]*sy+sa[8]*sz+sa[12];
-			this.speedY = sa[1]*sx+sa[5]*sy+sa[9]*sz+sa[13];
-			this.speedZ = sa[2]*sx+sa[6]*sy+sa[10]*sz+sa[14];
-
-			this.speedX +=  gInjectLR + sumFx;
-			this.speedY +=  gInjectUD + sumFy;
-			this.speedZ +=  gInjectFB + sumFz;
-
-
-			//位置の計算
-//			//recalculation of position of Unit Linear Motion
-//			myMat4.loadIdentity();
-//	//決まり
-//				myMat4.trans(this.speedX,this.speedY,this.speedZ);
-//	//
-//	//			myMat4.rot(0,1,0,this.thetaLR);
-//	//			myMat4.rot(1,0,0,this.thetaUD);
-//	//				myMat4.rot(0,0,1,this.thetaRoll);
-//			const px = this.posX;
-//			const py = this.posY;
-//			const pz = this.posZ;
-//			const pa = myMat4.arr;
-//			this.posX = pa[0]*px+pa[4]*py+pa[8]*pz+pa[12];
-//			this.posY = pa[1]*px+pa[5]*py+pa[9]*pz+pa[13];
-//			this.posZ = pa[2]*px+pa[6]*py+pa[10]*pz+pa[14];
 			this.posX += this.speedX;
 			this.posY += this.speedY;
 			this.posZ += this.speedZ;

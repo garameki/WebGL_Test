@@ -92,7 +92,7 @@ libFileRelationship.myShaders.relatedTo='myInfo';
 			shadertype = gl.VERTEX_SHADER;
 		} else {
 			// unknown html tag type
-			myInfo.main.error="Unknown html tag type for shader.The element type of shader program must be 'x-shader/x-vertex' or 'x-shader/x-fragment' now.";
+//Åú			myInfo.main.error="Unknown html tag type for shader.The element type of shader program must be 'x-shader/x-vertex' or 'x-shader/x-fragment' now.";
 			return null;
 		}
 		return compile(gl,shadertype,theSource,id);
@@ -130,15 +130,15 @@ libFileRelationship.myShaders.relatedTo='myInfo';
 		this.gl = gl;
 		this.loc = gl.getAttribLocation(prog,name);
 		if(this.loc == -1 || this.loc == null){
-			myInfo.main.error="Can't initialize attribute type of '"+name+"' variable, such that it's not used nor exist in '"+progName+"' shader.";
+//Åú			myInfo.main.error="Can't initialize attribute type of '"+name+"' variable, such that it's not used nor exist in '"+progName+"' shader.";
 		} else {
-			//ÅúmyInfo.main.info="'"+name+"' was enabled in '"+progName+"' program.";
+			//Åú//ÅúmyInfo.main.info="'"+name+"' was enabled in '"+progName+"' program.";
 		}
 	};
 	var flagError = false;
 	AttribVariable.prototype.assignBuffer = function(buffer,numComponents){
 		if(buffer==void 0 && !flagError){
-			myInfo.main.error="buffer="+buffer+" in AttribVariable.prototype.assinBuffer()";
+//Åú			myInfo.main.error="buffer="+buffer+" in AttribVariable.prototype.assinBuffer()";
 			flagError = true;
 			stop();
 		};
@@ -168,7 +168,7 @@ libFileRelationship.myShaders.relatedTo='myInfo';
 		this._name = name;
 		this._prog = prog;
 		if(this.loc == -1 || this.loc == null){
-			myInfo.main.error="Can't initialize uniform type of '"+name+"' variable, such that it's not used nor exist in '"+progName+"' shader.";
+//Åú			myInfo.main.error="Can't initialize uniform type of '"+name+"' variable, such that it's not used nor exist in '"+progName+"' shader.";
 			stop();
 		}
 	};

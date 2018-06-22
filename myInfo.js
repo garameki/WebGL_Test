@@ -35,7 +35,8 @@
 					clearInterval(hoge);
 					console.error("myInfo."+sName+"."+sNameChild+" might be not able to attach withinto DOM.");
 				}
-			},0.001);
+//●			},0.001);
+			},1000);
 		};
 	};
 	/** inner class **/

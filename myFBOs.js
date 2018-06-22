@@ -108,7 +108,7 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 		this.renderbuffer = gl.createRenderbuffer();
 		this.renderbuffer._name = "renderbuffer";
 		var size = buffWidth * buffHeight;
-		if(size > gl.getParameter(gl.MAX_RENDERBUFFER_SIZE))myInfo.main.caution = "framebuffer size is too large "+size;
+//●		if(size > gl.getParameter(gl.MAX_RENDERBUFFER_SIZE))myInfo.main.caution = "framebuffer size is too large "+size;
 		this.buffWidth = buffWidth;
 		this.buffHeight = buffHeight;
 	};
@@ -193,7 +193,7 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 		var matches,nameBuff;
 		matches = sMode.match(/C[NTR]D[NTR]S[NTR]|C[NTR]S[NTR]D[NTR]|D[NTR]C[NTR]S[NTR]|D[NTR]S[NTR]C[NTR]|S[NTR]C[NTR]D[NTR]|S[NTR]D[NTR]C[NTR]/g);
 		if(matches == null){
-			myInfo.main.error = "FBO.*.activate('HERE') 's HERE is wrong strings";
+//●			myInfo.main.error = "FBO.*.activate('HERE') 's HERE is wrong strings";
 			return;
 		}
 		matches = sMode.match(/CNDNSN/);
@@ -208,7 +208,7 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 		if(matches != null){
 			matches = sMode.match(/DR|SR/);
 			if(matches != null){
-				myInfo.main.error = "FBO.*.activate('HERE') 's HERE contains CR and, DR, SR or both";//レンダーバッファはカラーと他のものと一緒には使えない
+//●				myInfo.main.error = "FBO.*.activate('HERE') 's HERE contains CR and, DR, SR or both";//レンダーバッファはカラーと他のものと一緒には使えない
 				return;
 			}
 		}
@@ -225,26 +225,26 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 		switch(mode){
 			case "N":
 				gl.colorMask(false,false,false,false);
-				myInfo.main.colorbufferattach = nameBuff + "None";
+//●				myInfo.main.colorbufferattach = nameBuff + "None";
 				break;
 			case "T":
 				if(this.oColorBufferMode==myFBOs.none){
-					myInfo.main.error = "Please specify the colorBufferMode of myFBOs."+this.name+".activate()";
+//●					myInfo.main.error = "Please specify the colorBufferMode of myFBOs."+this.name+".activate()";
 				}else if(this.oColorBufferMode==void 0){
-					myInfo.main.error = "Please check the colorBufferMode argument of myFBOs."+this.name+"which is 'undefined'.";
+//●エ					myInfo.main.error = "Please check the colorBufferMode argument of myFBOs."+this.name+"which is 'undefined'.";
 				}
 				gl.colorMask(true,true,true,true);
 				this.initializeTextureColorBuffer();
 				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D, this.textureColorBuffer, 0);
 
 
-				myInfo.main.colorbufferattach = nameBuff + "Texture";
+//●				myInfo.main.colorbufferattach = nameBuff + "Texture";
 				break;
 			case "R":
 				gl.colorMask(true,true,true,true);
 				gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA4,this.buffWidth,this.buffHeight);
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
-				myInfo.main.colorbufferattach = nameBuff + "Renderbuffer";
+//●				myInfo.main.colorbufferattach = nameBuff + "Renderbuffer";
 				break;
 			default:
 		}
@@ -254,8 +254,8 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 			gl.enable(gl.STENCIL_TEST);
 			gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_STENCIL,this.buffWidth,this.buffHeight);
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);
-			myInfo.main.depthbufferattach = "  DEPTH BUFFER ATTACHING TO : Renderbuffer";
-			myInfo.main.stencilbufferattach = "STENCIL BUFFER ATTACHING TO : Renderbuffer";
+//●			myInfo.main.depthbufferattach = "  DEPTH BUFFER ATTACHING TO : Renderbuffer";
+//●			myInfo.main.stencilbufferattach = "STENCIL BUFFER ATTACHING TO : Renderbuffer";
 			this.funcControlBCDS(gl);//shaderフォルダの中で定義されたものがこのクラスに渡されているはず
 			return;// *********** return **************
 		}
@@ -265,19 +265,19 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 		switch(mode){
 			case "N":
 				gl.disable(gl.DEPTH_TEST);
-				myInfo.main.depthbufferattach = nameBuff + "None";
+//●				myInfo.main.depthbufferattach = nameBuff + "None";
 				break;
 			case "T":
 				gl.enable(gl.DEPTH_TEST);
 				this.initializeTextureDepthBuffer();
 				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D, this.textureDepthBuffer, 0);
-				myInfo.main.depthbufferattach = nameBuff + "Texture";
+//●				myInfo.main.depthbufferattach = nameBuff + "Texture";
 				break;
 			case "R":
 				gl.enable(gl.DEPTH_TEST);
 				gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,this.buffWidth,this.buffHeight);
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
-				myInfo.main.depthbufferattach = nameBuff + "Renderbuffer";
+//●				myInfo.main.depthbufferattach = nameBuff + "Renderbuffer";
 				break;
 			default:
 		}
@@ -287,19 +287,19 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 		switch(mode){
 			case "N":
 				gl.disable(gl.STENCIL_TEST);
-				myInfo.main.stencilbufferattach = nameBuff + "None";
+//●				myInfo.main.stencilbufferattach = nameBuff + "None";
 				break;
 			case "T":
 				gl.enable(gl.STENCIL_TEST);
 				this.initializeTextureStencilBuffer();
 				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.STENCIL_ATTACHMENT,gl.TEXTURE_2D, this.textureStencilBuffer, 0);
-				myInfo.main.stencilbufferattach = nameBuff + "Texture";
+//●				myInfo.main.stencilbufferattach = nameBuff + "Texture";
 				break;
 			case "R":
 				gl.enable(gl.STENCIL_TEST);
 				gl.renderbufferStorage(gl.RENDERBUFFER,gl.STENCIL_INDEX8,this.buffWidth,this.buffHeight);
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.renderbuffer);//gl.DEPTH_ATTACHMENT--means-->bit format
-				myInfo.main.stencilbufferattach = nameBuff + "Renderbuffer";
+//●				myInfo.main.stencilbufferattach = nameBuff + "Renderbuffer";
 				break;
 			default:
 		}

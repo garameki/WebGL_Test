@@ -49,6 +49,7 @@ libFileRelationship['UnitsToDraw'].relatedTo='myLabel';
 		this.nameTexture = sNameTexture;
 		/** shape **/
 		this.draw = shape.draw;
+		this.shape = shape;
 		this.buffers = createBuffers(gl,shape,sName);
 
 

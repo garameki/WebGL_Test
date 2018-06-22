@@ -26,6 +26,7 @@
 <script type="text/javascript"	src="./myLabel.js"></script>
 <script type="text/javascript"	src="./shapes/myShape.js"></script>
 	<script type="text/javascript"	src="./shapes/flame.js"></script>
+	<script type="text/javascript"	src="./shapes/lines.js"></script>
 <script type="text/javascript"	src="./myTextures.js"></script>
 <script type="text/javascript"	src="./myFBOs.js"></script>
 
@@ -148,7 +149,8 @@ if(flagName){
 		//var names = ["flame","plane"];
 		//var names = ["pluto","velocity","plane"];//,"earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 
-		var names = ["velocity","flame","sun","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+		var names = ["footMark","velocity","flame","sun","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+		//sun無し　var names = ["footMark","velocity","flame","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 
 		mySendAttribUniform[sNameShader](gl,names,angle);
 	myFBOs[sNameShader].inactivate();
@@ -446,7 +448,7 @@ if(flagName){
 
 
 //:::::::::::::::::::::::::::::::::: GLSL STATUS ::::::::::::::::::::::::::::::::::::::::::
-
+/*//●
 	myInfo.main.glerror 		 = "GL error:"+gl[gl.getError()];
 	myInfo.main.glstatus 		 = "GL status:"+gl[gl.getParameter(gl.FRAGMENT_SHADER_DERIVATIVE_HINT)];
 	myInfo.main.framebuffer 	 = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
@@ -456,7 +458,7 @@ if(flagName){
 	myInfo.main.stencilbackwritemask = "stencil mask back:"+gl.getParameter(gl.STENCIL_BACK_WRITEMASK).toString(16);
 	myInfo.main.stencilbits 	 = "stencil bit length: "+gl.getParameter(gl.STENCIL_BITS);
 	myInfo.main.stencilfunc 	 = "stencilFunc("+gl[gl.getParameter(gl.STENCIL_FUNC)]+","+gl.getParameter(gl.STENCIL_REF).toString(2)+","+gl.getParameter(gl.STENCIL_VALUE_MASK).toString(2)+")";
-
+*/
 };
 
 
@@ -516,6 +518,7 @@ function start(){
 
 	/** write information on sub screen **/
 
+/*
 	myInfo.create("main",550,0);//ordinary writing with properties of '.info=','.caution=' or '.error='
 
 	myInfo.main.createLine("span","black","white",10);//changable line writing with property of its name (e.g. myInfo.main.span="your text";)
@@ -531,7 +534,7 @@ function start(){
 	myInfo.main.createLine("colorbufferattach","black","white",10);
 	myInfo.main.createLine("depthbufferattach","black","white",10);
 	myInfo.main.createLine("stencilbufferattach","black","white",10);
-
+*/
 
 	
 
@@ -644,7 +647,7 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 	// caution // caution									// caution // caution
 	// caution // caution // caution // caution // caution // caution // caution // caution // caution // caution
 
-	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+//●	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
 	var wide = 512;
 	var aNameShader = [
 		"spaceShip",
@@ -686,7 +689,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 	//** prepare textures **
-	myInfo.main.info = "max texture size ="+gl.MAX_TEXTURE_SIZE;flagMaxTexture=true;
+//●	myInfo.main.info = "max texture size ="+gl.MAX_TEXTURE_SIZE;flagMaxTexture=true;
 
 	myTextures.changeRoot("textures/");
 
@@ -1137,7 +1140,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 
 	/** shape **/
 //	var shape = myShape.sphere(gl,50);
-	var shape = myShape.flame(gl,0.1,0.1);//sphere(gl,myFacts.planets[name].radius);
+	var shape = myShape.flame(gl,0.1,0.1,300);//sphere(gl,myFacts.planets[name].radius);
 
 	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
 //****************************************************************************************
@@ -1653,6 +1656,41 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	UnitsToDraw.join(gl,name,nameTextureGreen,shape,oMatrices,oValuesForShader);
 //****************************************************************************************
 
+//**************** FOOTMARK *****************************************************************
+	name = "footMark";
+
+	// this footMark is calculated at animation()
+	/** matrix **/
+	m1 = myXYZ.replaceViewNotRotate(xyz[namePlane]);
+	var oMatrices = {
+		modelView:[m1],	//all matrices
+		manipulatedRotation:[],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[]		//not manipulated matrices // not necessary
+	};
+
+	/** value **/
+	var oValuesForShader = {
+		name:name,
+		brightness:1.1,		//intensity of Sun light
+		alpha:1.,		//alpha
+		baseLight:1.,		//emmision
+		cassiniFactor:0.,	//whether ring or not
+	};
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,0,5,name,colorName);
+
+	/** shape **/
+	var shape = myShape.lines(gl,[0,0,0],[0,0,5]);
+
+	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+
+
+
 	/** observer **/
 /*
 	var aAccumeUnits = [];
@@ -1742,12 +1780,16 @@ llllllllll		myLabel.join('');
 		dt = timeStamp - timeBefore;
 		if(dt>10){
 			span+=dt/16;
-			myInfo.main.span = "span="+(Math.floor(span)).toString();
+//●			myInfo.main.span = "span="+(Math.floor(span)).toString();
+
 			myXYZTrigonometry.reposAll(dt);//次の.move(dt)で位置を使うのでmyXYZManipulationよりも先に計算しておくこと
 			myXYZManipulation.move(dt);
 			/** change shapes **/
 			UnitsToDraw.velocity.changeShape(myShape.line(gl,[0,0,0],[xyz[namePlane].speedX*5,xyz[namePlane].speedY*5,xyz[namePlane].speedZ*5],myColorName.magenta(1)));
 			UnitsToDraw.flame.changeShape(myShape.flame(gl,1,1));
+
+//●
+			UnitsToDraw.footMark.changeShape(UnitsToDraw.footMark.shape.addPoint([xyz["plane"].posX,xyz["plane"].posY,xyz["plane"].posZ]));
 
 //			drawScene(gl,oShader.spaceShip,span);
 			drawScene(gl,span);
