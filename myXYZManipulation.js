@@ -117,7 +117,7 @@ var hoge = setInterval(function(){
 			const G = myFacts.planets.gravity;
 
 
-			const aNames = ["saturn"];//,"jupiter","neptune","uranus","earth","mars","venus","mercury"];
+			const aNames = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury"];
 
 			//spacecraft ... origin ( this.posX this.posY this.posZ )
 			//target planet ... ( memT.x memT.y memT.z )
@@ -129,7 +129,7 @@ var hoge = setInterval(function(){
 				dz = memT.z - this.posZ;
 
 				len = 1/Math.sqrt(dx*dx+dy*dy+dz*dz);
-				force = -G * myFacts.planets[aNames[ii]].mass * len * len * 0.0001;
+				force = -G * myFacts.planets[aNames[ii]].mass * len * len * 0.001;
 				sumFx -= force * len * dx;
 				sumFy -= force * len * dy;
 				sumFz -= force * len * dz;
@@ -152,7 +152,7 @@ if(pp)pp.innerHTML = "x:"+Math.floor(this.posX*100)/100+" y:"+Math.floor(this.po
 pp.innerHTML += injx.toString()+"<br>";
 pp.innerHTML += injy.toString()+"<br>";
 pp.innerHTML += injz.toString()+"<br>";
-			//calc velocity vector スピードの計算
+			//calc velocity vector
 			this.speedX += injx + sumFx;
 			this.speedY += injy + sumFy;
 			this.speedZ += injz + sumFz;
