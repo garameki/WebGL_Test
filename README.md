@@ -1,6 +1,5 @@
 # SPACECRAFT  
-## latest version  
-### ```release_v1.1.21```  
+## latest version ```release_v1.1.21```  
 * Add Gravity Effect  
 > note: ` master `  branch is not latest
   
@@ -16,3 +15,7 @@ Pay attention to only one thing called swing-by by which your spacecraft might b
    
 ## How to play 
 Please see ```README.md``` in each version. 
+  
+## More  
+If you might use google chrome on a note-type computer,you would be better to turn off hardware accelaration.  
+It might be getting uncontinuously to draw.
