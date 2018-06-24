@@ -8,27 +8,31 @@ libFileRelationship.myXYZTrigonometry.relatedTo='myMat4';
 		/** global scope **/
 		myXYZTrigonometry = { };
 
-
-
+		// real           screen
+		//one hour ----- one year
+		//3600000ms----- 360°(earth) 
+		//			[°]/[h] * [rad]/[°] * [ms]/[h]
+		const anglePerHour = (360/365/24)*(Math.PI/180)/(3600000/365/24);//[rad/ms]----1 sidereal period of earth per real time 1 hour
 
 		/** inner class **/
-		var Member = function(r_xy,r_z,fTimes){//Note: The expression "function Member(){" to define occur a efficient issue.It's impossible to use variable 'Member' to inherits.
+		/**
+		 * @param {Number} period ... earth = 1.000000
+		**/
+		var Member = function(r_xy,r_z,period){
 			myXYZ.SuperMember.call(this);
 			this.rxy = r_xy;//radius on x-y plane
 			this.rz = r_z;//radius on (x or y)-z plane
-			this.fTimes = fTimes;//回転倍率
+			this.fTimes = anglePerHour/period;//公転角速度real timeの411msでanglePerHour°回転する
 			this.alpha = 2*3.14*Math.random();
 			this.gamma = 2*3.14*Math.random();
 		};
 		myXYZ.inherits(Member);
 		//@override
 		Member.prototype.reposition = function(totalTime){
-			this.x=this.rxy * Math.cos(this.fTimes*this.ratioTime*totalTime+this.alpha);
-			this.y=this.rxy * Math.sin(this.fTimes*this.ratioTime*totalTime+this.alpha);
-			this.z=this.rz  * Math.sin(this.fTimes*this.ratioTime*totalTime+this.gamma);
+			this.x=this.rxy * Math.cos(this.fTimes*totalTime+this.alpha);
+			this.y=this.rxy * Math.sin(this.fTimes*totalTime+this.alpha);
+			this.z=this.rz  * Math.sin(this.fTimes*totalTime+this.gamma);
 		};
-		//@override
-		Member.prototype.ratioTime = Math.PI*0.00555555555*0.005;
 
 		const TRUE = true;
 console

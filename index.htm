@@ -738,18 +738,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	//エラー対策しておかないとどこをどう修正/追加すればよいのかわからず、後で使えなくなる恐れがある
 
 	var _front_=false;
-	var _frontLength_ = 6;
-
-
-
-
-
-
-
-
-
-const bbb = 0.05 * myFacts.planets["earth"].radius;
-
+	var _frontLength_ = 6;//->UI
 
 
 	var colorName = myColorName.white(0.5);
@@ -847,8 +836,8 @@ let m1,m2,m3,m4,m5,m6,m7;
 //**************** JUPITER *****************************************************************
 	name = "jupiter";
 	var nameJupiter = name;//the Jupiter has sattelites
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrix **/
 	m1 = myXYZ.rotate(1,0,0,0,90);
@@ -890,8 +879,8 @@ let m1,m2,m3,m4,m5,m6,m7;
 
 //**************** URANUS *****************************************************************
 	name = "uranus";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -919,8 +908,8 @@ let m1,m2,m3,m4,m5,m6,m7;
 //**************** SATURN *****************************************************************
 	name = "saturn";
 	var nameSaturn = name;//the Uranus has sattelites
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -948,8 +937,8 @@ let m1,m2,m3,m4,m5,m6,m7;
 //**************** NEPTUNE *****************************************************************
 	name = "neptune";
 	var nameNeptune = name;//the Uranus has sattelites
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -977,8 +966,8 @@ let m1,m2,m3,m4,m5,m6,m7;
 //**************** EARTH ***********************************************************************************
 	name = "earth";
 	var nameEarth = name;
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1005,8 +994,8 @@ let m1,m2,m3,m4,m5,m6,m7;
 
 //**************** VENUS ***********************************************************************************
 	name = "venus";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1033,8 +1022,8 @@ let m1,m2,m3,m4,m5,m6,m7;
 
 //**************** MARS ***********************************************************************************
 	name = "mars";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1061,8 +1050,8 @@ let m1,m2,m3,m4,m5,m6,m7;
 
 //**************** MERCURY ***********************************************************************************
 	name = "mercury";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1089,8 +1078,8 @@ let m1,m2,m3,m4,m5,m6,m7;
 
 //**************** PLUTO ***********************************************************************************
 	name = "pluto";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,1000,1000,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1164,8 +1153,8 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** MOON OF EARTH *****************************************************************
 	name = "moon";
-	var revRadius = myFacts.planets[name].revRadius*0.1;;
-	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,0.5);
+	var revRad = myFacts.planets[name].revRadius*0.1;;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrix **/
 	m1 = myXYZ.rotate(1,0,0,0,90);
@@ -1210,8 +1199,8 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** TITAN OF SATURN *****************************************************************
 	name = "titan";
-	var revRadius = myFacts.planets[name].revRadius*0.1;
-	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,1);
+	var revRad = myFacts.planets[name].revRadius*0.1;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1240,8 +1229,8 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** MIMAS OF SATURN *****************************************************************
 	name = "mimas";
-	var revRadius = myFacts.planets[name].revRadius*0.5;
-	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,1);
+	var revRad = myFacts.planets[name].revRadius*0.5;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1269,8 +1258,8 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** TETHYS OF SATURN *****************************************************************
 	name = "tethys";
-	var revRadius = myFacts.planets[name].revRadius*0.4;
-	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,1);
+	var revRad = myFacts.planets[name].revRadius*0.4;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1299,8 +1288,8 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** IAPETUS OF SATURN *****************************************************************
 	name = "iapetus";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1328,8 +1317,8 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** TRITON OF NEPTUNE *****************************************************************
 	name = "triton";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1358,10 +1347,10 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** GANYMEDE OF JUPITER *****************************************************************
 	name = "ganymede";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
-	/** matrices **/
+/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
 	m4 = myXYZ.trans(xyz[nameJupiter]);//revolution公転//var is necessary not to overwrite pointer * and to assign new memory
 	var oMatrices = {
@@ -1386,10 +1375,10 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //****************************************************************************************
 
-//**************** KALLISTO OF JUPITER *****************************************************************
-	name = "kallisto";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+//**************** CALLISTO OF JUPITER *****************************************************************
+	name = "callisto";
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1417,8 +1406,8 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** IO OF JUPITER *****************************************************************
 	name = "io";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1446,8 +1435,8 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** EUROPA OF JUPITER *****************************************************************
 	name = "europa";
-	var revRadius = myFacts.planets[name].revRadius;
-	xyz[name] = myXYZTrigonometry.createMember(name,revRadius,revRadius,bbb/myFacts.planets[name].revRadius);
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZTrigonometry.createMember(name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrices **/
 	m3 = myXYZ.trans(xyz[name]);//revolution公転
@@ -1479,7 +1468,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************RING OF SATURN *****************************************************************
 	name = "ring";
-//	xyz[name] = myXYZTrigonometry.createMember(name,0,0,bbb/myFacts.planets[name].revRadius);
+//	xyz[name] = myXYZTrigonometry.createMember(name,0,0,name,revRad,revRad,myFacts.planets[name].period);
 
 	/** matrix **/
 	let m1 = myXYZ.rotate(1,0,0,0,90);
@@ -1789,25 +1778,22 @@ llllllllll		myLabel.join('');
 	var span=0;
 	var dt;
 	function render(timeStamp){
-		dt = timeStamp - timeBefore;
-		if(dt>10){
-			span+=dt/16;
-//●			myInfo.main.span = "span="+(Math.floor(span)).toString();
+		dtime = timeStamp - timeBefore;
+//●		myInfo.main.span = "span="+(Math.floor(span)).toString();
 
-			myXYZTrigonometry.reposAll(dt);//次の.move(dt)で位置を使うのでmyXYZManipulationよりも先に計算しておくこと
-			myXYZManipulation.move(dt);
-			/** change shapes **/
-			UnitsToDraw.velocity.changeShape(myShape.line(gl,[0,0,0],[xyz[namePlane].speedX*5,xyz[namePlane].speedY*5,xyz[namePlane].speedZ*5],myColorName.magenta(1)));
-			UnitsToDraw.flame.changeShape(myShape.flame(gl,1,1));
+		myXYZTrigonometry.reposAll(dtime);//次の.move(dtime)で位置を使うのでmyXYZManipulationよりも先に計算しておくこと
+		myXYZManipulation.move(dtime);
+		/** change shapes **/
+		UnitsToDraw.velocity.changeShape(myShape.line(gl,[0,0,0],[xyz[namePlane].speedX*5,xyz[namePlane].speedY*5,xyz[namePlane].speedZ*5],myColorName.magenta(1)));
+		UnitsToDraw.flame.changeShape(myShape.flame(gl,1,1));
 
 //●
-			UnitsToDraw.footMark.changeShape(UnitsToDraw.footMark.shape.addPoint([xyz["plane"].posX,xyz["plane"].posY,xyz["plane"].posZ]));
+		UnitsToDraw.footMark.changeShape(UnitsToDraw.footMark.shape.addPoint([xyz["plane"].posX,xyz["plane"].posY,xyz["plane"].posZ]));
 //const plane = xyz["plane"];
 //infoWindowP.innerText = "plane:x"+Math.floor(plane.posX*1000)/1000+" y:"+Math.floor(plane.posY*1000)/1000+" z:"+Math.floor(plane.posZ*1000)/1000;
-//			drawScene(gl,oShader.spaceShip,span);
-			drawScene(gl,span);
-			timeBefore = timeStamp;
-		}
+//		drawScene(gl,oShader.spaceShip,span);
+		drawScene(gl,span);
+		timeBefore = timeStamp;
 		window.requestAnimationFrame(render);
 	}
 	window.requestAnimationFrame(render);

@@ -66,19 +66,6 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 			this.matAccume=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 			this.matAccumeNotTranslated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 			this.matAccumeNotRotated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
-var hoge = setInterval(function(){
-	gg = document.getElementsByTagName('body')[0];
-	if(gg){
-		clearInterval(hoge);
-		pp = document.createElement('p');
-		pp.style.position = "absolute";
-		pp.style.top = "0px";
-		pp.style.left = "50px";
-		pp.style.color = "white";
-		gg.appendChild(pp);
-		pp.innerText = "Hello World";
-	}
-},100);
 
 		};
 		myXYZ.inherits(Member);
@@ -124,24 +111,18 @@ var hoge = setInterval(function(){
 			let memT,dx,dy,dz,len,force;
 			for(let ii in aNames){
 				memT = myXYZTrigonometry[aNames[ii]];//absolute coordinate
-				dx = memT.x - this.posX;
-				dy = memT.y - this.posY;
-				dz = memT.z - this.posZ;
+				dx = this.posX - memT.x;
+				dy = this.posY - memT.y;
+				dz = this.posZ - memT.z;
 
 				len = 1/Math.sqrt(dx*dx+dy*dy+dz*dz);
-				force = -G * myFacts.planets[aNames[ii]].mass * len * len * 0.001;
-				sumFx -= force * len * dx;
-				sumFy -= force * len * dy;
-				sumFz -= force * len * dz;
+				force = -G * myFacts.planets[aNames[ii]].mass * len * len;
+				sumFx += force * len * dx;
+				sumFy += force * len * dy;
+				sumFz += force * len * dz;
 			}
-const memTSaturn = myXYZTrigonometry["saturn"];
-if(pp)pp.innerHTML = "x:"+Math.floor(this.posX*100)/100+" y:"+Math.floor(this.posY*100)/100+" z:"+Math.floor(this.posZ*100)/100+"<br>"+
-		     "x:"+Math.floor(this.speedX*100)/100+" y:"+Math.floor(this.speedY*100)/100+" z:"+Math.floor(this.speedZ*100)/100+"<br>"+
-		     "x:"+Math.floor(sumFx*10000)+" y:"+Math.floor(sumFy*10000)+" z:"+Math.floor(sumFz*10000)+"<br>"+
-		     "x:"+Math.floor(memTSaturn.x)+" y:"+Math.floor(memTSaturn.y)+" z:"+Math.floor(memTSaturn.z)+"<br>";
 
-
-			//calc injection force
+			//calc injection force This force is on relative coordinate,so that this must be converted onto absolute coordinate
 			let ix = gInjectLR;
 			let iy = gInjectUD;
 			let iz = gInjectFB;
@@ -149,9 +130,7 @@ if(pp)pp.innerHTML = "x:"+Math.floor(this.posX*100)/100+" y:"+Math.floor(this.po
 			let injx = ai[0]*ix+ai[1]*iy+ai[2]*iz+ai[3];
 			let injy = ai[4]*ix+ai[5]*iy+ai[6]*iz+ai[7];
 			let injz = ai[8]*ix+ai[9]*iy+ai[10]*iz+ai[11];
-pp.innerHTML += injx.toString()+"<br>";
-pp.innerHTML += injy.toString()+"<br>";
-pp.innerHTML += injz.toString()+"<br>";
+
 			//calc velocity vector
 			this.speedX += injx + sumFx;
 			this.speedY += injy + sumFy;
