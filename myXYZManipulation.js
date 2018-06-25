@@ -5,8 +5,6 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 
 
 
-	var drawStep = 10;//milli seconds
-
 	let gg,pp;
 
 	//for using under controlled space ship, follow to key board
@@ -110,7 +108,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 			//target planet ... ( memT.x memT.y memT.z )
 			let memT,dx,dy,dz,len,force;
 			for(let ii in aNames){
-				memT = myXYZTrigonometry[aNames[ii]];//absolute coordinate
+				memT = myXYZRevolutions[aNames[ii]];//absolute coordinate
 				dx = this.posX - memT.x;
 				dy = this.posY - memT.y;
 				dz = this.posZ - memT.z;
@@ -166,14 +164,14 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 	
 	
 
-
+		//一分に一回の描画
 		Object.defineProperty(myXYZMani,'move',{value:move(hero)});
 		function move(member){//member === hero
-			var sumRemainder=0;
-			return function(dt){
-				sumRemainder+=dt;
-				var n = Math.floor(sumRemainder/drawStep);//何回移動させるか
-				sumRemainder=sumRemainder%drawStep;
+			var sumRemain=0;
+			return function(timeDiff_minute){//Whether virtual time or real time, it's none of this calculation. The quantity of time span is only important.
+				sumRemain+=timeDiff_minute;
+				var n = Math.floor(sumRemain);// a number of translation of the spacecraft
+				sumRemain=sumRemain - n;
 
 				for(var ii=0;ii<n;ii++){
 
