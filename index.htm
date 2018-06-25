@@ -1793,7 +1793,8 @@ llllllllll		myLabel.join('');
 		UnitsToDraw.footMark.changeShape(UnitsToDraw.footMark.shape.addPoint([xyz["plane"].posX,xyz["plane"].posY,xyz["plane"].posZ]));
 
 		/** report **/
-		infoWindowP.innerHTML = (Math.floor(vTimeTotal_minute/60/60/24/365%365)).toString()+"年"+(Math.floor(vTimeTotal_minute/60/24)).toString()+"日"+(Math.floor(vTimeTotal_minute/60%24)).toString()+"時間"+(Math.floor(vTimeTotal_minute%60)).toString()+"分";
+		infoWindowP.innerHTML  = (Math.floor(vTimeTotal_minute/60/60/24/365%365)).toString()+"年"+(Math.floor(vTimeTotal_minute/60/24)).toString()+"日"+(Math.floor(vTimeTotal_minute/60%24)).toString()+"時間"+(Math.floor(vTimeTotal_minute%60)).toString()+"分<br>";
+		infoWindowP.innerHTML += "Distance<br>Earth:"+Math.floor(calcDistance("earth"))+"km<br>"
 
 		drawScene(gl,vTimeTotal_minute);
 		rTimeBefore = rTimeStamp;
@@ -1802,6 +1803,14 @@ llllllllll		myLabel.join('');
 	window.requestAnimationFrame(render);
 };//start
 
+	function calcDistance(sName) {
+		/**spacecraft**/
+		const dx = myXYZManipulation.member.posX - myXYZRevolutions[sName].x;
+		const dy = myXYZManipulation.member.posY - myXYZRevolutions[sName].y;
+		const dz = myXYZManipulation.member.posZ - myXYZRevolutions[sName].z;
+
+		return Math.sqrt(dx*dx + dy*dy + dz*dz);
+	};
 </script>
 
 </head>

@@ -2,6 +2,9 @@
 libFileRelationship.myXYZManipulation.relatedTo='myMat4';
 libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 libFileRelationship.myXYZManipulation.relatedTo='myFacts';
+libFileRelationship.myXYZManipulation.relatedTo='myVec3';
+libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
+
 
 
 
@@ -13,8 +16,8 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 		myXYZManipulation = myXYZMani = { };
 
 		//differential
-		const dTurn = 0.01;//angle
-		const dInject = 0.01;//Accelaration
+		const dTurn = Math.PI/180/60;//radian per 1 second besed on which 1 rotation takes 1 minute
+		const dInject = 0.0001;// must make unit [Newton]
 
 		//key codes
 		const AR=39;//→ Arrow Right
@@ -102,8 +105,8 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 			const G = myFacts.planets.gravity;
 
 
-			const aNames = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury"];
-
+			//const aNames = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury"];
+			const aNames = ["earth"];
 			//spacecraft ... origin ( this.posX this.posY this.posZ )
 			//target planet ... ( memT.x memT.y memT.z )
 			let memT,dx,dy,dz,len,force;
@@ -146,6 +149,53 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 
 		};
 
+		Member.prototype.updateDirection = function () {
+			//1秒ごとの回転処理
+
+			// spacecraftの-Z軸方向を地球に向ける
+
+			//元の方向ベクトル(0 0 -1)の現在の向きを求める
+			const mat = this.matAccumeNotTranslated;
+			const cx = 0;
+			const cy = 0;
+			const cz = -1;
+			const newcx = mat[0]*cx+mat[1]*cy+mat[2]*cz+mat[3];
+			const newcy = mat[4]*cx+mat[5]*cy+mat[6]*cz+mat[7];
+			const newcz = mat[8]*cx+mat[9]*cy+mat[10]*cz+mat[11];
+
+			//spacecraftから見た地球の方向ベクトルを求める
+			const ex = myXYZRevolutions["earth"].x - this.posX;
+			const ey = myXYZRevolutions["earth"].y - this.posY;
+			const ez = myXYZRevolutions["earth"].z - this.posZ;
+
+			//spacecraftの現在の-Z軸の方向と地球の方向との内角を求める
+			const vnewc = [newcx,newcy,newcz];
+			const ve = [ex,ey,ez];
+			vnewc.normalize3D();
+			ve.normalize3D();
+			const angleRad = Math.acos(myVec3.dot(vnewc,ve));// in radians
+.asinも使って正確な角度を求める
+特に角度が90°を超える場合
+
+			//既に地球に向いている時は計算しない
+			if(Math.abs(angleRad)>0.001) {
+				//spacecraftの現在の-Z軸方向を地球の方向に向けるときの回転軸を求める
+				const axis = myVec3.cross(ve,vnewc);
+				const angle = dTurn * angleRad / Math.abs(angleRad)/1;
+
+
+				//matAccumeに加える
+				myMat4.load(this.matAccume);
+				myMat4.rot(axis[0],axis[1],axis[2],angle);
+				myMat4.storeTo(this.matAccume);
+
+				//matAccumeNotTranslatedに加える
+				myMat4.load(this.matAccumeNotTranslated);
+				myMat4.rot(axis[0],axis[1],axis[2],angle);
+				myMat4.storeTo(this.matAccumeNotTranslated);
+
+			}
+		};
 
 
 		var hero = new Member();//only one member is allowed to be made
@@ -160,11 +210,12 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 				return null;
 			}
 		};
+		Object.defineProperty(myXYZManipulation,'member',{get:function(){return hero;},enumerable:true,configurable:false});
 
 	
 	
 
-		//一分に一回の描画
+		//一秒に一回の描画
 		Object.defineProperty(myXYZMani,'move',{value:move(hero)});
 		function move(member){//member === hero
 			var sumRemain=0;
@@ -173,11 +224,13 @@ libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 				var n = Math.floor(sumRemain);// a number of translation of the spacecraft
 				sumRemain=sumRemain - n;
 
-				for(var ii=0;ii<n;ii++){
+				for(var ii=0;ii<n*60;ii++){
 
 					member.updateAccumes();
 
 					member.updatePosition();
+
+					member.updateDirection();
 
 
 				}
