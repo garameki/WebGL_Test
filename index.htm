@@ -8,6 +8,7 @@
 <script type="text/javascript"	src="./libElement.js"></script>
 <script type="text/javascript"	src="./myXYZ.js"></script>
 <script type="text/javascript"	src="./myXYZManipulation.js"></script>
+	<script type="text/javascript"	src="./myXYZManipulation.buttons.js"></script>
 <script type="text/javascript"	src="./myXYZRevolutions.js"></script>
 <script type="text/javascript"	src="./myXYZGravity.js"></script>
 <script type="text/javascript"	src="./myMat4.js"></script>
@@ -738,7 +739,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 	//エラー対策しておかないとどこをどう修正/追加すればよいのかわからず、後で使えなくなる恐れがある
 
 	var _front_=false;
-	var _frontLength_ = 6;//->UI
+	var _frontLength_ = 11;//->UI
 
 
 	var colorName = myColorName.white(0.5);
@@ -1371,7 +1372,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	/** shape **/
 	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
 
-	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
 
 //****************************************************************************************
 
@@ -1553,7 +1554,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	var radius = myFacts.planets[nameEarth].radius * 1.05;
 	var shape = myShape.sphere(gl,radius);
 
-	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
+//	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
 }
 //****************************************************************************************
 
@@ -1567,7 +1568,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 	/** matrix **/
 	m1 = myXYZ.replaceViewNotTranslated(xyz[namePlane]);
-	m2 = myXYZ.translate(-15,-15,-30);
+	m2 = myXYZ.translate(-2,-2,-30);
 	var oMatrices = {
 		modelView:[m2],	//all matrices
 		manipulatedRotation:[],	//accumeLightDirectional  rotation matrices in manipulated matrices
@@ -1589,7 +1590,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	myLabel[name].addText(0,0,5,name,colorName);
 
 	/** shape **/
-	var shape = myShape.line(gl,[0,0,0],[0,0,5],myColorName.magenta(1));
+	var shape = myShape.line(gl,[0,0,0],[0,0,-1],myColorName.magenta(1));
 
 	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
 //****************************************************************************************
@@ -1602,7 +1603,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	myLabel[name].addText(0,5,0,name,colorName);
 
 	/** shape **/
-	var shape = myShape.line(gl,[0,0,0],[0,5,0],myColorName.magenta(1));
+	var shape = myShape.line(gl,[0,0,0],[0,1,0],myColorName.magenta(1));
 
 	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
 //****************************************************************************************
@@ -1615,7 +1616,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	myLabel[name].addText(5,0,0,name,colorName);
 
 	/** shape **/
-	var shape = myShape.line(gl,[0,0,0],[5,0,0],myColorName.magenta(1));
+	var shape = myShape.line(gl,[0,0,0],[1,0,0],myColorName.magenta(1));
 
 	UnitsToDraw.join(gl,name,nameTextureWhite,shape,oMatrices,oValuesForShader);
 //****************************************************************************************
@@ -1629,7 +1630,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 	// this arrow is calculated at animation
 	/** matrix **/
 	m1 = myXYZ.replaceViewNotTranslated(xyz[namePlane]);
-	m2 = myXYZ.translate(-15,-15,-30);
+	m2 = myXYZ.translate(-2,-2,-30);
 	var oMatrices = {
 		modelView:[m1,m2],	//all matrices
 		manipulatedRotation:[],	//accumeLightDirectional  rotation matrices in manipulated matrices
@@ -1820,13 +1821,5 @@ llllllllll		myLabel.join('');
 <div id="canvasContainer">
 	<canvas id="glcanvas" style="position:relative;top:0px;left:0px;background-color:black;width:512px;height:512px;"></canvas>
 </div>
-<p id="PRINT_INFO" style="position:absolute;top:0px;left:0px:offset:0px;font-size:40px;background-color:white;"></p>
-<p id="PRINT_CAUTION" style="position:absolute;top:0px;left:0px;color:red;font-size:25px;line-height:28px;offset:0px;background-color:transparent;"></p>
-	<div>
-		<h3 style="offset:0px;">Animating objects with WebGL</h3>
-		<h5 style="offset:0px;">using gl.TRIANGLES mode to draw and not using gl.ELEMENT_ARRAY_BUFFER mode to buffer</h5>
-		<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/Tutorial/Lighting_in_WebGL">MDN web docs moz://a(click next page)</a></p>
-		<p class="info" style="position:relative;top:0px;left:0px;color:black;font-size:30px:offset:0px">cite site:<a href="https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html">WebGLFundamentals</a></p>
-	</div>
 </div></body></html>
 

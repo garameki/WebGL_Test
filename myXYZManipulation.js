@@ -15,6 +15,41 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 		/** global scope **/
 		myXYZManipulation = myXYZMani = { };
 
+		Object.defineProperty(myXYZManipulation,'detect',{value:detect,writable:false,enumerable:false,configurable:false});
+		function detect(){
+			swDetect = !swDetect;
+		};
+
+		//info window --- I cant make this external function!!
+		let Info;
+		const hoge = setInterval(func(700,100,"black"),10);
+		function func(left,top,color) {
+			let collection;
+			let counter = 0;
+			return function() {
+				collection = document.getElementsByTagName('body');
+				if(collection.length == 0) {
+					if(++counter>100) {
+						clearInterval(hoge);
+						console.error("body not found.");
+					}
+				} else {
+					clearInterval(hoge);
+					Info = document.createElement('p');
+					Info.style.position = 'absolute';
+					Info.style.left = left.toString()+'px';
+					Info.style.top = top.toString()+'px';
+					Info.style.color = color;
+					collection[0].appendChild(Info);
+				}
+			};
+		};
+
+
+		function tos(num) {
+			return (Math.floor(num*1000)/1000).toString();
+		};
+
 		//differential
 		const dTurn = Math.PI/180/60;//radian per 1 second besed on which 1 rotation takes 1 minute
 		const dInject = 0.0001;// must make unit [Newton]
@@ -40,6 +75,10 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 		var gTurnAxZ = 0;//roll with axis Z
 		var gTurnAxX = 0;//roll with axis X
 		var gTurnAxY = 0;//roll with axis Y
+
+		//for Buttons
+		let swMZtoPlanet = false;
+		let swPXtoDirection = false;
 
 //		var gMissile=false;
 		var gAR=false;
@@ -71,7 +110,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 		};
 		myXYZ.inherits(Member);
 		Member.prototype.updateAccumes = function(){
-			//********** 視線の転回と移動に関する計算 ************
+			//********** キーによる視線の転回に関する計算 ************
 
 			//produce 3 matrices
 
@@ -94,9 +133,12 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 		};
 
 
+		let posXBefore=0;
+		let posYBefore=0;
+		let posZBefore=0;
 		Member.prototype.updatePosition = function(){
-
-			//All positions,velocities and forces are in absolute coordinate.
+			//key accelaration and gravity accelaration in absolute coordinate.
+			//キーによる加速の計算と重力による加速の計算
 
 			//calc FORCE
 			let sumFx = 0;//absolute coordinate
@@ -105,8 +147,8 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 			const G = myFacts.planets.gravity;
 
 
-			//const aNames = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury"];
-			const aNames = ["earth"];
+			//●const aNames = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury"];
+			const aNames = [];//["earth"];
 			//spacecraft ... origin ( this.posX this.posY this.posZ )
 			//target planet ... ( memT.x memT.y memT.z )
 			let memT,dx,dy,dz,len,force;
@@ -136,65 +178,107 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 			this.speedX += injx + sumFx;
 			this.speedY += injy + sumFy;
 			this.speedZ += injz + sumFz;
-
-//this.speedX = 1;
-//this.speedY = 0;
-//this.speedZ = 0;
-
-
-
 			this.posX += this.speedX;
 			this.posY += this.speedY;
 			this.posZ += this.speedZ;
 
+
+//			Info.innerHTML = "<br> posDX:"+(this.posX-posXBefore).toString()+"<br>posDY:"+(this.posY-posYBefore).toString()+"<br>posDZ:"+tos(this.posZ-posZBefore);
+
+			posXBefore = this.posX;
+			posYBefore = this.posY;
+			posZBefore = this.posZ;
 		};
 
-		Member.prototype.updateDirection = function () {
-			//1秒ごとの回転処理
 
-			// spacecraftの-Z軸方向を地球に向ける
+		
+		Member.prototype.updateMZtoPlanet = function () {
+			//a little bit rotation every 1 second 1秒ごとの回転処理
+
+			// make the Earth be in gaze onto -Z axisの-Z軸方向を地球に向ける
 
 			//元の方向ベクトル(0 0 -1)の現在の向きを求める
 			const mat = this.matAccumeNotTranslated;
-			const cx = 0;
-			const cy = 0;
-			const cz = -1;
-			const newcx = mat[0]*cx+mat[1]*cy+mat[2]*cz+mat[3];
-			const newcy = mat[4]*cx+mat[5]*cy+mat[6]*cz+mat[7];
-			const newcz = mat[8]*cx+mat[9]*cy+mat[10]*cz+mat[11];
+			const vecMZ = [-mat[2],-mat[6],-mat[10]];
+
+			Info.innerHTML = tos(vecMZ.x)+" "+tos(vecMZ.y)+" "+tos(vecMZ.z)+"<br>";
 
 			//spacecraftから見た地球の方向ベクトルを求める
-			const ex = myXYZRevolutions["earth"].x - this.posX;
-			const ey = myXYZRevolutions["earth"].y - this.posY;
-			const ez = myXYZRevolutions["earth"].z - this.posZ;
+			const ve = [myXYZRevolutions["earth"].x - this.posX,myXYZRevolutions["earth"].y - this.posY,myXYZRevolutions["earth"].z - this.posZ];
 
 			//spacecraftの現在の-Z軸の方向と地球の方向との内角を求める
-			const vnewc = [newcx,newcy,newcz];
-			const ve = [ex,ey,ez];
-			vnewc.normalize3D();
+			vecMZ.normalize3D();
 			ve.normalize3D();
-			const angleRad = Math.acos(myVec3.dot(vnewc,ve));// in radians
-.asinも使って正確な角度を求める
-特に角度が90°を超える場合
+			const angleRad = Math.acos(myVec3.dot(vecMZ,ve));// in radians , arguments must be normal
 
+
+
+
+//			Info.innerHTML += Math.floor(angleRad*180/3.141592653*1000)/1000;
+			Info.innerHTML = "<br>ve.x:"+tos(Math.floor(ve.x*100)/100)+"<br>ve.y:"+tos(Math.floor(ve.y*100)/100)+"<br>ve.z:"+tos(Math.floor(ve.z*100)/100);
+
+
+			let axis,angle;
 			//既に地球に向いている時は計算しない
-			if(Math.abs(angleRad)>0.001) {
+			if(Math.abs(angleRad)>0.01) {
 				//spacecraftの現在の-Z軸方向を地球の方向に向けるときの回転軸を求める
-				const axis = myVec3.cross(ve,vnewc);
-				const angle = dTurn * angleRad / Math.abs(angleRad)/1;
+				axis = myVec3.cross(ve,vecMZ);
+				angle = Math.min(dTurn,angleRad) ;
 
-
-				//matAccumeに加える
-				myMat4.load(this.matAccume);
-				myMat4.rot(axis[0],axis[1],axis[2],angle);
-				myMat4.storeTo(this.matAccume);
-
-				//matAccumeNotTranslatedに加える
-				myMat4.load(this.matAccumeNotTranslated);
-				myMat4.rot(axis[0],axis[1],axis[2],angle);
-				myMat4.storeTo(this.matAccumeNotTranslated);
-
+			} else {
+				axis = [1,1,1];
+				angle = 0;
 			}
+
+			//matAccumeに加える
+			myMat4.load(this.matAccume);
+			myMat4.rot(axis[0],axis[1],axis[2],angle);
+			myMat4.storeTo(this.matAccume);
+
+			//matAccumeNotTranslatedに加える
+			myMat4.load(this.matAccumeNotTranslated);
+			myMat4.rot(axis[0],axis[1],axis[2],angle);
+			myMat4.storeTo(this.matAccumeNotTranslated);
+
+
+		};
+
+
+		Member.prototype.updatePXtoDirection = function () {
+			//a little bit rotation every 1 second 1秒ごとの回転処理
+
+
+			//spacecraftの進行方向のベクトルを求める
+			const vecDirection = [this.posX - positionBefore[0],this.posY - positionBefore[1],this.posZ - positionBefore[2]];
+
+			//元の方向ベクトル(1 0 0)の現在の向きvecXを求める
+			const mat = this.matAccumeNotTranslated;
+			const vecPX = [mat[0],mat[4],mat[8]];
+
+			//spacecraftの現在のX軸の方向と進行方向との内角を求める
+			vecPX.normalize3D();
+			vecDirection.normalize3D();
+			const angleRad = Math.acos(myVec3.dot(vecPX,vecDirection));// in radians, arguments must be normal
+
+			let axis,angle;
+			if(Math.abs(angleRad)>0.01) {
+				//回転軸を求める
+				axis = myVec3.cross(vecDirection,vecPX);
+				angle = Math.min(dTurn,angleRad) ;
+			} else {
+				axis = [1,1,1];
+				angle = 0;
+			}
+
+			//matAccumeに加える
+			myMat4.load(this.matAccume);
+			myMat4.rot(axis[0],axis[1],axis[2],angle);
+			myMat4.storeTo(this.matAccume);
+
+			//matAccumeNotTranslatedに加える
+			myMat4.load(this.matAccumeNotTranslated);
+			myMat4.rot(axis[0],axis[1],axis[2],angle);
+			myMat4.storeTo(this.matAccumeNotTranslated);
 		};
 
 
@@ -214,7 +298,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 
 	
 	
-
+		let positionBefore;
 		//一秒に一回の描画
 		Object.defineProperty(myXYZMani,'move',{value:move(hero)});
 		function move(member){//member === hero
@@ -230,12 +314,12 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 
 					member.updatePosition();
 
-					member.updateDirection();
+					if(myXYZManipulation.button.MZtoPlanet.sw)member.updateMZtoPlanet();
+					if(myXYZManipulation.button.PXtoDirection.sw)member.updatePXtoDirection();
 
+					positionBefore = [member.posX,member.posY,member.posZ];
 
 				}
-
-
 			};
 		};
 
@@ -421,5 +505,9 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 				}
 			};
 		};
+
+
+
+
 	})();
 

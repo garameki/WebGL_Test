@@ -90,10 +90,10 @@ function sendPerspectiveMatrix(gl,vari){
 	*/
 		//perspective matrix...myMat4 already has a property defined about this
 //	var fieldOfView = 70 * Math.PI / 180;	//in radian;
-	var fieldOfView = 70 * Math.PI / 180;	//in radian;
+	var fieldOfView = 20 * Math.PI / 180;	//in radian;
 	var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-	var zNear = 0.01;
-	var zFar = 10000000.0;
+	var zNear = 10;
+	var zFar = 100000000000000000.0;
 
 	myMat4.loadPerspective(fieldOfView,aspect,zNear,zFar);
 	vari.sendFloat32Array(myMat4.arr);
