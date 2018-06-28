@@ -206,6 +206,12 @@ Info.innerHTML = "";
 
 			// make the Earth be in gaze onto -Z axisの-Z軸方向を地球に向ける
 
+			//Do not rotate directry using quaternion!
+			//Must divide the rotation to 3 rotation using 3 axes X,Y and Z.
+			//Must accumerate each angles (e.g.+30°,-20°,+60° and so on) into each rotation of each axes.
+			//This way is the best one to make a rotation matrix which is accumerated one after another.
+			//Otherwise a pure components of rotation in matrix is polluted by other components of rotation more or less.
+
 			//X,Y,Zのそれぞれの軸の回転変位をmatrixに積み重ねていくことが大切
 			//例えば、X軸中心の回転に於いて、30°進んで、20°戻って、60°進んでっていう具合にする。
 			//ここには、他の軸の回転成分は入り込む余地がないので、（当然だが）行列計算におけるX軸中心の回転操作でY軸成分の回転をすることがなくなる。
