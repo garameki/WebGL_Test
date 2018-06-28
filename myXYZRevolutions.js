@@ -13,7 +13,7 @@ myXYZRevolutions = { };
 //3600000ms----- 360°(earth) 
 //			[°]/[h] * [rad]/[°] * [ms]/[h]
 const anglePerHour = (360)*(Math.PI/180)/(1000*60*60);//[rad/ms]----1 sidereal period of earth per real time 1 hour
-const radPerMinute = 2*Math.PI/365/24/60/60;   //1年で1周するときに1時間で何ラジアン回転するか
+const radPerMinute = 2*Math.PI/365/24/60;   //1年で1周するときに1時間で何ラジアン回転するか
 
 /** inner class **/
 /**
@@ -25,13 +25,14 @@ var Member = function(r_xy,r_z,period){
 	this.rz = r_z;//radius on (x or y)-z plane
 	this.alpha = 2*3.14*Math.random();
 	this.gamma = 2*3.14*Math.random();
+	this.freq = radPerMinute / Math.max(0.000001,period);
 };
 myXYZ.inherits(Member);
 //@override
 Member.prototype.reposition = function(vTime_total_minute){
-	this.x=this.rxy * Math.cos(radPerMinute * vTime_total_minute + this.alpha);
-	this.y=this.rxy * Math.sin(radPerMinute * vTime_total_minute + this.alpha);
-	this.z=this.rz  * Math.sin(radPerMinute * vTime_total_minute + this.gamma);
+	this.x=this.rxy * Math.cos(this.freq * vTime_total_minute + this.alpha);
+	this.y=this.rxy * Math.sin(this.freq * vTime_total_minute + this.alpha);
+	this.z=this.rz  * Math.sin(this.freq * vTime_total_minute + this.gamma);
 };
 
 const TRUE = true;

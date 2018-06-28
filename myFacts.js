@@ -21,7 +21,7 @@
 		"sun":{
 			"revRadius":0,
 			"parent":"",
-			"radius":695508*0.0001,
+			"radius":695508,
 			"mass":1.9891e+9,
 			"periodRevolution":null,
 			"rotationHour":654
@@ -83,7 +83,8 @@
 			"radius":6051,
 			"mass":4868,
 			"periodRevolution":0.161596,
-			"rotationHour":5831.52
+			"rotationHour":-5832
+
 
 
 		},
@@ -92,7 +93,9 @@
 			"parent":"sun",
 			"radius":3390,
 			"mass":641,
-			"periodRevolution":24.624
+			"periodRevolution":24.624,
+			"rotationHour":24.6167
+
 
 		},
 		"ganymede":{
@@ -175,7 +178,7 @@
 
 		},
 		"pluto":{
-			"revRadius":591300,
+			"revRadius":591300e+4,
 			"parent":"sun",
 			"radius":1185,
 			"mass":13,
@@ -225,7 +228,7 @@
 	for(let name in planets){
 		myFacts.planets[name] = { };
 		if(planets[name].parent == "sun"){
-			myFacts.planets[name].revRadius = planets[name].revRadius*0.001;
+			myFacts.planets[name].revRadius = planets[name].revRadius;//*0.001;
 		} else {
 			myFacts.planets[name].revRadius = planets[name].revRadius;
 		}

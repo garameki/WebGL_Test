@@ -150,7 +150,7 @@ if(flagName){
 		//var names = ["flame","plane"];
 		//var names = ["pluto","velocity","plane"];//,"earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 
-		var names = ["footMark","velocity","flame","sun","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
+		var names = ["footMark","velocity","flame","sun","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys","neptune","pluto"];//<-----JUPITERからrenderされる
 		//var names = ["footMark","velocity","flame","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 
 		mySendAttribUniform[sNameShader](gl,names,angle);
@@ -790,7 +790,9 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 //**************** SUN ***********************************************************************************
 	name = "sun";
 	var nameSun = name;
-	xyz[name] = new (function(){this.x=0;this.y=0;this.z=0});//do nothing instance
+//	xyz[name] = new (function(){this.x=0;this.y=0;this.z=0});//do nothing instance
+//	xyz[name] = myXYZRevolutions.createMember(name,revRad,revRad,myFacts.planets[name].periodRevolution);
+	xyz[name] = myXYZRevolutions.createMember(name,0,0,0);
 
 	/** matrix **/
 	var m1 = myXYZ.rotate(1,0,0,90);
@@ -1158,7 +1160,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** MOON OF EARTH *****************************************************************
 	name = "moon";
-	var revRad = myFacts.planets[name].revRadius*0.1;;
+	var revRad = myFacts.planets[name].revRadius;
 	xyz[name] = myXYZRevolutions.createMember(name,revRad,revRad,myFacts.planets[name].periodRevolution);
 
 	/** matrix **/
@@ -1204,7 +1206,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** TITAN OF SATURN *****************************************************************
 	name = "titan";
-	var revRad = myFacts.planets[name].revRadius*0.1;
+	var revRad = myFacts.planets[name].revRadius;
 	xyz[name] = myXYZRevolutions.createMember(name,revRad,revRad,myFacts.planets[name].periodRevolution);
 
 	/** matrices **/
@@ -1235,7 +1237,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** MIMAS OF SATURN *****************************************************************
 	name = "mimas";
-	var revRad = myFacts.planets[name].revRadius*0.5;
+	var revRad = myFacts.planets[name].revRadius;
 	xyz[name] = myXYZRevolutions.createMember(name,revRad,revRad,myFacts.planets[name].periodRevolution);
 
 	/** matrices **/
@@ -1265,7 +1267,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 //**************** TETHYS OF SATURN *****************************************************************
 	name = "tethys";
-	var revRad = myFacts.planets[name].revRadius*0.4;
+	var revRad = myFacts.planets[name].revRadius;
 	xyz[name] = myXYZRevolutions.createMember(name,revRad,revRad,myFacts.planets[name].periodRevolution);
 
 	/** matrices **/

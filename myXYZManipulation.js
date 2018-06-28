@@ -52,7 +52,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 
 		//differential
 		const dTurn = 2 * Math.PI / 60 / 6000 * 10 ;//radian per 1 second besed on which 1 rotation per 10 minute
-		const dInject = 0.00001;// must make unit [Newton]
+		const dInject = 0.01;// must make unit [Newton]
 
 		//key codes
 		const AR=39;//→ Arrow Right
@@ -147,19 +147,19 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 			const G = myFacts.planets.gravity;
 
 
-			//●const aNames = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury"];
-			const aNames = ["earth"];
+			const aNamesSource = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury","pluto","moon"];
+//			const aNamesSource = [];
 			//spacecraft ... origin ( this.posX this.posY this.posZ )
 			//target planet ... ( memT.x memT.y memT.z )
 			let memT,dx,dy,dz,len,force;
-			for(let ii in aNames){
-				memT = myXYZRevolutions[aNames[ii]];//absolute coordinate
+			for(let ii in aNamesSource){
+				memT = myXYZRevolutions[aNamesSource[ii]];//absolute coordinate
 				dx = this.posX - memT.x;
 				dy = this.posY - memT.y;
 				dz = this.posZ - memT.z;
 
 				len = 1/Math.sqrt(dx*dx+dy*dy+dz*dz);
-				force = -G * myFacts.planets[aNames[ii]].mass * len * len;
+				force = -G * myFacts.planets[aNamesSource[ii]].mass * len * len;
 				sumFx += force * len * dx;
 				sumFy += force * len * dy;
 				sumFz += force * len * dz;
@@ -208,7 +208,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 		// 5.クオターニオン回転行列を求めて、modelViewMatrixに積算する
 		// 6.再描画
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		Member.prototype.updateMZtoPlanet = function () {
+		Member.prototype.updateMZto = function (sNamePlanet) {
 Info.innerHTML = "";
 			const mat = this.matAccumeNotTranslated;
 		
@@ -219,7 +219,20 @@ Info.innerHTML = "";
 			Info.innerHTML +="axMZ x"+tos(axMZ.x,1000)+" y"+tos(axMZ.y,1000)+" z"+tos(axMZ.z,1000)+"<br>";
 
 			//Calc vector of direction looking Earth from SpaceCraft. S pacecraftから見たE arthの方向ベクトルを求める
-			const vecSE = [myXYZRevolutions["earth"].x - this.posX,myXYZRevolutions["earth"].y - this.posY,myXYZRevolutions["earth"].z - this.posZ,1];
+//●			const vecSE = [myXYZRevolutions["earth"].x - this.posX,myXYZRevolutions["earth"].y - this.posY,myXYZRevolutions["earth"].z - this.posZ,1];
+
+			let xx = 0,yy = 0,zz = 0;
+			let name;
+			name = sNamePlanet;
+			do {
+				xx += myXYZRevolutions[name].x;
+				yy += myXYZRevolutions[name].y;
+				zz += myXYZRevolutions[name].z;
+				name = myFacts.planets[name].parent;
+			} while(name != "");
+			const vecSE = [xx - this.posX,yy - this.posY,zz - this.posZ,1];
+
+
 			//その絶対座標を現在の向きに変換する
 			//●
 			vecSE.multi1444(mat);
@@ -265,7 +278,7 @@ Info.innerHTML = "";
 
 
 
-
+/*
 		Member.prototype.updateMZtoPlanet_origin_has_issue = function () {
 
 			/////////////////// 最初のやつ ////////////////////////////////////
@@ -334,7 +347,7 @@ Info.innerHTML = "";
 
 
 		};
-
+*/
 		Member.prototype.updateMZtoDirection = function () {
 			//a little bit rotation every 1 second 1秒ごとの回転処理
 
@@ -405,8 +418,21 @@ Info.innerHTML = "";
 
 					member.updatePosition();
 
-					if(myXYZManipulation.button.MZtoPlanet.sw)member.updateMZtoPlanet();
-					if(myXYZManipulation.button.MZtoDirection.sw)member.updateMZtoDirection();
+					if(myXYZManipulation.button.MZtoSun)member.updateMZto("sun");
+					if(myXYZManipulation.button.MZtoMercury)member.updateMZto("mercury");
+					if(myXYZManipulation.button.MZtoVenus)member.updateMZto("venus");
+					if(myXYZManipulation.button.MZtoEarth)member.updateMZto("earth");
+					if(myXYZManipulation.button.MZtoMars)member.updateMZto("mars");
+					if(myXYZManipulation.button.MZtoJupiter)member.updateMZto("jupiter");
+					if(myXYZManipulation.button.MZtoSaturn)member.updateMZto("saturn");
+					if(myXYZManipulation.button.MZtoUranus)member.updateMZto("uranus");
+					if(myXYZManipulation.button.MZtoNeptune)member.updateMZto("neptune");
+					if(myXYZManipulation.button.MZtoPluto)member.updateMZto("pluto");
+					if(myXYZManipulation.button.MZtoMoon)member.updateMZto("moon");
+				//	if(myXYZManipulation.button.MZto)member.updateMZto("");
+				//	if(myXYZManipulation.button.MZto)member.updateMZto("");
+				//	if(myXYZManipulation.button.MZto)member.updateMZto("");
+					if(myXYZManipulation.button.MZtoDirection)member.updateMZtoDirection();
 
 					positionBefore = [member.posX,member.posY,member.posZ];
 

@@ -25,15 +25,18 @@ function funcHoge() {
 		}
 	}
 };
+
+const oInstances = { };
 function createButtonONOFF(sName,left,top,text){
 	const element = document.createElement('button');
-	const inst = new ButtonONOFF(element,"red","white");
-	Object.defineProperty(myXYZManipulation.button,sName,{value:inst,writable:false,enumerable:true,configurable:false});
+//不要	const inst = new ButtonONOFF(element,"red","white");
+	oInstances[sName] = new ButtonONOFF(element,"red","white");
+	Object.defineProperty(myXYZManipulation.button,sName,{get:function(){return oInstances[sName].sw;},enumerable:true,configurable:false});
 	element.style.position = 'absolute';
 	element.style.left = left.toString() + 'px';
 	element.style.top  = top.toString() + 'px';
 	element.innerText = text;
-	element.addEventListener('click',inst.click(),false);
+	element.addEventListener('click',oInstances[sName].click(),false);
 	document.getElementsByTagName('body')[0].appendChild(element);
 };
 
@@ -52,7 +55,7 @@ ButtonONOFF.prototype.click = function(){
 			myself.turnOFF();
 		} else {
 			for(let name in myXYZManipulation.button) {
-				myXYZManipulation.button[name].turnOFF();
+				oInstances[name].turnOFF();
 			}
 			myself.turnON();
 		}
@@ -72,68 +75,29 @@ function addButtons() {
 
 
 	const aButtons = [
-		['MZtoPlanet',600,100,'-Z to Earth'],
-		['MZtoDirection',600,200,'-Z to Direction']
+		['MZtoSun',600,100,'-Z to Sun'],
+		['MZtoMercury',600,150,'-Z to Mercury'],
+		['MZtoVenus',600,200,'-Z to Venus'],
+		['MZtoEarth',600,250,'-Z to Earth'],
+		['MZtoMars',600,300,'-Z to Mars'],
+		['MZtoJupiter',600,350,'-Z to Jupiter'],
+		['MZtoSaturn',600,400,'-Z to Saturn'],
+		['MZtoUranus',600,450,'-Z to Uranus'],
+		['MZtoNeptune',600,500,'-Z to Neptune'],
+		['MZtoPluto',600,550,'-Z to Pluto'],
+		['MZtoMoon',600,600,'-Z to Moon'],
+		['MZtoDirection',600,700,'-Z to Direction']
 	];
 	let args;
+	const top = 100;
+	const left = 600;
 	for(let ii in aButtons) {
 		args = aButtons[ii];
-		createButtonONOFF(args[0],args[1],args[2],args[3]);
+		createButtonONOFF(args[0],left,ii * 20 + top,args[3]);
 	}
 
-/*
-	eleMZtoPlanet = createButton(600,100,'-Z to Earth',funcMZtoEarth());
-	function funcMZtoEarth() {
-		let sw = false;
-		let bgcolor = "white";
-		return function() {
-			if(sw) {
-				sw = false;
-				bgcolor = "white";
-			} else {
-				sw = true;
-				bgcolor = "red";
-			}
-			eleMZtoPlanet.style.backgroundColor = bgcolor;
-		};
-	};
 
-	elePXtoDirection = createButton(600,100,'+X to Direction',funcPXtoDirection());
-	function funcPXtoDirection() {
-		let sw = false;
-		let bgcolor = "white";
-		return function() {
-			if(sw) {
-				sw = false;
-				bgcolor = "white";
-			} else {
-				sw = true;
-				bgcolor = "red";
-			}
-			elePXtoDirection.style.backgroundColor = bgcolor;
-		};
-	};
-*/
 
-/*
-		swMZtoPlanet=!swMZtoPlanet;eleMZtoPlanet.backgroundColor=
-	};
-	document.createElement('button');
-	eleMZtoPlanet.style.position = 'absolute';
-	eleMZtoPlanet.style.left = '600px';
-	eleMZtoPlanet.style.top  = '100px';
-	eleMZtoPlanet.innerText = "-Z to Earth";
-	eleMZtoPlanet.addEventListener('click',function(){},false);
-	collection[0].appendChild(eleMZtoPlanet);
-
-	elePXtoDirection = document.createElement('button');
-	elePXtoDirection.style.position = 'absolute';
-	elePXtoDirection.style.left = '600px';
-	elePXtoDirection.style.top  = '200px';
-	elePXtoDirection.innerText = "+X to Direction";
-	elePXtoDirection.addEventListener('click',function(){swPXtoDirection=!swPXtoDirection;},false);
-	collection[0].appendChild(elePXtoDirection);
-*/
 };//addButtons
 
 /* */})();
