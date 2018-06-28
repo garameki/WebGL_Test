@@ -148,7 +148,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 
 
 			//●const aNames = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury"];
-			const aNames = [];//["earth"];
+			const aNames = ["earth"];
 			//spacecraft ... origin ( this.posX this.posY this.posZ )
 			//target planet ... ( memT.x memT.y memT.z )
 			let memT,dx,dy,dz,len,force;
