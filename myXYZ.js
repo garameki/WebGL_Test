@@ -110,6 +110,8 @@ libFileRelationship.myXYZ.relatedTo='myMat4';
 //		}
 //	};
 
+
+
 	Object.defineProperty(myXYZ,'trans',{value:translateMember,enumerable:true});
 	function translateMember(memberXYZ){
 		return function(time){
@@ -123,14 +125,23 @@ libFileRelationship.myXYZ.relatedTo='myMat4';
 		};
 	};
 	Object.defineProperty(myXYZ,'rotate',{value:rotate,writable:false,enumerable:true});
-	function rotate(rx,ry,rz,ratioPerYear,deg0){
-		//@param {number} tx,ty,tz	quantum according to cartesian coordinate to translate
+	function rotate(rx,ry,rz,deg){
 		//@param {number} rx,ry,rz	vector of axis which is center of rotation
-		//@param {number} deg0		initially angle of rotation
 		//@param {number} ratio		ratio of rotation speed
 
-		var rad0 = deg0*Math.PI/180;
-		const ratio = ratioPerYear * radPerMinute;
+		const rad = deg*Math.PI/180;
+		return function(time){
+			//model view matrix...myMat4 was already defined in global scope
+			myMat4.rot(rx,ry,rz,rad);
+		}
+	};
+	Object.defineProperty(myXYZ,'rotation',{value:rotation,writable:false,enumerable:true});
+	function rotation(rx,ry,rz,rotationHour,deg0){
+		//@param {number} rx,ry,rz	vector of axis which is center of rotation
+		//@param {number} ratio		ratio of rotation speed
+
+		const ratio = 2 * Math.PI / rotationHour / 60;//1 rotation per 24 hour
+		const rad0 = deg0*Math.PI/180;
 		return function(timeTotal_minute){
 			//model view matrix...myMat4 was already defined in global scope
 			myMat4.rot(rx,ry,rz,ratio * timeTotal_minute + rad0);

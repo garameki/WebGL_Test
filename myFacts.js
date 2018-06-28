@@ -15,13 +15,16 @@
 	const minifySize    = 1.0;	//000000000000000000????????????
 
 
+	var temp = 24;
+
 	const planets = {
 		"sun":{
 			"revRadius":0,
 			"parent":"",
 			"radius":695508*0.0001,
 			"mass":1.9891e+9,
-			"period":null
+			"periodRevolution":null,
+			"rotationHour":654
 
 		},
 		"jupiter":{
@@ -29,7 +32,9 @@
 			"parent":"sun",
 			"radius":69911,
 			"mass":1.8986e+6,
-			"period":11.85678
+			"periodRevolution":11.85678,
+			"rotationHour":9.924
+
 
 		},
 		"saturn":{
@@ -37,7 +42,9 @@
 			"parent":"sun",
 			"radius":58232,
 			"mass":5.683e+5,
-			"period":29.42415
+			"periodRevolution":29.42415,
+			"rotationHour":10.2336
+
 
 		},
 		"uranus":{
@@ -45,7 +52,9 @@
 			"parent":"sun",
 			"radius":25362,
 			"mass":86832,
-			"period":83.74921
+			"periodRevolution":83.74921,
+			"rotationHour":-17.2333
+
 
 		},
 		"neptune":{
@@ -53,7 +62,9 @@
 			"parent":"sun",
 			"radius":24622,
 			"mass":102430,
-			"period":163.7267
+			"periodRevolution":163.7267,
+			"rotationHour":16.1
+
 
 		},
 		"earth":{
@@ -61,7 +72,9 @@
 			"parent":"sun",
 			"radius":6371,
 			"mass":5973,
-			"period":1.0
+			"periodRevolution":1.0,
+			"rotationHour":23.928
+
 
 		},
 		"venus":{
@@ -69,7 +82,9 @@
 			"parent":"sun",
 			"radius":6051,
 			"mass":4868,
-			"period":0.161596
+			"periodRevolution":0.161596,
+			"rotationHour":5831.52
+
 
 		},
 		"mars":{
@@ -77,7 +92,7 @@
 			"parent":"sun",
 			"radius":3390,
 			"mass":641,
-			"period":1.880751
+			"periodRevolution":24.624
 
 		},
 		"ganymede":{
@@ -85,7 +100,9 @@
 			"parent":"jupiter",
 			"radius":2631,
 			"mass":148,
-			"period":0.01960274
+			"periodRevolution":0.01960274,
+			"rotationHour":temp
+
 
 		},
 		"titan":{
@@ -93,7 +110,9 @@
 			"parent":"saturn",
 			"radius":2576,
 			"mass":134,
-			"period":0.0436849315
+			"periodRevolution":0.0436849315,
+			"rotationHour":temp
+
 
 		},
 		"mercury":{
@@ -101,14 +120,18 @@
 			"parent":"sun",
 			"radius":2439,
 			"mass":330,
-			"period":0.240850
+			"periodRevolution":0.240850,
+			"rotationHour":1407.5
+
 		},
 		"callisto":{
 			"revRadius":1883000,
 			"parent":"jupiter",
 			"radius":2410,
 			"mass":107,
-			"period":0.0457233
+			"periodRevolution":0.0457233,
+			"rotationHour":temp
+
 
 		},
 		"io":{
@@ -116,7 +139,9 @@
 			"parent":"jupiter",
 			"radius":1821,
 			"mass":89,
-			"period":0.004846575
+			"periodRevolution":0.004846575,
+			"rotationHour":temp
+
 
 		},
 		"moon":{
@@ -124,7 +149,9 @@
 			"parent":"earth",
 			"radius":1737,
 			"mass":73,
-			"period":0.07485397
+			"periodRevolution":0.07485397,
+			"rotationHour":655.7208
+
 
 		},
 		"europa":{
@@ -132,7 +159,9 @@
 			"parent":"jupiter",
 			"radius":1561,
 			"mass":48,
-			"period":0.009728767
+			"periodRevolution":0.009728767,
+			"rotationHour":temp
+
 
 		},
 		"triton":{
@@ -140,7 +169,9 @@
 			"parent":"neptune",
 			"radius":1353,
 			"mass":21,
-			"period":0.01610136986
+			"periodRevolution":0.01610136986,
+			"rotationHour":temp
+
 
 		},
 		"pluto":{
@@ -148,7 +179,9 @@
 			"parent":"sun",
 			"radius":1185,
 			"mass":13,
-			"period":245.4306
+			"periodRevolution":245.4306,
+			"rotationHour":153.2808
+
 
 		},
 		"iapetus":{
@@ -156,7 +189,9 @@
 			"parent":"saturn",
 			"radius":736,
 			"mass":2,
-			"period":0.21734520547
+			"periodRevolution":0.21734520547,
+			"rotationHour":temp
+
 
 		},
 		"tethys":{
@@ -164,7 +199,9 @@
 			"parent":"saturn",
 			"radius":533,
 			"mass":0.62,
-			"period":0.0051726
+			"periodRevolution":0.0051726,
+			"rotationHour":temp
+
 
 		},
 		"mimas":{
@@ -172,9 +209,11 @@
 			"parent":"saturn",
 			"radius":198,
 			"mass":0.037,
-			"period":0.0025808
+			"periodRevolution":0.0025808,
+			"rotationHour":temp
 
-		},
+
+		}
 	};
 
 	myFacts.planets = { };
@@ -193,7 +232,9 @@
 		myFacts.planets[name].radius = planets[name].radius;
 		myFacts.planets[name].mass = planets[name].mass;
 		myFacts.planets[name].parent = planets[name].parent;
-		myFacts.planets[name].period = planets[name].period;
+		myFacts.planets[name].periodRevolution = planets[name].periodRevolution;
+		myFacts.planets[name].rotationHour = planets[name].rotationHour;
+		
 	}
 
 

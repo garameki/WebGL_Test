@@ -425,21 +425,21 @@ Info.innerHTML = "";
 					//nothing
 				
 				}else if(gInjectLR < 0){
-					myXYZ.rotate(0,0,1,0,-90)(time);
+					myXYZ.rotate(0,0,1,-90)(time);
 					myXYZ.translate(0.1,0,0)(time);
 				}else if(gInjectLR > 0){
-					myXYZ.rotate(0,0,1,0,90)(time);
+					myXYZ.rotate(0,0,1,90)(time);
 					myXYZ.translate(-0.1,0,0)(time);
 				}else if(gInjectUD < 0){
-					myXYZ.rotate(1,0,0,0,0)(time);
+					myXYZ.rotate(1,0,0,0)(time);
 					myXYZ.translate(0,0.1,0)(time);
 				}else if(gInjectUD > 0){
-					myXYZ.rotate(1,0,0,0,180)(time);
+					myXYZ.rotate(1,0,0,180)(time);
 					myXYZ.translate(0,-0.1,0)(time);
 				}else if(gInjectFB > 0){
-					myXYZ.rotate(1,0,0,0,-90)(time);
+					myXYZ.rotate(1,0,0,-90)(time);
 				}else if(gInjectFB < 0){
-					myXYZ.rotate(1,0,0,0,90)(time);
+					myXYZ.rotate(1,0,0,90)(time);
 				}else{
 					 myXYZ.translate(0,0,10)(time);
 				}
