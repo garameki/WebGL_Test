@@ -1,12 +1,15 @@
-﻿libFileRelationship.create('myXYZManipulation.buttonONOFF');
+﻿libFileRelationship.create('myXYZManipulation.buttonPOWER');
 libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation';
 
-
+//exclusive swiches
 
 
 	//for using under controlled space ship, follow to key board
 /* */(function(){
 
+
+// POWER
+let value;
 
 //attach buttons after loading DOM
 let counter = 0;
@@ -16,7 +19,7 @@ function funcHoge() {
 	collection = document.getElementsByTagName('body');
 	if(collection.length != 0 && 'myXYZManipulation' in window) {
 		clearInterval(hoge);
-		myXYZManipulation.button = { };
+		Object.defineProperty(myXYZManipulation,'buttonPOWER',{get:function(){return value;},enumerable:true,configurable:false});
 		addButtons();
 	} else {
 		if(++counter > 100) {
@@ -27,11 +30,9 @@ function funcHoge() {
 };
 
 const oInstances = { };
-function createButtonONOFF(sName,left,top,text){
+function createButtonPOWER(sName,left,top,text,power){
 	const element = document.createElement('button');
-//不要	const inst = new ButtonONOFF(element,"red","white");
-	oInstances[sName] = new ButtonONOFF(element,"red","white");
-	Object.defineProperty(myXYZManipulation.button,sName,{get:function(){return oInstances[sName].sw;},enumerable:true,configurable:false});
+	oInstances[sName] = new ButtonPOWER(element,"red","white",power);
 	element.style.position = 'absolute';
 	element.style.left = left.toString() + 'px';
 	element.style.top  = top.toString() + 'px';
@@ -41,32 +42,32 @@ function createButtonONOFF(sName,left,top,text){
 };
 
 /**class**/
-function ButtonONOFF(element,sColorON,sColorOFF){
+function ButtonPOWER(element,sColorON,sColorOFF,power){
+	this.value = power;
 	this.element = element;
-	this.switch = false;
 	this.bgcolorON = sColorON;
 	this.bgcolorOFF = sColorOFF;
 	element.style.backgroundColor = this.bgcolorOFF;
 };
-ButtonONOFF.prototype.click = function(){
+ButtonPOWER.prototype.click = function(){
 	const myself = this;
 	return function() {
 		if(myself.switch) {
 			myself.turnOFF();
 		} else {
-			for(let name in myXYZManipulation.button) {
+			for(let name in oInstances) {
 				oInstances[name].turnOFF();
 			}
 			myself.turnON();
 		}
 	};//return
 };
-ButtonONOFF.prototype.turnON = function() {
-	this.switch = true;
+ButtonPOWER.prototype.turnON = function() {
+	value = this.value;
 	this.element.style.backgroundColor = this.bgcolorON;
 };
-ButtonONOFF.prototype.turnOFF = function(){
-	this.switch = false;
+ButtonPOWER.prototype.turnOFF = function(){
+	value = 0;
 	this.element.style.backgroundColor = this.bgcolorOFF;
 };
 
@@ -74,25 +75,18 @@ function addButtons() {
 
 	let args,left,top;
 
-	const aButtonsONOFF = [
-		['MZtoSun',600,100,'-Z to Sun'],
-		['MZtoMercury',600,150,'-Z to Mercury'],
-		['MZtoVenus',600,200,'-Z to Venus'],
-		['MZtoEarth',600,250,'-Z to Earth'],
-		['MZtoMars',600,300,'-Z to Mars'],
-		['MZtoJupiter',600,350,'-Z to Jupiter'],
-		['MZtoSaturn',600,400,'-Z to Saturn'],
-		['MZtoUranus',600,450,'-Z to Uranus'],
-		['MZtoNeptune',600,500,'-Z to Neptune'],
-		['MZtoPluto',600,550,'-Z to Pluto'],
-		['MZtoMoon',600,600,'-Z to Moon'],
-		['MZtoDirection',600,700,'-Z to Direction']
+	const aButtonsPOWER = [
+		['Maximum','for So Far Planets',1],
+		['High','for Far Planets',0.1],
+		['Middle','for Near Planets',0.01],
+		['Low','Nearby planet',0.001],
+		['Minimum','Adjust orbital',0.0001]
 	];
-	left = 600;
+	left = 800;
 	top = 100;
-	for(let ii in aButtons) {
-		args = aButtonsONOFF[ii];
-		createButtonONOFF(args[0],left,ii * 20 + top,args[3]);
+	for(let ii in aButtonsPOWER) {
+		args = aButtonsPOWER[ii];
+		createButtonPOWER(args[0],left,ii * 20 + top,args[1],args[2]);
 	}
 
 

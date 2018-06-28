@@ -16,7 +16,7 @@ function funcHoge() {
 	collection = document.getElementsByTagName('body');
 	if(collection.length != 0 && 'myXYZManipulation' in window) {
 		clearInterval(hoge);
-		myXYZManipulation.button = { };
+		myXYZManipulation.buttonDETECT = { };
 		addButtons();
 	} else {
 		if(++counter > 100) {
@@ -27,11 +27,11 @@ function funcHoge() {
 };
 
 const oInstances = { };
-function createButtonONOFF(sName,left,top,text){
+function createButtonDETECT(sName,left,top,text){
 	const element = document.createElement('button');
-//不要	const inst = new ButtonONOFF(element,"red","white");
-	oInstances[sName] = new ButtonONOFF(element,"red","white");
-	Object.defineProperty(myXYZManipulation.button,sName,{get:function(){return oInstances[sName].switch;},enumerable:true,configurable:false});
+//不要	const inst = new ButtonDETECT(element,"red","white");
+	oInstances[sName] = new ButtonDETECT(element,"red","white");
+	Object.defineProperty(myXYZManipulation.buttonDETECT,sName,{get:function(){return oInstances[sName].switch;},enumerable:true,configurable:false});
 	element.style.position = 'absolute';
 	element.style.left = left.toString() + 'px';
 	element.style.top  = top.toString() + 'px';
@@ -41,31 +41,31 @@ function createButtonONOFF(sName,left,top,text){
 };
 
 /**class**/
-function ButtonONOFF(element,sColorON,sColorOFF){
+function ButtonDETECT(element,sColorON,sColorOFF){
 	this.element = element;
 	this.switch = false;
 	this.bgcolorON = sColorON;
 	this.bgcolorOFF = sColorOFF;
 	element.style.backgroundColor = this.bgcolorOFF;
 };
-ButtonONOFF.prototype.click = function(){
+ButtonDETECT.prototype.click = function(){
 	const myself = this;
 	return function() {
 		if(myself.switch) {
 			myself.turnOFF();
 		} else {
-			for(let name in myXYZManipulation.button) {
+			for(let name in myXYZManipulation.buttonDETECT) {
 				oInstances[name].turnOFF();
 			}
 			myself.turnON();
 		}
 	};//return
 };
-ButtonONOFF.prototype.turnON = function() {
+ButtonDETECT.prototype.turnON = function() {
 	this.switch = true;
 	this.element.style.backgroundColor = this.bgcolorON;
 };
-ButtonONOFF.prototype.turnOFF = function(){
+ButtonDETECT.prototype.turnOFF = function(){
 	this.switch = false;
 	this.element.style.backgroundColor = this.bgcolorOFF;
 };
@@ -74,7 +74,7 @@ function addButtons() {
 
 	let args,left,top;
 
-	const aButtonsONOFF = [
+	const aButtonsDETECT = [
 		['MZtoSun',600,100,'-Z to Sun'],
 		['MZtoMercury',600,150,'-Z to Mercury'],
 		['MZtoVenus',600,200,'-Z to Venus'],
@@ -90,9 +90,9 @@ function addButtons() {
 	];
 	left = 600;
 	top = 100;
-	for(let ii in aButtonsONOFF) {
-		args = aButtonsONOFF[ii];
-		createButtonONOFF(args[0],left,ii * 20 + top,args[3]);
+	for(let ii in aButtonsDETECT) {
+		args = aButtonsDETECT[ii];
+		createButtonDETECT(args[0],left,ii * 20 + top,args[3]);
 	}
 
 

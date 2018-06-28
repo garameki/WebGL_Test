@@ -52,7 +52,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 
 		//differential
 		const dTurn = 2 * Math.PI / 60 / 6000 * 10 ;//radian per 1 second besed on which 1 rotation per 10 minute
-		const dInject = 0.01;// must make unit [Newton]
+		let dInject = 0.01;// must make unit [Newton]
 
 		//key codes
 		const AR=39;//→ Arrow Right
@@ -418,21 +418,25 @@ Info.innerHTML = "";
 
 					member.updatePosition();
 
-					if(myXYZManipulation.button.MZtoSun)member.updateMZto("sun");
-					if(myXYZManipulation.button.MZtoMercury)member.updateMZto("mercury");
-					if(myXYZManipulation.button.MZtoVenus)member.updateMZto("venus");
-					if(myXYZManipulation.button.MZtoEarth)member.updateMZto("earth");
-					if(myXYZManipulation.button.MZtoMars)member.updateMZto("mars");
-					if(myXYZManipulation.button.MZtoJupiter)member.updateMZto("jupiter");
-					if(myXYZManipulation.button.MZtoSaturn)member.updateMZto("saturn");
-					if(myXYZManipulation.button.MZtoUranus)member.updateMZto("uranus");
-					if(myXYZManipulation.button.MZtoNeptune)member.updateMZto("neptune");
-					if(myXYZManipulation.button.MZtoPluto)member.updateMZto("pluto");
-					if(myXYZManipulation.button.MZtoMoon)member.updateMZto("moon");
-				//	if(myXYZManipulation.button.MZto)member.updateMZto("");
-				//	if(myXYZManipulation.button.MZto)member.updateMZto("");
-				//	if(myXYZManipulation.button.MZto)member.updateMZto("");
-					if(myXYZManipulation.button.MZtoDirection)member.updateMZtoDirection();
+					if(myXYZManipulation.buttonDETECT.MZtoSun)member.updateMZto("sun");
+					if(myXYZManipulation.buttonDETECT.MZtoMercury)member.updateMZto("mercury");
+					if(myXYZManipulation.buttonDETECT.MZtoVenus)member.updateMZto("venus");
+					if(myXYZManipulation.buttonDETECT.MZtoEarth)member.updateMZto("earth");
+					if(myXYZManipulation.buttonDETECT.MZtoMars)member.updateMZto("mars");
+					if(myXYZManipulation.buttonDETECT.MZtoJupiter)member.updateMZto("jupiter");
+					if(myXYZManipulation.buttonDETECT.MZtoSaturn)member.updateMZto("saturn");
+					if(myXYZManipulation.buttonDETECT.MZtoUranus)member.updateMZto("uranus");
+					if(myXYZManipulation.buttonDETECT.MZtoNeptune)member.updateMZto("neptune");
+					if(myXYZManipulation.buttonDETECT.MZtoPluto)member.updateMZto("pluto");
+					if(myXYZManipulation.buttonDETECT.MZtoMoon)member.updateMZto("moon");
+				//	if(myXYZManipulation.buttonDETECT.MZto)member.updateMZto("");
+				//	if(myXYZManipulation.buttonDETECT.MZto)member.updateMZto("");
+				//	if(myXYZManipulation.buttonDETECT.MZto)member.updateMZto("");
+					if(myXYZManipulation.buttonDETECT.MZtoDirection)member.updateMZtoDirection();
+
+					//dInject = 0.01;// must make unit [Newton]
+
+					dInject = myXYZManipulation.buttonPOWER;
 
 					positionBefore = [member.posX,member.posY,member.posZ];
 
