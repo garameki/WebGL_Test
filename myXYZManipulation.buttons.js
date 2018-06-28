@@ -69,12 +69,12 @@ ButtonONOFF.prototype.turnOFF = function(){
 	this.switch = false;
 	this.element.style.backgroundColor = this.bgcolorOFF;
 };
-Object.defineProperty(ButtonONOFF.prototype,'sw',{get:function(){return this.switch;},enumerable:false,configurable:false});//getterを使いたいがためにthisを使ってる
 
 function addButtons() {
 
+	let args,left,top;
 
-	const aButtons = [
+	const aButtonsONOFF = [
 		['MZtoSun',600,100,'-Z to Sun'],
 		['MZtoMercury',600,150,'-Z to Mercury'],
 		['MZtoVenus',600,200,'-Z to Venus'],
@@ -88,11 +88,10 @@ function addButtons() {
 		['MZtoMoon',600,600,'-Z to Moon'],
 		['MZtoDirection',600,700,'-Z to Direction']
 	];
-	let args;
-	const top = 100;
-	const left = 600;
+	left = 600;
+	top = 100;
 	for(let ii in aButtons) {
-		args = aButtons[ii];
+		args = aButtonsONOFF[ii];
 		createButtonONOFF(args[0],left,ii * 20 + top,args[3]);
 	}
 
