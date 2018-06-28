@@ -1,4 +1,4 @@
-﻿libFileRelationship.create('myXYZManipulation.buttonDETECT');
+﻿libFileRelationship.create('myXYZManipulation.buttonONOFF');
 libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation';
 
 
