@@ -29,4 +29,23 @@ libFileRelationship.create('extArray');
 		this[2] = this[2] * nn;
 	};
 
+	Object.defineProperty(Array.prototype,'multi4441',{value:multi4441,writable:false,enumerable:false,configurable:false});
+	function multi4441(mat){
+		const x = mat[0] * this[0] + mat[1] * this[1] + mat[2] * this[2] + mat[3];
+		const y = mat[4] * this[0] + mat[5] * this[1] + mat[6] * this[2] + mat[7];
+		const z = mat[8] * this[0] + mat[9] * this[1] + mat[10]* this[2] + mat[11];
+		const w = mat[12]* this[0] + mat[13]* this[1] + mat[14]* this[2] + mat[15];
+		this[0]=x;this[1]=y;this[2]=z;this[3]=w;
+	};
+
+	Object.defineProperty(Array.prototype,'multi1444',{value:multi1444,writable:false,enumerable:false,configurable:false});
+	function multi1444(mat){
+		const x = mat[0] * this[0] + mat[4] * this[1] + mat[8] * this[2] + mat[12];
+		const y = mat[1] * this[0] + mat[5] * this[1] + mat[9] * this[2] + mat[13];
+		const z = mat[2] * this[0] + mat[6] * this[1] + mat[10]* this[2] + mat[14];
+		const w = mat[3] * this[0] + mat[7] * this[1] + mat[11]* this[2] + mat[15];
+		this[0]=x;this[1]=y;this[2]=z;this[3]=w;
+	};
+	
+
 /* */})();
