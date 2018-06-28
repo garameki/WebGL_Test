@@ -31,7 +31,7 @@ function createButtonONOFF(sName,left,top,text){
 	const element = document.createElement('button');
 //不要	const inst = new ButtonONOFF(element,"red","white");
 	oInstances[sName] = new ButtonONOFF(element,"red","white");
-	Object.defineProperty(myXYZManipulation.button,sName,{get:function(){return oInstances[sName].sw;},enumerable:true,configurable:false});
+	Object.defineProperty(myXYZManipulation.button,sName,{get:function(){return oInstances[sName].switch;},enumerable:true,configurable:false});
 	element.style.position = 'absolute';
 	element.style.left = left.toString() + 'px';
 	element.style.top  = top.toString() + 'px';
@@ -90,7 +90,7 @@ function addButtons() {
 	];
 	left = 600;
 	top = 100;
-	for(let ii in aButtons) {
+	for(let ii in aButtonsONOFF) {
 		args = aButtonsONOFF[ii];
 		createButtonONOFF(args[0],left,ii * 20 + top,args[3]);
 	}
