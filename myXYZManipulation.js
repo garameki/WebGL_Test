@@ -51,8 +51,8 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 		};
 
 		//differential
-		const dTurn = Math.PI/180/60;//radian per 1 second besed on which 1 rotation takes 1 minute
-		const dInject = 0.0001;// must make unit [Newton]
+		const dTurn = 2 * Math.PI / 60 / 6000 * 10 ;//radian per 1 second besed on which 1 rotation per 10 minute
+		const dInject = 0.00001;// must make unit [Newton]
 
 		//key codes
 		const AR=39;//→ Arrow Right
@@ -335,26 +335,26 @@ Info.innerHTML = "";
 
 		};
 
-		Member.prototype.updatePXtoDirection = function () {
+		Member.prototype.updateMZtoDirection = function () {
 			//a little bit rotation every 1 second 1秒ごとの回転処理
-
-
-			//spacecraftの進行方向のベクトルを求める
-			const vecDirection = [this.posX - positionBefore[0],this.posY - positionBefore[1],this.posZ - positionBefore[2]];
 
 			//元の方向ベクトル(1 0 0)の現在の向きvecXを求める
 			const mat = this.matAccumeNotTranslated;
-			const vecPX = [mat[0],mat[4],mat[8]];
+			const axMZ = [0,0,-1];
+
+			//spacecraftの進行方向のベクトルを求める
+			const vecDirection = [this.posX - positionBefore[0],this.posY - positionBefore[1],this.posZ - positionBefore[2]];
+			vecDirection.multi1444(mat);
 
 			//spacecraftの現在のX軸の方向と進行方向との内角を求める
-			vecPX.normalize3D();
+			axMZ.normalize3D();
 			vecDirection.normalize3D();
-			const angleRad = Math.acos(myVec3.dot(vecPX,vecDirection));// in radians, arguments must be normal
+			const angleRad = Math.acos(myVec3.dot(axMZ,vecDirection));// in radians, arguments must be normal
 
 			let axis,angle;
 			if(Math.abs(angleRad)>0.001) {
 				//回転軸を求める
-				axis = myVec3.cross(vecDirection,vecPX);
+				axis = myVec3.cross(vecDirection,axMZ);
 				angle = Math.min(dTurn,angleRad) ;
 			} else {
 				axis = [1,1,1];
@@ -406,7 +406,7 @@ Info.innerHTML = "";
 					member.updatePosition();
 
 					if(myXYZManipulation.button.MZtoPlanet.sw)member.updateMZtoPlanet();
-					if(myXYZManipulation.button.PXtoDirection.sw)member.updatePXtoDirection();
+					if(myXYZManipulation.button.MZtoDirection.sw)member.updateMZtoDirection();
 
 					positionBefore = [member.posX,member.posY,member.posZ];
 

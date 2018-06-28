@@ -7,6 +7,8 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation';
 	//for using under controlled space ship, follow to key board
 /* */(function(){
 
+
+//attach buttons after loading DOM
 let counter = 0;
 let collection;
 const hoge = setInterval(funcHoge,10);
@@ -71,7 +73,7 @@ function addButtons() {
 
 	const aButtons = [
 		['MZtoPlanet',600,100,'-Z to Earth'],
-		['PXtoDirection',600,200,'+X to Direction']
+		['MZtoDirection',600,200,'-Z to Direction']
 	];
 	let args;
 	for(let ii in aButtons) {
