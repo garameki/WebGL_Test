@@ -46,12 +46,12 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 		};
 
 
-		function tos(num) {
-			return (Math.floor(num*1000)/1000).toString();
+		function tos(num,i) {
+			return (Math.floor(num*i)/i).toString();
 		};
 
 		//differential
-		const dTurn = Math.PI/180/60;//radian per 1 second besed on which 1 rotation takes 1 minute
+		const dTurn = Math.PI/180/60*0.1;//radian per 1 second besed on which 1 rotation takes 1 minute●
 		const dInject = 0.0001;// must make unit [Newton]
 
 		//key codes
@@ -106,6 +106,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 			this.matAccume=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 			this.matAccumeNotTranslated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 			this.matAccumeNotRotated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
+			this.matAccumeForAttitudeControl=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity●
 
 		};
 		myXYZ.inherits(Member);
@@ -130,6 +131,13 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 			myMat4.multiArray(this.matAccumeNotTranslated);
 			myMat4.storeTo(this.matAccume);
 
+			//4.produce matAccuemForAttitudeControl
+			myMat4.load(this.matAccumeForAttitudeControl);
+				myMat4.rot(0,1,0,gTurnAxY);//gTurnAx*...angle
+				myMat4.rot(1,0,0,gTurnAxX);
+				myMat4.rot(0,0,1,gTurnAxZ);
+			myMat4.storeTo(this.matAccumeForAttitudeControl);
+		
 		};
 
 
@@ -183,7 +191,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 			this.posZ += this.speedZ;
 
 
-//			Info.innerHTML = "<br> posDX:"+(this.posX-posXBefore).toString()+"<br>posDY:"+(this.posY-posYBefore).toString()+"<br>posDZ:"+tos(this.posZ-posZBefore);
+//			Info.innerHTML = "<br> posDX:"+(this.posX-posXBefore).toString()+"<br>posDY:"+(this.posY-posYBefore).toString()+"<br>posDZ:"+tos(this.posZ-posZBefore,1);
 
 			posXBefore = this.posX;
 			posYBefore = this.posY;
@@ -193,52 +201,86 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 
 		
 		Member.prototype.updateMZtoPlanet = function () {
+Info.innerHTML = "";
 			//a little bit rotation every 1 second 1秒ごとの回転処理
 
 			// make the Earth be in gaze onto -Z axisの-Z軸方向を地球に向ける
 
-			//元の方向ベクトル(0 0 -1)の現在の向きを求める
-			const mat = this.matAccumeNotTranslated;
-			const vecMZ = [-mat[2],-mat[6],-mat[10]];
+			//X,Y,Zのそれぞれの軸の回転変位をmatrixに積み重ねていくことが大切
+			//例えば、X軸中心の回転に於いて、30°進んで、20°戻って、60°進んでっていう具合にする。
+			//ここには、他の軸の回転成分は入り込む余地がないので、（当然だが）行列計算におけるX軸中心の回転操作でY軸成分の回転をすることがなくなる。
+			//クオターニオンを使ったダイレクトの回転で回転行列を更新した場合には、他の軸成分が行列に混じるために、
+			//次のダイレクトの回転をしようと思っても、行きたい方向に回転してくれなくなる。
 
-			Info.innerHTML = tos(vecMZ.x)+" "+tos(vecMZ.y)+" "+tos(vecMZ.z)+"<br>";
+//			//X,Y,Z軸の現在の向きを求める(これが回転軸となる)
+//			const mat = this.matAccumeForAttitudeControl;
+//			const vecPX = [mat[0],mat[4],mat[8]];
+//			const vecPY = [mat[1],mat[5],mat[9]];
+//			const vecPZ = [mat[2],mat[6],mat[10]];
+			
+			//-Z軸（視線方向）の現在の向きを求める
+			const mat = this.matAccumeForAttitudeControl;
+			const axisMZ = [0,0,-1,1];
+			axisMZ.multi4441(mat);
+			Info.innerHTML +="axisMZ x"+tos(axisMZ.x,1000)+" y"+tos(axisMZ.y,1000)+" z"+tos(axisMZ.z,1000)+"<br>";
 
-			//spacecraftから見た地球の方向ベクトルを求める
-			const ve = [myXYZRevolutions["earth"].x - this.posX,myXYZRevolutions["earth"].y - this.posY,myXYZRevolutions["earth"].z - this.posZ];
+			//S pacecraftから見たE arthの方向ベクトルを求める
+			const vecSE = [myXYZRevolutions["earth"].x - this.posX,myXYZRevolutions["earth"].y - this.posY,myXYZRevolutions["earth"].z - this.posZ,1];
+			//その絶対座標を現在の向きに変換する
+			//vecSE.multi4441(mat);
+
+
+
 
 			//spacecraftの現在の-Z軸の方向と地球の方向との内角を求める
-			vecMZ.normalize3D();
-			ve.normalize3D();
-			const angleRad = Math.acos(myVec3.dot(vecMZ,ve));// in radians , arguments must be normal
-
-
+			axisMZ.normalize3D();
+			vecSE.normalize3D();
+			const angleRad = Math.acos(myVec3.dot(axisMZ,vecSE));// in radians , arguments must be normal
 
 
 //			Info.innerHTML += Math.floor(angleRad*180/3.141592653*1000)/1000;
-			Info.innerHTML = "<br>ve.x:"+tos(Math.floor(ve.x*100)/100)+"<br>ve.y:"+tos(Math.floor(ve.y*100)/100)+"<br>ve.z:"+tos(Math.floor(ve.z*100)/100);
+			
+	//		Info.innerHTML +="<br>"+tos(mat[0],1000)+" "+tos(mat[1],1000)+" "+tos(mat[2],1000)+" "+tos(mat[3],1000)+"<br>";
+	//		Info.innerHTML +=tos(mat[4],1000)+" "+tos(mat[5],1000)+" "+tos(mat[6],1000)+" "+tos(mat[7],1000)+"<br>";
+	//		Info.innerHTML +=tos(mat[8],1000)+" "+tos(mat[9],1000)+" "+tos(mat[10],1000)+" "+tos(mat[11],1000)+"<br>";
+	//		Info.innerHTML +=tos(mat[12],1000)+" "+tos(mat[13],1000)+" "+tos(mat[14],1000)+" "+tos(mat[15],1000)+"<br>";
+
+	//		Info.innerHTML += "<br>vecSE x:"+tos(vecSE.x,1000)+" y:"+tos(vecSE.y,1000)+" z:"+tos(vecSE.z,1000)+"<br>";
+	//		Info.innerHTML +="axisMZ x"+tos(axisMZ.x,1000)+" y"+tos(axisMZ.y,1000)+" z"+tos(axisMZ.z,1000)+"<br>";
 
 
-			let axis,angle;
+
+
+
+			let axisRot,angleRot;
 			//既に地球に向いている時は計算しない
-			if(Math.abs(angleRad)>0.01) {
+			if(Math.abs(angleRad)>0.001) {
 				//spacecraftの現在の-Z軸方向を地球の方向に向けるときの回転軸を求める
-				axis = myVec3.cross(ve,vecMZ);
-				angle = Math.min(dTurn,angleRad) ;
-
+				axisRot = myVec3.cross(vecSE,axisMZ);
+				axisRot.normalize3D();// is not necessary but important to realize how rotation axis is.
+				angleRot = Math.min(dTurn,angleRad) ;
+	//			Info.innerHTML +="diff angleRot "+tos(angleRad*180/3.141592653,1000000)+"<br>";
+	//			Info.innerHTML +="axisRot x"+tos(axisRot.x,100000)+" y"+tos(axisRot.y,100000)+" z"+tos(axisRot.z,100000)+"<br>";
+	//			Info.innerHTML +="angleRot"+tos(angleRot*180/3.141592653,1000000)+"<br>";
 			} else {
-				axis = [1,1,1];
-				angle = 0;
+				axisRot = [1,1,1];
+				angleRot = 0;
 			}
 
 			//matAccumeに加える
 			myMat4.load(this.matAccume);
-			myMat4.rot(axis[0],axis[1],axis[2],angle);
+			myMat4.rot(axisRot[0],axisRot[1],axisRot[2],angleRot);
 			myMat4.storeTo(this.matAccume);
 
 			//matAccumeNotTranslatedに加える
 			myMat4.load(this.matAccumeNotTranslated);
-			myMat4.rot(axis[0],axis[1],axis[2],angle);
+			myMat4.rot(axisRot[0],axisRot[1],axisRot[2],angleRot);
 			myMat4.storeTo(this.matAccumeNotTranslated);
+
+			//matAccumeForAttitudeControlに加える
+			myMat4.load(this.matAccumeForAttitudeControl);
+			myMat4.rot(axisRot[0],axisRot[1],axisRot[2],angleRot);
+			myMat4.storeTo(this.matAccumeForAttitudeControl);
 
 
 		};
@@ -261,7 +303,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 			const angleRad = Math.acos(myVec3.dot(vecPX,vecDirection));// in radians, arguments must be normal
 
 			let axis,angle;
-			if(Math.abs(angleRad)>0.01) {
+			if(Math.abs(angleRad)>0.001) {
 				//回転軸を求める
 				axis = myVec3.cross(vecDirection,vecPX);
 				angle = Math.min(dTurn,angleRad) ;
