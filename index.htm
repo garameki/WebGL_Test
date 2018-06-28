@@ -1136,7 +1136,7 @@ let m1,m2,m3,m4,m5,m6,m7;
 
 	/** label **/
 	myLabel.join(name);
-	myLabel[name].addText(0,0,0,name,colorName);
+//●	myLabel[name].addText(0,0,0,name,colorName);
 
 	/** shape **/
 //	var shape = myShape.sphere(gl,50);
@@ -1587,7 +1587,8 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 	/** label **/
 	myLabel.join(name);
-	myLabel[name].addText(0,0,5,name,colorName);
+//	myLabel[name].addText(0,0,1,name,colorName);
+	myLabel[name].addText(0,0,1,"front",colorName);
 
 	/** shape **/
 	var shape = myShape.line(gl,[0,0,0],[0,0,-1],myColorName.magenta(1));
@@ -1600,7 +1601,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 	/** label **/
 	myLabel.join(name);
-	myLabel[name].addText(0,5,0,name,colorName);
+	myLabel[name].addText(0,1,0,name,colorName);
 
 	/** shape **/
 	var shape = myShape.line(gl,[0,0,0],[0,1,0],myColorName.magenta(1));
@@ -1613,7 +1614,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 	/** label **/
 	myLabel.join(name);
-	myLabel[name].addText(5,0,0,name,colorName);
+	myLabel[name].addText(1,0,0,name,colorName);
 
 	/** shape **/
 	var shape = myShape.line(gl,[0,0,0],[1,0,0],myColorName.magenta(1));
@@ -1682,7 +1683,7 @@ let m1,m2,m3,m4,m5,m6,m7,m8;
 
 	/** label **/
 	myLabel.join(name);
-	myLabel[name].addText(0,0,5,name,colorName);
+//●	myLabel[name].addText(0,0,5,name,colorName);
 
 	/** shape **/
 	var shape = myShape.lines(gl,[0,0,0]);

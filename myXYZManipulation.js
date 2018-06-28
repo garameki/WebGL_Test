@@ -51,7 +51,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 		};
 
 		//differential
-		const dTurn = Math.PI/180/60*0.1;//radian per 1 second besed on which 1 rotation takes 1 minute●
+		const dTurn = Math.PI/180/60;//radian per 1 second besed on which 1 rotation takes 1 minute
 		const dInject = 0.0001;// must make unit [Newton]
 
 		//key codes
@@ -106,7 +106,6 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 			this.matAccume=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 			this.matAccumeNotTranslated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
 			this.matAccumeNotRotated=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity
-			this.matAccumeForAttitudeControl=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];//Identity●
 
 		};
 		myXYZ.inherits(Member);
@@ -131,13 +130,6 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 			myMat4.multiArray(this.matAccumeNotTranslated);
 			myMat4.storeTo(this.matAccume);
 
-			//4.produce matAccuemForAttitudeControl
-			myMat4.load(this.matAccumeForAttitudeControl);
-				myMat4.rot(0,1,0,gTurnAxY);//gTurnAx*...angle
-				myMat4.rot(1,0,0,gTurnAxX);
-				myMat4.rot(0,0,1,gTurnAxZ);
-			myMat4.storeTo(this.matAccumeForAttitudeControl);
-		
 		};
 
 
@@ -200,7 +192,83 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 
 
 		
+		//////////////////////////////// 惑星追尾(方向) ////////////////////////////////////////////////
+		// 1.両社の絶対座標からspacecraftXYZ座標系における惑星の位置ベクトルを計算
+		// 2.その位置ベクトルを現在spececraftが向いている方向に再計算
+		//   行列計算は(1x4)x(4x4)
+		//     ここで
+		//     (1x4)は位置
+		//     (4x4)は累積回転行列(初期から現在までのspacecraftの向きの積算。つまりmodelViewMatrixの回転成分を取り出した行列)
+		// 3.回転軸の計算は外積で求める。掛ける順番が大切。
+		//   (現在の惑星の位置ベクトル) X (spacecraftの-Z軸方向ベクトル)
+		//     ここで
+		//     (spacecraftの-Z軸方向ベクトル)はwebglなら(0 0 -1)
+		// 4.現在の惑星の位置ベクトル(衛星座標系)と(0 0 -1)のなす角度を求める
+		//   どちらも単位ベクトルにしてから、内積のacosを求める事により求まる。
+		// 5.クオターニオン回転行列を求めて、modelViewMatrixに積算する
+		// 6.再描画
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 		Member.prototype.updateMZtoPlanet = function () {
+Info.innerHTML = "";
+			const mat = this.matAccumeNotTranslated;
+		
+			//Calc vector of current direction of gaze from initial vector -Z axis(0 0 -1) as the direction of our gaze -Z軸（視線方向）の現在の向きを求める
+			const axMZ = [0,0,-1,1];//why const,the reason the variables of array is pointer.So that components are changable like using 'let'.
+			//axMZ.multi4441(mat);
+
+			Info.innerHTML +="axMZ x"+tos(axMZ.x,1000)+" y"+tos(axMZ.y,1000)+" z"+tos(axMZ.z,1000)+"<br>";
+
+			//Calc vector of direction looking Earth from SpaceCraft. S pacecraftから見たE arthの方向ベクトルを求める
+			const vecSE = [myXYZRevolutions["earth"].x - this.posX,myXYZRevolutions["earth"].y - this.posY,myXYZRevolutions["earth"].z - this.posZ,1];
+			//その絶対座標を現在の向きに変換する
+			//●
+			vecSE.multi1444(mat);
+
+
+
+
+			//spacecraftの現在の-Z軸の方向と地球の方向との内角を求める
+			axMZ.normalize3D();
+			vecSE.normalize3D();
+			const angleRad = Math.acos(myVec3.dot(axMZ,vecSE));// in radians , arguments must be normal
+
+			let axisRot,angleRot;
+			//既に地球に向いている時は計算しない
+			if(Math.abs(angleRad)>0.001) {
+				//spacecraftの現在の-Z軸方向を地球の方向に向けるときの回転軸を求める
+				//axisRot = myVec3.cross(axMZ,vecSE);
+				axisRot = myVec3.cross(vecSE,axMZ);
+				axisRot.normalize3D();// is not necessary but important to realize how rotation axis is.
+				angleRot = Math.min(dTurn,angleRad) ;
+			} else {
+				axisRot = [1,1,1];
+				angleRot = 0;
+			}
+
+			//matAccumeに加える
+			myMat4.load(this.matAccume);
+			myMat4.rot(axisRot[0],axisRot[1],axisRot[2],angleRot);
+			myMat4.storeTo(this.matAccume);
+
+			//matAccumeNotTranslatedに加える
+			myMat4.load(this.matAccumeNotTranslated);
+			myMat4.rot(axisRot[0],axisRot[1],axisRot[2],angleRot);
+			myMat4.storeTo(this.matAccumeNotTranslated);
+
+		};
+
+
+
+
+
+
+
+
+
+
+		Member.prototype.updateMZtoPlanet_origin_has_issue = function () {
+
+			/////////////////// 最初のやつ ////////////////////////////////////
 Info.innerHTML = "";
 			//a little bit rotation every 1 second 1秒ごとの回転処理
 
@@ -209,8 +277,11 @@ Info.innerHTML = "";
 			//Do not rotate directry using quaternion!
 			//Must divide the rotation to 3 rotation using 3 axes X,Y and Z.
 			//Must accumerate each angles (e.g.+30°,-20°,+60° and so on) into each rotation of each axes.
+			//Especially in this case,the purpose is making a gaze(-Z axis) vector and Earth vector take same direction.
+			//Then the rotation axis Z is not in use.It's not useful to make them getting close.
 			//This way is the best one to make a rotation matrix which is accumerated one after another.
 			//Otherwise a pure components of rotation in matrix is polluted by other components of rotation more or less.
+
 
 			//X,Y,Zのそれぞれの軸の回転変位をmatrixに積み重ねていくことが大切
 			//例えば、X軸中心の回転に於いて、30°進んで、20°戻って、60°進んでっていう具合にする。
@@ -218,56 +289,29 @@ Info.innerHTML = "";
 			//クオターニオンを使ったダイレクトの回転で回転行列を更新した場合には、他の軸成分が行列に混じるために、
 			//次のダイレクトの回転をしようと思っても、行きたい方向に回転してくれなくなる。
 
-//			//X,Y,Z軸の現在の向きを求める(これが回転軸となる)
-//			const mat = this.matAccumeForAttitudeControl;
-//			const vecPX = [mat[0],mat[4],mat[8]];
-//			const vecPY = [mat[1],mat[5],mat[9]];
-//			const vecPZ = [mat[2],mat[6],mat[10]];
-			
-			//-Z軸（視線方向）の現在の向きを求める
-			const mat = this.matAccumeForAttitudeControl;
-			const axisMZ = [0,0,-1,1];
-			axisMZ.multi4441(mat);
-			Info.innerHTML +="axisMZ x"+tos(axisMZ.x,1000)+" y"+tos(axisMZ.y,1000)+" z"+tos(axisMZ.z,1000)+"<br>";
+			//Calc vector of current direction of gaze from initial vector -Z axis(0 0 -1) as the direction of our gaze -Z軸（視線方向）の現在の向きを求める
+			const axisMZ = [0,0,-1,1];//why const,the reason the variables of array is pointer.So that components are changable like using 'let'.
+			axMZ.multi4441(mat);
+			Info.innerHTML +="axMZ x"+tos(axMZ.x,1000)+" y"+tos(axMZ.y,1000)+" z"+tos(axMZ.z,1000)+"<br>";
 
-			//S pacecraftから見たE arthの方向ベクトルを求める
+			//Calc vector of direction looking Earth from SpaceCraft. S pacecraftから見たE arthの方向ベクトルを求める
 			const vecSE = [myXYZRevolutions["earth"].x - this.posX,myXYZRevolutions["earth"].y - this.posY,myXYZRevolutions["earth"].z - this.posZ,1];
 			//その絶対座標を現在の向きに変換する
 			//vecSE.multi4441(mat);
 
 
-
-
 			//spacecraftの現在の-Z軸の方向と地球の方向との内角を求める
-			axisMZ.normalize3D();
+			axMZ.normalize3D();
 			vecSE.normalize3D();
-			const angleRad = Math.acos(myVec3.dot(axisMZ,vecSE));// in radians , arguments must be normal
-
-
-//			Info.innerHTML += Math.floor(angleRad*180/3.141592653*1000)/1000;
-			
-	//		Info.innerHTML +="<br>"+tos(mat[0],1000)+" "+tos(mat[1],1000)+" "+tos(mat[2],1000)+" "+tos(mat[3],1000)+"<br>";
-	//		Info.innerHTML +=tos(mat[4],1000)+" "+tos(mat[5],1000)+" "+tos(mat[6],1000)+" "+tos(mat[7],1000)+"<br>";
-	//		Info.innerHTML +=tos(mat[8],1000)+" "+tos(mat[9],1000)+" "+tos(mat[10],1000)+" "+tos(mat[11],1000)+"<br>";
-	//		Info.innerHTML +=tos(mat[12],1000)+" "+tos(mat[13],1000)+" "+tos(mat[14],1000)+" "+tos(mat[15],1000)+"<br>";
-
-	//		Info.innerHTML += "<br>vecSE x:"+tos(vecSE.x,1000)+" y:"+tos(vecSE.y,1000)+" z:"+tos(vecSE.z,1000)+"<br>";
-	//		Info.innerHTML +="axisMZ x"+tos(axisMZ.x,1000)+" y"+tos(axisMZ.y,1000)+" z"+tos(axisMZ.z,1000)+"<br>";
-
-
-
-
+			const angleRad = Math.acos(myVec3.dot(axMZ,vecSE));// in radians , arguments must be normal
 
 			let axisRot,angleRot;
 			//既に地球に向いている時は計算しない
 			if(Math.abs(angleRad)>0.001) {
 				//spacecraftの現在の-Z軸方向を地球の方向に向けるときの回転軸を求める
-				axisRot = myVec3.cross(vecSE,axisMZ);
+				axisRot = myVec3.cross(vecSE,axMZ);
 				axisRot.normalize3D();// is not necessary but important to realize how rotation axis is.
 				angleRot = Math.min(dTurn,angleRad) ;
-	//			Info.innerHTML +="diff angleRot "+tos(angleRad*180/3.141592653,1000000)+"<br>";
-	//			Info.innerHTML +="axisRot x"+tos(axisRot.x,100000)+" y"+tos(axisRot.y,100000)+" z"+tos(axisRot.z,100000)+"<br>";
-	//			Info.innerHTML +="angleRot"+tos(angleRot*180/3.141592653,1000000)+"<br>";
 			} else {
 				axisRot = [1,1,1];
 				angleRot = 0;
@@ -290,7 +334,6 @@ Info.innerHTML = "";
 
 
 		};
-
 
 		Member.prototype.updatePXtoDirection = function () {
 			//a little bit rotation every 1 second 1秒ごとの回転処理
