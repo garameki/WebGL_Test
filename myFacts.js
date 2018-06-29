@@ -228,7 +228,7 @@
 	for(let name in planets){
 		myFacts.planets[name] = { };
 		if(planets[name].parent == "sun"){
-			myFacts.planets[name].revRadius = planets[name].revRadius;//*0.001;
+			myFacts.planets[name].revRadius = planets[name].revRadius*0.001;
 		} else {
 			myFacts.planets[name].revRadius = planets[name].revRadius;
 		}

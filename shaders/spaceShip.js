@@ -81,14 +81,14 @@ var fs = (function(){/*
 
 var vs = (function(){/*
 	//'attribute' this type is used in vertex shader only.This type is assigned on buffers defined in js
-	attribute vec3 aVertexPosition;//x y z
+	attribute highp vec3 aVertexPosition;//x y z
 	attribute vec3 aVertexNormal;//x y z
 	attribute vec2 aTextureCoord;//x y
 
 	//The type of 'uniform' mainly matrices receipter from js
 	uniform mat4 uModelViewMatrixInversedTransposed;
-	uniform mat4 uModelViewMatrix;
-	uniform mat4 uPerspectiveMatrix;
+	uniform highp mat4 uModelViewMatrix;
+	uniform highp mat4 uPerspectiveMatrix;
 	uniform mat4 uManipulatedRotationMatrix;
 
 

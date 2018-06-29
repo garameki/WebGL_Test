@@ -9,7 +9,7 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation';
 
 
 // POWER
-let value;
+let value=0;
 
 //attach buttons after loading DOM
 let counter = 0;
