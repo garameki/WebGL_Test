@@ -418,6 +418,9 @@ Info.innerHTML = "";
 
 					member.updatePosition();
 
+					if(myXYZManipulation.buttonDETECT=='direction')member.updateMZtoDirection();
+					else if(myXYZManipulation.buttonDETECT)member.updateMZto(myXYZManipulation.buttonDETECT);
+/*
 					if(myXYZManipulation.buttonDETECT.MZtoSun)member.updateMZto("sun");
 					if(myXYZManipulation.buttonDETECT.MZtoMercury)member.updateMZto("mercury");
 					if(myXYZManipulation.buttonDETECT.MZtoVenus)member.updateMZto("venus");
@@ -433,7 +436,7 @@ Info.innerHTML = "";
 				//	if(myXYZManipulation.buttonDETECT.MZto)member.updateMZto("");
 				//	if(myXYZManipulation.buttonDETECT.MZto)member.updateMZto("");
 					if(myXYZManipulation.buttonDETECT.MZtoDirection)member.updateMZtoDirection();
-
+*/
 					//dInject = 0.01;// must make unit [Newton]
 
 					dInject = myXYZManipulation.buttonPOWER;

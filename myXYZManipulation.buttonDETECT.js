@@ -7,6 +7,11 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation';
 	//for using under controlled space ship, follow to key board
 /* */(function(){
 
+//DETECT
+
+const NONE = void 0;
+let value=NONE;//initial value
+
 
 //attach buttons after loading DOM
 let counter = 0;
@@ -16,7 +21,8 @@ function funcHoge() {
 	collection = document.getElementsByTagName('body');
 	if(collection.length != 0 && 'myXYZManipulation' in window) {
 		clearInterval(hoge);
-		myXYZManipulation.buttonDETECT = { };
+//○		myXYZManipulation.buttonDETECT = { };
+		Object.defineProperty(myXYZManipulation,'buttonDETECT',{get:function(){return value;},enumerable:false,configurable:false});
 		addButtons();
 	} else {
 		if(++counter > 100) {
@@ -27,21 +33,21 @@ function funcHoge() {
 };
 
 const oInstances = { };
-function createButtonDETECT(sName,left,top,text){
+function createButtonDETECT(sName,left,top,text,sNamePlanet){
 	const element = document.createElement('button');
-//不要	const inst = new ButtonDETECT(element,"red","white");
-	oInstances[sName] = new ButtonDETECT(element,"red","white");
-	Object.defineProperty(myXYZManipulation.buttonDETECT,sName,{get:function(){return oInstances[sName].switch;},enumerable:true,configurable:false});
+	oInstances[sNamePlanet] = new ButtonDETECT(element,"red","white",sNamePlanet);
 	element.style.position = 'absolute';
 	element.style.left = left.toString() + 'px';
 	element.style.top  = top.toString() + 'px';
 	element.innerText = text;
-	element.addEventListener('click',oInstances[sName].click(),false);
+	element.addEventListener('click',oInstances[sNamePlanet].click(),false);
 	document.getElementsByTagName('body')[0].appendChild(element);
 };
 
 /**class**/
-function ButtonDETECT(element,sColorON,sColorOFF){
+function ButtonDETECT(element,sColorON,sColorOFF,sNamePlanet){
+	this.value = sNamePlanet;
+	this.switch = false;
 	this.element = element;
 	this.switch = false;
 	this.bgcolorON = sColorON;
@@ -54,7 +60,7 @@ ButtonDETECT.prototype.click = function(){
 		if(myself.switch) {
 			myself.turnOFF();
 		} else {
-			for(let name in myXYZManipulation.buttonDETECT) {
+			for(let name in oInstances) {
 				oInstances[name].turnOFF();
 			}
 			myself.turnON();
@@ -62,10 +68,12 @@ ButtonDETECT.prototype.click = function(){
 	};//return
 };
 ButtonDETECT.prototype.turnON = function() {
+	value = this.value;
 	this.switch = true;
 	this.element.style.backgroundColor = this.bgcolorON;
 };
 ButtonDETECT.prototype.turnOFF = function(){
+	value = NONE;
 	this.switch = false;
 	this.element.style.backgroundColor = this.bgcolorOFF;
 };
@@ -75,24 +83,25 @@ function addButtons() {
 	let args,left,top;
 
 	const aButtonsDETECT = [
-		['MZtoSun',600,100,'-Z to Sun'],
-		['MZtoMercury',600,150,'-Z to Mercury'],
-		['MZtoVenus',600,200,'-Z to Venus'],
-		['MZtoEarth',600,250,'-Z to Earth'],
-		['MZtoMars',600,300,'-Z to Mars'],
-		['MZtoJupiter',600,350,'-Z to Jupiter'],
-		['MZtoSaturn',600,400,'-Z to Saturn'],
-		['MZtoUranus',600,450,'-Z to Uranus'],
-		['MZtoNeptune',600,500,'-Z to Neptune'],
-		['MZtoPluto',600,550,'-Z to Pluto'],
-		['MZtoMoon',600,600,'-Z to Moon'],
-		['MZtoDirection',600,700,'-Z to Direction']
+		//title text,value
+		['Sun','sun'],
+		['Mercury','mercury'],
+		['Venus','venus'],
+		['Earth','earth'],
+		['Mars','mars'],
+		['Jupiter','jupiter'],
+		['Saturn','saturn'],
+		['Uanus','uranus'],
+		['Neptune','neptune'],
+		['Pluto','pluto'],
+		['Moon','moon'],
+		['Direction','direction']
 	];
 	left = 600;
 	top = 100;
 	for(let ii in aButtonsDETECT) {
 		args = aButtonsDETECT[ii];
-		createButtonDETECT(args[0],left,ii * 20 + top,args[3]);
+		createButtonDETECT(args[0],left,ii * 20 + top,args[0],args[1]);
 	}
 
 

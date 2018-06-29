@@ -9,7 +9,8 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation';
 
 
 // POWER
-let value=0;
+const NONE = 0;
+let value = NONE;
 
 //attach buttons after loading DOM
 let counter = 0;
@@ -19,7 +20,7 @@ function funcHoge() {
 	collection = document.getElementsByTagName('body');
 	if(collection.length != 0 && 'myXYZManipulation' in window) {
 		clearInterval(hoge);
-		Object.defineProperty(myXYZManipulation,'buttonPOWER',{get:function(){return value;},enumerable:true,configurable:false});
+		Object.defineProperty(myXYZManipulation,'buttonPOWER',{get:function(){return value;},enumerable:false,configurable:false});
 		addButtons();
 	} else {
 		if(++counter > 100) {
@@ -52,14 +53,14 @@ function ButtonPOWER(element,sColorON,sColorOFF,power){
 ButtonPOWER.prototype.click = function(){
 	const myself = this;
 	return function() {
-		if(myself.switch) {
-			myself.turnOFF();
-		} else {
+//		if(myself.switch) {
+//			myself.turnOFF();
+//		} else {
 			for(let name in oInstances) {
 				oInstances[name].turnOFF();
 			}
 			myself.turnON();
-		}
+//		}
 	};//return
 };
 ButtonPOWER.prototype.turnON = function() {
@@ -67,7 +68,7 @@ ButtonPOWER.prototype.turnON = function() {
 	this.element.style.backgroundColor = this.bgcolorON;
 };
 ButtonPOWER.prototype.turnOFF = function(){
-	value = 0;
+	value = NONE;
 	this.element.style.backgroundColor = this.bgcolorOFF;
 };
 
