@@ -4,8 +4,11 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZ';
 libFileRelationship.myXYZManipulation.relatedTo='myFacts';
 libFileRelationship.myXYZManipulation.relatedTo='myVec3';
 libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
+//libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation_buttonDETECT';
+//libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation_buttonPOWER';
+//libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation_buttonGRAVITY';
 
-
+console.error("This is Manipu");
 
 
 	let gg,pp;
@@ -147,19 +150,19 @@ libFileRelationship.myXYZManipulation.relatedTo='myXYZRevolutions';
 			const G = myFacts.planets.gravity;
 
 
-			const aNamesSource = ["saturn","jupiter","neptune","uranus","earth","mars","venus","mercury","pluto","moon"];
-//			const aNamesSource = [];
+			const oNamesPlanet = myXYZManipulation.buttonGRAVITY;
+
 			//spacecraft ... origin ( this.posX this.posY this.posZ )
 			//target planet ... ( memT.x memT.y memT.z )
 			let memT,dx,dy,dz,len,force;
-			for(let ii in aNamesSource){
-				memT = myXYZRevolutions[aNamesSource[ii]];//absolute coordinate
+			for(let name in oNamesPlanet){
+				memT = myXYZRevolutions[name];//absolute coordinate
 				dx = this.posX - memT.x;
 				dy = this.posY - memT.y;
 				dz = this.posZ - memT.z;
 
 				len = 1/Math.sqrt(dx*dx+dy*dy+dz*dz);
-				force = -G * myFacts.planets[aNamesSource[ii]].mass * len * len;
+				force = -G * myFacts.planets[name].mass * len * len;
 				sumFx += force * len * dx;
 				sumFy += force * len * dy;
 				sumFz += force * len * dz;

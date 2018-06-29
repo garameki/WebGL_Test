@@ -1,17 +1,19 @@
-﻿libFileRelationship.create('myXYZManipulation.buttonDETECT');
-libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation';
-
+﻿libFileRelationship.create('myXYZManipulation_buttonGRAVITY');
+libFileRelationship.myXYZManipulation_buttonGRAVITY.relatedTo='myXYZManipulation';
 
 
 
 	//for using under controlled space ship, follow to key board
 /* */(function(){
 
-//DETECT BUTTONS
+//GRAVITY BUTTONS
+
+//button type : Non-exclusive
+
+//return {Object} myXYZManipulation.buttonGRAVITY
 
 
-
-////////////////////////// attach buttons after loading DOM /////////////////////////////////
+///////////////// attach buttons after loading DOM //////////////////////
 let counter = 0;
 let collection;
 const hoge = setInterval(funcHoge,10);
@@ -19,7 +21,7 @@ function funcHoge() {
 	collection = document.getElementsByTagName('body');
 	if(collection.length != 0 && 'myXYZManipulation' in window) {
 		clearInterval(hoge);
-		Object.defineProperty(myXYZManipulation,'buttonDETECT',{get:function(){return classValue;},enumerable:false,configurable:false});
+		Object.defineProperty(myXYZManipulation,'buttonGRAVITY',{get:function(){return class_oValues;},enumerable:false,configurable:false});
 		addButtons();
 	} else {
 		if(++counter > 100) {
@@ -28,16 +30,18 @@ function funcHoge() {
 		}
 	}
 };
-
-/////////////////////////// Names of Button to append to DOM////////////////////////////////////////////
-
+//////////////////////////////// Buttons to add ////////////////////////////////////
 function addButtons() {
 
-	let args,left,top;
+	const left = 900;
+	const top = 100;
+	let args;
 
+	//myXYZRevolutionsに登録されている(登録される)名前でなくてはなりません。
+	//myFacts.planetsに登録されている(登録される)名前でなくてはなりません。
 	const aButtons = [
 		//title text,value
-		['Sun','sun'],
+	//	['Sun','sun'],
 		['Mercury','mercury'],
 		['Venus','venus'],
 		['Earth','earth'],
@@ -47,37 +51,30 @@ function addButtons() {
 		['Uanus','uranus'],
 		['Neptune','neptune'],
 		['Pluto','pluto'],
-		['Moon','moon'],
-		['Direction','direction']
+		['Moon','moon']
 	];
-	left = 600;
-	top = 100;
 	for(let ii in aButtons) {
 		args = aButtons[ii];
 		createButton(args[0],left,ii * 20 + top,args[0],args[1]);
 	}
-
-
-
 };//addButtons
 
-//////////////////// Button Instances ///////////////////////////////////////////
+////////////////// Instances //////////////////////////////////////////////
 
 const oInstances = { };
-function createButton(sName,left,top,text,sNamePlanet){
+function createButton(sIdentifier,left,top,text,sNamePlanet){
 	const element = document.createElement('button');
-	oInstances[sNamePlanet] = new Button(element,"red","white",sNamePlanet);
+	oInstances[sIdentifier] = new Button(element,"red","white",sNamePlanet);
 	element.style.position = 'absolute';
 	element.style.left = left.toString() + 'px';
 	element.style.top  = top.toString() + 'px';
 	element.innerText = text;
-	element.addEventListener('click',oInstances[sNamePlanet].click(),false);
+	element.addEventListener('click',oInstances[sIdentifier].click(),false);
 	document.getElementsByTagName('body')[0].appendChild(element);
 };
 
-/////////////////////////// class definition //////////////////////////////////////
-const classNONE = void 0;
-let classValue=classNONE;//initial value
+////////////////////////////////////// class difinition ////////////////////////////////
+let class_oValues={ };//initial value,It is the reason that the deleting components is easy why I use object
 function Button(element,sColorON,sColorOFF,sNamePlanet){
 	this.value = sNamePlanet;
 	this.switch = false;
@@ -93,23 +90,25 @@ Button.prototype.click = function(){
 		if(myself.switch) {
 			myself.turnOFF();
 		} else {
-			for(let name in oInstances) {
-				oInstances[name].turnOFF();
-			}
+		//●	for(let name in oInstances) {
+		//●		oInstances[name].turnOFF();
+		//●	}
 			myself.turnON();
 		}
 	};//return
 };
 Button.prototype.turnON = function() {
-	classValue = this.value;
+	Object.defineProperty(class_oValues,this.value,{value:null,writable:false,enumerable:true,configurable:true});//Set configurable:TRUE to be able to delete this property
 	this.switch = true;
 	this.element.style.backgroundColor = this.bgcolorON;
 };
 Button.prototype.turnOFF = function(){
-	classValue = classNONE;
+	delete class_oValues[this.value];//this simplicity is the reason why I choiced the type of Object instead of Array.
 	this.switch = false;
 	this.element.style.backgroundColor = this.bgcolorOFF;
 };
+
+
 
 
 /* */})();

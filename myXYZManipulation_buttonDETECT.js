@@ -1,15 +1,20 @@
-﻿libFileRelationship.create('myXYZManipulation.buttonPOWER');
-libFileRelationship.myXYZManipulation.relatedTo='myXYZManipulation';
+﻿libFileRelationship.create('myXYZManipulation_buttonDETECT');
+libFileRelationship.myXYZManipulation_buttonDETECT.relatedTo='myXYZManipulation';
 
-//exclusive swiches
+
 
 
 	//for using under controlled space ship, follow to key board
 /* */(function(){
 
-//POWER BUTTON
+//DETECT BUTTONS
 
-/////////////////////// attach buttons after loading DOM /////////////////////////////////////
+//button type : exclusive
+
+//return value {String} myXYZManipulation.buttonDETECT
+
+
+////////////////////////// attach buttons after loading DOM /////////////////////////////////
 let counter = 0;
 let collection;
 const hoge = setInterval(funcHoge,10);
@@ -17,7 +22,7 @@ function funcHoge() {
 	collection = document.getElementsByTagName('body');
 	if(collection.length != 0 && 'myXYZManipulation' in window) {
 		clearInterval(hoge);
-		Object.defineProperty(myXYZManipulation,'buttonPOWER',{get:function(){return classValue;},enumerable:false,configurable:false});
+		Object.defineProperty(myXYZManipulation,'buttonDETECT',{get:function(){return classValue;},enumerable:false,configurable:false});
 		addButtons();
 	} else {
 		if(++counter > 100) {
@@ -27,45 +32,60 @@ function funcHoge() {
 	}
 };
 
+/////////////////////////// Names of Button to append to DOM////////////////////////////////////////////
+
 function addButtons() {
 
 	let args,left,top;
 
 	const aButtons = [
-		['Maximum','for So Far Planets',1],
-		['High','for Far Planets',0.1],
-		['Middle','for Near Planets',0.01],
-		['Low','Nearby planet',0.001],
-		['Minimum','Adjust orbital',0.0001]
+		//title text,value
+		['Sun','sun'],
+		['Mercury','mercury'],
+		['Venus','venus'],
+		['Earth','earth'],
+		['Mars','mars'],
+		['Jupiter','jupiter'],
+		['Saturn','saturn'],
+		['Uanus','uranus'],
+		['Neptune','neptune'],
+		['Pluto','pluto'],
+		['Moon','moon'],
+		['Direction','direction']
 	];
-	left = 800;
+	left = 600;
 	top = 100;
 	for(let ii in aButtons) {
 		args = aButtons[ii];
-		createButton(args[0],left,ii * 20 + top,args[1],args[2]);
+		createButton(args[0],left,ii * 20 + top,args[0],args[1]);
 	}
+
+
+
 };//addButtons
 
-///////////////////////////////// create button instances ////////////////////////////////////////
+//////////////////// Button Instances ///////////////////////////////////////////
+
 const oInstances = { };
-function createButton(sName,left,top,text,power){
+function createButton(sName,left,top,text,sNamePlanet){
 	const element = document.createElement('button');
-	oInstances[sName] = new Button(element,"red","white",power);
+	oInstances[sNamePlanet] = new Button(element,"red","white",sNamePlanet);
 	element.style.position = 'absolute';
 	element.style.left = left.toString() + 'px';
 	element.style.top  = top.toString() + 'px';
 	element.innerText = text;
-	element.addEventListener('click',oInstances[sName].click(),false);
+	element.addEventListener('click',oInstances[sNamePlanet].click(),false);
 	document.getElementsByTagName('body')[0].appendChild(element);
 };
 
-///////////////////// class definition /////////////////////////////////////
-const classNONE = 0;
-let classValue = classNONE;
-function Button(element,sColorON,sColorOFF,power){
-	this.value = power;
+/////////////////////////// class definition //////////////////////////////////////
+const classNONE = void 0;
+let classValue=classNONE;//initial value
+function Button(element,sColorON,sColorOFF,sNamePlanet){
+	this.value = sNamePlanet;
 	this.switch = false;
 	this.element = element;
+	this.switch = false;
 	this.bgcolorON = sColorON;
 	this.bgcolorOFF = sColorOFF;
 	element.style.backgroundColor = this.bgcolorOFF;
@@ -74,7 +94,7 @@ Button.prototype.click = function(){
 	const myself = this;
 	return function() {
 		if(myself.switch) {
-//			myself.turnOFF();//can't turn off all switches
+			myself.turnOFF();
 		} else {
 			for(let name in oInstances) {
 				oInstances[name].turnOFF();
