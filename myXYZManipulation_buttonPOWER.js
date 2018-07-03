@@ -1,15 +1,11 @@
 ﻿libFileRelationship.create('myXYZManipulation_buttonPOWER');
 libFileRelationship.myXYZManipulation_buttonPOWER.relatedTo='myXYZManipulation';
 
-console.error("This is POWER");
 
-//exclusive swiches
-
-
-	//for using under controlled space ship, follow to key board
+	//for using under controlled space ship, follow with key board
 /* */(function(){
 
-//POWER BUTTON
+//POWER BUTTONS
 
 //button type exclusive
 
@@ -32,25 +28,40 @@ function funcHoge() {
 		}
 	}
 };
-
+//////////////////////////////// Buttons to DOM ////////////////////////////////////
 function addButtons() {
 
 	const left = 750;
 	const top = 100;
 	let args;
 
+	const title = 'POWER';
 	const aButtons = [
 		['Maximum','for So Far Planets',1],
 		['High','for Far Planets',0.1],
 		['Middle','for Near Planets',0.01],
 		['Low','Nearby planet',0.001],
-		['Minimum','Adjust orbital',0.0001]
+		['Very_Low','Adjust orbital',0.001],
+		['Minimum','Fine Adjusting',0.00001]
 	];
+	createTitle(title,left,top);
 	for(let ii in aButtons) {
 		args = aButtons[ii];
-		createButton(args[0],left,ii * 20 + top,args[1],args[2]);
+		createButton(args[0],left,ii * 20 + 20 + top,args[1],args[2]);
 	}
+	(oInstances['Minimum'].click())();
 };//addButtons
+
+//////////////////// Button Title ///////////////////////////////////////////////
+
+function createTitle(sTitle,left,top) {
+	const element = document.createElement('span');
+	element.style.position = 'absolute';
+	element.style.left = left.toString() + 'px';
+	element.style.top  = top.toString() + 'px';
+	element.innerText = sTitle;
+	document.getElementsByTagName('body')[0].appendChild(element);
+};
 
 ///////////////////////////////// create button instances ////////////////////////////////////////
 const oInstances = { };

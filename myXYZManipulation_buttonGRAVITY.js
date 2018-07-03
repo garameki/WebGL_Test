@@ -2,8 +2,7 @@
 libFileRelationship.myXYZManipulation_buttonGRAVITY.relatedTo='myXYZManipulation';
 
 
-
-	//for using under controlled space ship, follow to key board
+	//for using under controlled space ship, follow with key board
 /* */(function(){
 
 //GRAVITY BUTTONS
@@ -30,12 +29,14 @@ function funcHoge() {
 		}
 	}
 };
-//////////////////////////////// Buttons to add ////////////////////////////////////
+//////////////////////////////// Buttons to DOM ////////////////////////////////////
 function addButtons() {
 
 	const left = 900;
 	const top = 100;
 	let args;
+
+	const title =  'GRAVITY';
 
 	//myXYZRevolutionsに登録されている(登録される)名前でなくてはなりません。
 	//myFacts.planetsに登録されている(登録される)名前でなくてはなりません。
@@ -53,13 +54,25 @@ function addButtons() {
 		['Pluto','pluto'],
 		['Moon','moon']
 	];
+	createTitle(title,left,top);
 	for(let ii in aButtons) {
 		args = aButtons[ii];
-		createButton(args[0],left,ii * 20 + top,args[0],args[1]);
+		createButton(args[0],left,ii * 20 + 20 + top,args[0],args[1]);
 	}
 };//addButtons
 
-////////////////// Instances //////////////////////////////////////////////
+//////////////////// Button Title ///////////////////////////////////////////////
+
+function createTitle(sTitle,left,top) {
+	const element = document.createElement('span');
+	element.style.position = 'absolute';
+	element.style.left = left.toString() + 'px';
+	element.style.top  = top.toString() + 'px';
+	element.innerText = sTitle;
+	document.getElementsByTagName('body')[0].appendChild(element);
+};
+
+////////////////// Button Instances //////////////////////////////////////////////
 
 const oInstances = { };
 function createButton(sIdentifier,left,top,text,sNamePlanet){

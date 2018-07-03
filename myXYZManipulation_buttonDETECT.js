@@ -36,7 +36,12 @@ function funcHoge() {
 
 function addButtons() {
 
-	let args,left,top;
+
+	const left = 600;
+	const top = 100;
+	let args;
+
+	const title = 'DETECT';
 
 	const aButtons = [
 		//title text,value
@@ -53,16 +58,26 @@ function addButtons() {
 		['Moon','moon'],
 		['Direction','direction']
 	];
-	left = 600;
-	top = 100;
+	createTitle(title,left,top);
 	for(let ii in aButtons) {
 		args = aButtons[ii];
-		createButton(args[0],left,ii * 20 + top,args[0],args[1]);
+		createButton(args[0],left,ii * 20 + 20 + top,args[0],args[1]);
 	}
 
 
 
 };//addButtons
+
+//////////////////// Button Title ///////////////////////////////////////////////
+
+function createTitle(sTitle,left,top) {
+	const element = document.createElement('span');
+	element.style.position = 'absolute';
+	element.style.left = left.toString() + 'px';
+	element.style.top  = top.toString() + 'px';
+	element.innerText = sTitle;
+	document.getElementsByTagName('body')[0].appendChild(element);
+};
 
 //////////////////// Button Instances ///////////////////////////////////////////
 
