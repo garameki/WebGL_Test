@@ -1757,6 +1757,7 @@ llllllllll		myLabel.join('');
 	let rTimeInitial = void 0;//real time
 	let rTimeBefore=0;
 	let convertRtoV_minute = 1/1000/60*(365*24);//現実の1時間が仮想宇宙では地球の1恒星周期
+	let beforeDETECT = "earth";
 	function render(rTimeStamp){
 		if(!rTimeInitial)rTimeInitial = rTimeStamp;
 		vTimeTotal_minute = (rTimeStamp - rTimeInitial)*convertRtoV_minute;
@@ -1773,8 +1774,10 @@ llllllllll		myLabel.join('');
 
 		/** report **/
 		infoWindowP.innerHTML  = (Math.floor(vTimeTotal_minute/60/60/24/365)).toString()+"年"+(Math.floor(vTimeTotal_minute/60/24%365)).toString()+"日"+(Math.floor(vTimeTotal_minute/60%24)).toString()+"時間"+(Math.floor(vTimeTotal_minute%60)).toString()+"分<br>";
-		if(myXYZManipulation.buttonDETECT && myXYZManipulation.buttonDETECT != 'direction')infoWindowP.innerHTML += "Distance<br>"+myXYZManipulation.buttonDETECT+":"+Math.floor(calcDistance(myXYZManipulation.buttonDETECT))+"km<br>"
-
+		if(beforeDETECT && beforeDETECT != 'direction'){
+			infoWindowP.innerHTML += "Distance<br>"+beforeDETECT+":"+Math.floor(calcDistance(beforeDETECT))+"km<br>"
+			if(myXYZManipulation.buttonDETECT && beforeDETECT != 'direction')beforeDETECT = myXYZManipulation.buttonDETECT;
+		}
 		drawScene(gl,vTimeTotal_minute);
 		rTimeBefore = rTimeStamp;
 		window.requestAnimationFrame(render);
