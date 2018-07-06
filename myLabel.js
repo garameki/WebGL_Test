@@ -12,7 +12,8 @@ function join(sName){
 };
 //○	Object.defineProperty(myLabel,'Labels',{value:Labels,writable:false,enumerable:true,configurable:false});
 
-//////////////////////// Inner class //////////////////////////////////////
+//////////////////////// Label class //////////////////////////////////////
+
 function Labels(){
 	this.aTexts = [];
 };
@@ -28,7 +29,7 @@ Labels.prototype.repos = function(gl,pmat,mvmat){
 };
 
 
-/////////////////////// Inner class of Inner class ////////////////////////////////////
+/////////////////////// Text class ////////////////////////////////////
 function Text(x,y,z,str,color){
 	this.x=x;
 	this.y=y;
@@ -58,7 +59,7 @@ function Text(x,y,z,str,color){
 		// myMat4.multi(mvmat);	must be done this outside until before arriving here
 		var newP = myMat4.get2D(this.x,this.y,this.z);
 		if(newP[2]>1){
-//			this.elementText.nodeValue=this.str+' behind';
+			this.elementText.nodeValue="";//this.str+' behind';
 		}else{
 			this.elementText.nodeValue=this.str;
 		}
