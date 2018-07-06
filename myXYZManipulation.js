@@ -34,11 +34,11 @@ function funcHoge(left,top,color) {
 			}
 		} else {
 			clearInterval(hoge);
-			funcHogeDetail(left,top,color);	
+			funcHogeDetail(left,top,color,collection);	
 		}
 	};
 };
-function funcHogeDetail(left,top,color) {
+function funcHogeDetail(left,top,color,collection) {
 	Info = document.createElement('p');
 	Info.style.position = 'absolute';
 	Info.style.left = left.toString()+'px';
@@ -92,6 +92,9 @@ var gZ=false;
 var gW=false;
 var gQ=false;
 var gSH=false;
+
+
+/** inner class **/
 
 var Member = function(){
 	myXYZ.SuperMember.call(this);
@@ -195,7 +198,7 @@ Member.prototype.updatePosition = function(){
 
 
 //////////////////////////////// 惑星追尾(方向) ////////////////////////////////////////////////
-// 1.両社の絶対座標からspacecraftXYZ座標系における惑星の位置ベクトルを計算
+// 1.両者の絶対座標からspacecraftXYZ座標系における惑星の位置ベクトルを計算
 // 2.その位置ベクトルを現在spececraftが向いている方向に再計算
 //   行列計算は(1x4)x(4x4)
 //     ここで
@@ -215,10 +218,10 @@ Info.innerHTML = "";
 	const mat = this.matAccumeNotTranslated;
 
 	//Calc vector of current direction of gaze from initial vector -Z axis(0 0 -1) as the direction of our gaze -Z軸（視線方向）の現在の向きを求める
-	const axMZ = [0,0,-1,1];//why const,the reason the variables of array is pointer.So that components are changable like using 'let'.
+	const axMZ = [0,0,-1,1];//why const,the reason the variables of array is pointer.So that components are changeable like using 'let'.
 	//axMZ.multi4441(mat);
 
-	Info.innerHTML +="axMZ x"+tos(axMZ.x,1000)+" y"+tos(axMZ.y,1000)+" z"+tos(axMZ.z,1000)+"<br>";
+//	Info.innerHTML +="axMZ x"+tos(axMZ.x,1000)+" y"+tos(axMZ.y,1000)+" z"+tos(axMZ.z,1000)+"<br>";
 
 	//Calc vector of direction looking Earth from SpaceCraft. S pacecraftから見たE arthの方向ベクトルを求める
 //●			const vecSE = [myXYZRevolutions["earth"].x - this.posX,myXYZRevolutions["earth"].y - this.posY,myXYZRevolutions["earth"].z - this.posZ,1];
@@ -388,6 +391,8 @@ Member.prototype.updateMZtoDirection = function () {
 };
 
 
+/////////////////////// Instance of Member Class ////////////////////////////////
+
 var hero = new Member();//only one member is allowed to be made
 var flagSeatReserved = false;
 Object.defineProperty(myXYZMani,'createMember',{value:createMember});
@@ -409,8 +414,8 @@ let positionBefore;
 Object.defineProperty(myXYZMani,'move',{value:move(hero)});
 function move(member){//member === hero
 	var sumRemain=0;
-	return function(timeDiff_minute){//Whether virtual time or real time, it's none of this calculation. The quantity of time span is only important.
-		sumRemain+=timeDiff_minute;
+	return function(timeDiff_minute) {//Whether virtual time or real time, it's none of this calculation. The quantity of time span is only important.
+		sumRemain += timeDiff_minute;
 		var n = Math.floor(sumRemain);// a number of translation of the spacecraft
 		sumRemain=sumRemain - n;
 
@@ -422,23 +427,6 @@ function move(member){//member === hero
 
 			if(myXYZManipulation.buttonDETECT=='direction')member.updateMZtoDirection();
 			else if(myXYZManipulation.buttonDETECT)member.updateMZto(myXYZManipulation.buttonDETECT);
-/*
-			if(myXYZManipulation.buttonDETECT.MZtoSun)member.updateMZto("sun");
-			if(myXYZManipulation.buttonDETECT.MZtoMercury)member.updateMZto("mercury");
-			if(myXYZManipulation.buttonDETECT.MZtoVenus)member.updateMZto("venus");
-			if(myXYZManipulation.buttonDETECT.MZtoEarth)member.updateMZto("earth");
-			if(myXYZManipulation.buttonDETECT.MZtoMars)member.updateMZto("mars");
-			if(myXYZManipulation.buttonDETECT.MZtoJupiter)member.updateMZto("jupiter");
-			if(myXYZManipulation.buttonDETECT.MZtoSaturn)member.updateMZto("saturn");
-			if(myXYZManipulation.buttonDETECT.MZtoUranus)member.updateMZto("uranus");
-			if(myXYZManipulation.buttonDETECT.MZtoNeptune)member.updateMZto("neptune");
-			if(myXYZManipulation.buttonDETECT.MZtoPluto)member.updateMZto("pluto");
-			if(myXYZManipulation.buttonDETECT.MZtoMoon)member.updateMZto("moon");
-		//	if(myXYZManipulation.buttonDETECT.MZto)member.updateMZto("");
-		//	if(myXYZManipulation.buttonDETECT.MZto)member.updateMZto("");
-		//	if(myXYZManipulation.buttonDETECT.MZto)member.updateMZto("");
-			if(myXYZManipulation.buttonDETECT.MZtoDirection)member.updateMZtoDirection();
-*/
 			//dInject = 0.01;// must make unit [Newton]
 
 			dInject = myXYZManipulation.buttonPOWER;

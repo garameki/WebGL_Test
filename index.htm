@@ -491,8 +491,8 @@ onload=function(){
 	document.getElementsByTagName('body')[0].appendChild(pp);
 	pp.style.position ='absolute';
 	pp.style.left = '100px';
-	pp.style.top = '50px';
-	pp.style.color = 'white';
+	pp.style.top = '550px';
+	pp.style.color = 'black';
 
 
 	//////////// Wait for all of file in use /////////////////////
@@ -1773,7 +1773,7 @@ llllllllll		myLabel.join('');
 
 		/** report **/
 		infoWindowP.innerHTML  = (Math.floor(vTimeTotal_minute/60/60/24/365)).toString()+"年"+(Math.floor(vTimeTotal_minute/60/24%365)).toString()+"日"+(Math.floor(vTimeTotal_minute/60%24)).toString()+"時間"+(Math.floor(vTimeTotal_minute%60)).toString()+"分<br>";
-		infoWindowP.innerHTML += "Distance<br>Earth:"+Math.floor(calcDistance("earth"))+"km<br>"
+		if(myXYZManipulation.buttonDETECT && myXYZManipulation.buttonDETECT != 'direction')infoWindowP.innerHTML += "Distance<br>"+myXYZManipulation.buttonDETECT+":"+Math.floor(calcDistance(myXYZManipulation.buttonDETECT))+"km<br>"
 
 		drawScene(gl,vTimeTotal_minute);
 		rTimeBefore = rTimeStamp;

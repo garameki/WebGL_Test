@@ -11,7 +11,7 @@
 
 	myFacts = { };
 
-	const minifyGravity = 1.0;	//0.001 ~ 1
+	const minifyGravity = 2.8;	// for adjusting gravity scale for GEO 38km from the surface of the Earth
 	const minifySize    = 1.0;	//000000000000000000????????????
 
 
@@ -223,12 +223,12 @@
 
 
 
-	myFacts.planets.gravity = 9.8;
+	myFacts.planets.gravity = 9.8 * minifyGravity;
 	let name;
 	for(let name in planets){
 		myFacts.planets[name] = { };
 		if(planets[name].parent == "sun"){
-			myFacts.planets[name].revRadius = planets[name].revRadius*0.001;
+			myFacts.planets[name].revRadius = planets[name].revRadius;
 		} else {
 			myFacts.planets[name].revRadius = planets[name].revRadius;
 		}
