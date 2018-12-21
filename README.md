@@ -7,8 +7,8 @@ What's New
 ===========  
 Add Gravity Effect from planets    
   
-INSTALL  
--------  
+INSTALL & START  
+-----------------  
   
 1.```npm install```  
 2.```npm start```  

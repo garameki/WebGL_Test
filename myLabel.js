@@ -30,6 +30,7 @@ Labels.prototype.repos = function(gl,pmat,mvmat){
 
 
 /////////////////////// Text class ////////////////////////////////////
+
 function Text(x,y,z,str,color){
 	this.x=x;
 	this.y=y;
@@ -44,31 +45,31 @@ function Text(x,y,z,str,color){
 //<canvas width=512 height=512></canvas>
 //</div>
 //this containers are going to vanish in future
-		this.elementText = document.createTextNode("");
-		this.elementText.className='textGLText';
-		this.elementDiv.appendChild(this.elementText);
-		this.elementText.nodeValue = str;
-		var offset = libElement.getOffset(this.elementDiv.parentNode);//kkk to do that offsets get to be changable
-		this.offsetLeft=0;//offset.left;
-		this.offsetTop=0;//offset.top;
+	this.elementText = document.createTextNode("");
+	this.elementText.className='textGLText';
+	this.elementDiv.appendChild(this.elementText);
+	this.elementText.nodeValue = str;
+	var offset = libElement.getOffset(this.elementDiv.parentNode);//kkk to do that offsets get to be changable
+	this.offsetLeft=0;//offset.left;
+	this.offsetTop=0;//offset.top;
 
-//			this.elementText.onclick=function(event){console.log("event=",event);};
-	};
-	Text.prototype.reposition = function(gl){
-		// myMat4.load(pmat); 	must be done this outside until before arriving here
-		// myMat4.multi(mvmat);	must be done this outside until before arriving here
-		var newP = myMat4.get2D(this.x,this.y,this.z);
-		if(newP[2]>1){
-			this.elementText.nodeValue="";//this.str+' behind';
-		}else{
-			this.elementText.nodeValue=this.str;
-		}
-		this.elementDiv.style.left = Math.floor((newP[0]+1)*gl.canvas.width*0.5+this.offsetLeft).toString()+"px";
-		this.elementDiv.style.top = Math.floor((1-newP[1])*gl.canvas.height*0.5+this.offsetTop).toString()+"px";
-	};
-	Text.prototype.setText = function(str){
-		this.elementText.nodeValue=str;
-	};
+//		this.elementText.onclick=function(event){console.log("event=",event);};
+};
+Text.prototype.reposition = function(gl){
+	// myMat4.load(pmat); 	must be done this outside until before arriving here
+	// myMat4.multi(mvmat);	must be done this outside until before arriving here
+	var newP = myMat4.get2D(this.x,this.y,this.z);
+	if(newP[2]>1){
+		this.elementText.nodeValue="";//this.str+' behind';
+	}else{
+		this.elementText.nodeValue=this.str;
+	}
+	this.elementDiv.style.left = Math.floor((newP[0]+1)*gl.canvas.width*0.5+this.offsetLeft).toString()+"px";
+	this.elementDiv.style.top = Math.floor((1-newP[1])*gl.canvas.height*0.5+this.offsetTop).toString()+"px";
+};
+Text.prototype.setText = function(str){
+	this.elementText.nodeValue=str;
+};
 //i think that the functions of myMat4 must be limited not to use globaly but to be used by suitable functions.---> why?
 
 
