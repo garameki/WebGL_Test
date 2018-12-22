@@ -136,7 +136,7 @@ if("flagName" in window){
 	var iiShader = 0;
 };
 
-//************************* DRAW OPAQUE OBJECTS ****************************
+//************************* DRAW OPAQUE OBJECTS 不透明なものをまず描く****************************
 //***************************************************************************
 var sNameShader = "spaceShip";
 if((bitRun & myShaderBIT[sNameShader]) != 0){
@@ -668,23 +668,23 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 		"mixTwoTexturesWithDepthes",
 		"makeStencilFromTextureOnBlack",
 		"drawPolygonOffStencil",
-		"makeStencilFromShadowUsingSaturnAndRing",
-		"makeStencilFromTwoStencilTextures",
-		"drawPolygonMoreTransparentlyOnStencil",
-		"makeTextureOfSaturnFromLightPointOfViewForSaturn",
-		"makeTextureOfSaturnFromLightPointOfViewForShadow",
-		"drawSaturnWithRoundedTextureOnLightSide",
-		"drawSaturnWithRectangleTextureOnDarkSide"
+		"makeStencilFromShadowUsingSaturnAndRing", //
+		"makeStencilFromTwoStencilTextures", //2つのステンシルテクスチャーを1つのステンシルテクスチャーとしてまとめて描く
+		"drawPolygonMoreTransparentlyOnStencil", //ステンシルバッファにより透明なポリゴンを描く
+		"makeTextureOfSaturnFromLightPointOfViewForSaturn", //光源から見た土星をテクスチャーに描く
+		"makeTextureOfSaturnFromLightPointOfViewForShadow", //光源から見た土星の影をテクスチャーに描く
+		"drawSaturnWithRoundedTextureOnLightSide", //光が当たっている部分を影を含めて描く
+		"drawSaturnWithRectangleTextureOnDarkSide" //土星の暗い部分を描く
 	];
-	for(var ii in aNameShader){
+	for(var ii in aNameShader){ //シェーダーとFBOは対応する
 		myShaders[aNameShader[ii]].attach(gl);
 		myFBOs[aNameShader[ii]].initialize(gl,wide,wide);
 	}
-	myShaderBIT = { };
+	myShaderBIT = { }; //それぞれのシェーダーに固有のbit桁を付ける
 	var n = 1;
 	for(var ii in aNameShader){
 		Object.defineProperty(myShaderBIT,aNameShader[ii],{value:n,writable:false,enumerable:true,configurable:false});
-		Object.defineProperty(myShaderBIT,n.toString(16),{value:aNameShader[ii],enumerable:true,configurable:false});
+		Object.defineProperty(myShaderBIT,n.toString(16),{value:aNameShader[ii],enumerable:true,configurable:false}); //逆検索用
 		n *= 2;
 	}
 //HINT	var nn = gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_ATTRIBUTES);if(nn!=null)for(var ii=0;ii<nn;ii++){gl.disableVertexAttribArray(ii);};
@@ -752,7 +752,7 @@ console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 //**************** PLANE ********************************************************************
 	name = "plane";
 	var namePlane = name;
-	xyz[name] = myXYZManipulation.createMember();
+	xyz[name] = myXYZManipulation.createMember(); //キー操作を唯一受け付けるメンバーの登録
 
 
 	/** matrix **/

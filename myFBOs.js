@@ -28,7 +28,7 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 
 	/** the structure of color buffer mode using texImage2D **/
 	var obj0 = null;
-	var obj1 = {
+	var obj1 = { // for "none" Red 4bit Green 4bit Blue 4bit Alpha 4bit
 		internalFormat:function(gl){return gl.RGBA;},
 		format:function(gl){return gl.RGBA;},
 		type:function(gl){return gl.UNSIGNED_SHORT_4_4_4_4;}

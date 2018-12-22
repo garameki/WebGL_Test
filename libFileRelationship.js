@@ -20,17 +20,17 @@ onload=function(){
 	let nameP,nameC,ii;
 	var hoge = setInterval(function(){
 		flag=true;
-		for(nameP in FR){
+		for(nameP in FR){ 
 			for(ii in FR[nameP].aAccounts){
 				nameC = FR[nameP].aAccounts[ii];
-				flag = flag && (nameC in window);
+				flag = flag && (nameC in window);//全ての必要なライブラリが読み込まれているか調べる
 				if(!flag)break;
 			}
 			if(!flag)break;
 		}
 		if(flag){
 			clearInterval(hoge);
-			start();
+			start();	//全てのライブラリが読み込まれていれば、ここから、すべてが始まる
 		}else if(++count>30){
 			clearInterval(hoge);
 			console.error(nameP,"で使用する外部ファイル",nameC,"が読み込まれていません");
