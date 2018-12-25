@@ -82,7 +82,8 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 
 		//buffer size
 		this.buffWidth = null;
-		this.buffHeight = null;
+
+this.buffHeight = null;
 
 		//the setting before activation calling
 		this.colorMasks = void 0;
@@ -183,7 +184,7 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 		//glViewport(0 --- x coord in canvas, 0 --- y coord in canvas, fboWidth, fboHeight);
 		gl.viewport(0,0,this.buffWidth,this.buffHeight);
 
-		//for resetting up at the time of inactivation()
+		//for resetting up at the time of inactivation() 変化させる前の状態を記憶しておく
 		this.colorMasks =  gl.getParameter(gl.COLOR_WRITEMASK);
 		this.depthTest =   gl.getParameter(gl.DEPTH_TEST);
 		this.stencilTest = gl.getParameter(gl.STENCIL_TEST);//kkk他にもいっぱい種類あるぞ...https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter
@@ -198,7 +199,7 @@ libFileRelationship.myFBOs.relatedTo='myInfo';
 		}
 		matches = sMode.match(/CNDNSN/);
 		if(matches == null){
-			gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);
+			gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer); //initialize()時にthis.framebuffer = gl.createFramebuffer()してある。
 		} else {
 			gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 			this.funcControlBCDS(gl);//shaderフォルダの中で定義されたものがこのクラスに渡されているはず

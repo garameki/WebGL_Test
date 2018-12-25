@@ -24,9 +24,9 @@ libFileRelationship[sNameOfShader].relatedTo='extMath';
 
 	/* customize below */
 
-	var sModeOfFBO = "CNDNSN";//to turn of the frame buffer //C[NTR]D[NTR]S[NTR]
-	var colorBufferModeOfFBO = myFBOs.none;//[none | colorBufferModeIsRGBA4444 | colorBufferModeIsRGBA5551 | colorBufferModeIsALPHA]
-	var controllColorDepthStencilOfFBO = function(gl){
+var sModeOfFBO = "CNDNSN";//to turn of the frame buffer //C[NTR]D[NTR]S[NTR]
+var colorBufferModeOfFBO = myFBOs.none;//[none | colorBufferModeIsRGBA4444 | colorBufferModeIsRGBA5551 | colorBufferModeIsALPHA]
+var controllColorDepthStencilOfFBO = function(gl){
 
 	/** BLEND ‚±‚ÌŒø‰Ê‚Íalpha<1.0‚Ì‚Æ‚«‚ÉŒ»‚ê‚Ü‚·B**/
 	gl.disable(gl.BLEND);//https://stackoverflow.com/questions/11633950/opengl-blend-modes-vs-shader-blending

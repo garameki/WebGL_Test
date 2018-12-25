@@ -10,7 +10,7 @@ libFileRelationship.myShaders.relatedTo='myInfo';
 	myShaders = { };
 
 	/** Property **/
-	Object.defineProperty(myShaders,'createFromHTMLElement',{value:createFromTag,writable:false,enumerable:false,configurable:false});
+	Object.defineProperty(myShaders,'createFromHTMLElement',{value:createFromTag,writable:false,enumerable:false,configurable:false}); //HTMLのidから、シェーダープログラムを読み込むことができた。いまは出来ない。new Shader(からの部分を変える必要がある。今は使っていない。
 	function createFromTag(gl,sName,sIdVertex,sIdFragment){
 		var oVertexShader = getShaderFromTag(gl,sIdVertex);
 		var oFragmentShader = getShaderFromTag(gl,sIdFragment);
@@ -136,7 +136,7 @@ libFileRelationship.myShaders.relatedTo='myInfo';
 		}
 	};
 	var flagError = false;
-	AttribVariable.prototype.assignBuffer = function(buffer,numComponents){
+	AttribVariable.prototype.assignBuffer = function(buffer,numComponents){ //頂点データをbufferで渡す
 		if(buffer==void 0 && !flagError){
 //●			myInfo.main.error="buffer="+buffer+" in AttribVariable.prototype.assinBuffer()";
 			flagError = true;
@@ -148,7 +148,7 @@ libFileRelationship.myShaders.relatedTo='myInfo';
 
 //console.log("arrayBuffer=",this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING)," was pointed");
 	};
-	AttribVariable.prototype.assignArray = function(arr,numComponents){
+	AttribVariable.prototype.assignArray = function(arr,numComponents){ //頂点データを配列で渡すときに使う
 		var buff = this.gl.createBuffer();
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER,buff);
 		this.gl.bufferData(this.gl.ARRAY_BUFFER,new Float32Array(arr),this.gl.STATIC_DRAW);

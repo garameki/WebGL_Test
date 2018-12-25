@@ -21,8 +21,10 @@
 <script	type="text/javascript"	src="./myShaders.js"></script>
 <script	type="text/javascript"	src="./mySendAttribUniform.js"></script>
 <script	type="text/javascript"	src="./myPlanetData.js"></script>
+<!--
 <script	type="text/javascript"	src="./myInfo.js"></script>
 <script	type="text/javascript"	src="./myFacts.js"></script>
+-->
 
 
 
@@ -44,7 +46,6 @@
 
 <!--*** shader programs, FBOs and controllers of CDF ***-->
 <script type="text/javascript" src="./shaders/spaceShip.js"></script>
-<!--
 <script type="text/javascript" src="./shaders/makeTextureOfSaturnFromLightPointOfViewForSaturn.js"></script>
 <script type="text/javascript" src="./shaders/makeTextureOfSaturnFromLightPointOfViewForShadow.js"></script>
 <script	type="text/javascript" src="./shaders/mixTwoTexturesWithDepthes.js"></script>
@@ -56,7 +57,7 @@
 <script type="text/javascript" src="./shaders/drawTextureOnClipSpace.js"></script>
 <script type="text/javascript" src="./shaders/drawSaturnWithRoundedTextureOnLightSide.js"></script>
 <script type="text/javascript" src="./shaders/drawSaturnWithRectangleTextureOnDarkSide.js"></script>
--->
+
 
 <script type='text/javascript'>
 //I like 'var'.
@@ -72,41 +73,103 @@ function drawScene(gl,angle){
 
 
 
-	var sNameShader = "spaceShip";
-		myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
-		myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
+var sNameShader = "spaceShip";
+if((bitRun & myShaderBIT[sNameShader]) != 0){
+if(flagName){
+	console.log(++iiShader+"."+sNameShader);
+	var inv = ~myShaderBIT[sNameShader];
+	bitRun = bitRun & inv;//使い終わったビットを0にする
 
-			var names = ["jupiter"];
+}
+	myFBOs[sNameShader].activate("CNDNSN");//使い終わったらinactivate()すること。メモリを解放し、frame bufferを切り離すために。
+	myShaders[sNameShader].activate();//使い終わったらinactivate()すること。viewportを元に戻すために。
+		//var names = ["flame","plane","up","back","right","velocity"];
+		//var names = ["flame","plane"];
+		//var names = ["pluto","velocity","plane"];//,"earth","up","right","back","uranus","moon","mars","venus","jupiter","sun","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 
-			mySendAttribUniform[sNameShader](gl,names,angle); //auFunctionの実行
-		myFBOs[sNameShader].inactivate();
-		//	myTextures["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
-		//	myTextures["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
+		var names = ["footMark","velocity","flame","sun","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys","neptune","pluto"];//<-----JUPITERからrenderされる
+		//var names = ["footMark","velocity","flame","plane","earth","up","right","back","uranus","moon","mars","venus","jupiter","mercury","titan","mimas","tethys"];//<-----JUPITERからrenderされる
 
-if(false){
-	var sNameShader = "drawTextureOnClipSpace";
-		//*************************** DRAW TEXTURE ON CLIP SPACE NORMAL **********************************************
-		//************************************************************************************************************
-		//1枚のテクスチャをそのままクリップスペースに描きます。作成したテクスチャが適正なものかどうかを確かめるために使います。
-		//テクスチャ名"forDrawingClipSpace"
-		//を表示します
-		//************************************************************************************************************
-		myFBOs[sNameShader].activate("CNDNSN");
-		myShaders[sNameShader].activate();
-		myShaders[sNameShader].uniform["uSampler"].sendInt(0);
-		myTextures["forDrawingClipSpace"].activate(0);
-		myShaders[sNameShader].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
-		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-		myFBOs[sNameShader].inactivate();
-
+		mySendAttribUniform[sNameShader](gl,names,angle);
+	myFBOs[sNameShader].inactivate();
+	//	myTextures["opaquesColorBuffer"].import(myFBOs[sNameShader].textureColorBuffer);//用意したtextureに保存
+	//	myTextures["opaquesDepthBuffer"].import(myFBOs[sNameShader].textureDepthBuffer);//用意したtextureに保存
 }//boolean
 
+//*************************** DRAW TEXTURE ON CLIP SPACE NORMAL **********************************************
+//************************************************************************************************************
+//1枚のテクスチャをそのままクリップスペースに描きます。作成したテクスチャが適正なものかどうかを確かめるために使います。
+//テクスチャ名"forDrawingClipSpace"
+//を表示します
+//************************************************************************************************************
+var sNameShader = "drawTextureOnClipSpace";
+if((bitRun & myShaderBIT[sNameShader]) != 0){ 
+if(flagName){
+	console.log(++iiShader+"."+sNameShader);
+	var inv = ~myShaderBIT[sNameShader];
+	bitRun = bitRun & inv;//使い終わったビットを0にする
+}
+	myFBOs[sNameShader].activate("CNDNSN");
+	myShaders[sNameShader].activate();
+	myShaders[sNameShader].uniform["uSampler"].sendInt(0);
+	myTextures["forDrawingClipSpace"].activate(0);
+	myShaders[sNameShader].attrib.aVertexPosition.assignArray([1,1,-1,1,1,-1,-1,-1],2);//four points of each corners of clip space
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+	myFBOs[sNameShader].inactivate();
+}
+//**************************************** END ******************************************************************
+// ****************************************************************************************************************
+
+
+//うえのやつにDEPTHを加味した描画をさせる
 
 
 
+
+// ***************** check runBit to detect function not used *****************
+
+if(flagName){
+
+	console.log("no use part");
+	var n = 1;
+	while(n < bitRun){
+		if(bitRun & n !=0)console.error(myShaderBIT[n.toString(16)]);
+		n *=2;
+	}
+	console.log("");
+}
+
+// *****************************************************************************
+//************** release memories ***************************
 	myFBOs.free();//free up memories
+//	gl.deleteTexture(myTextures["opaquesColorBuffer"].texture);
+//	gl.deleteTexture(myTextures["opaquesDepthBuffer"].texture);
+//	gl.deleteTexture(myTextures["ringColorBuffer"].texture);
+//	gl.deleteTexture(myTextures["ringDepthBuffer"].texture);
+//*****************************************
 
-}; //drawScene()
+	
+
+
+//*********************************** END *****************************************************
+
+
+
+//:::::::::::::::::::::::::::::::::: GLSL STATUS ::::::::::::::::::::::::::::::::::::::::::
+/*//●
+	myInfo.main.glerror 		 = "GL error:"+gl[gl.getError()];
+	myInfo.main.glstatus 		 = "GL status:"+gl[gl.getParameter(gl.FRAGMENT_SHADER_DERIVATIVE_HINT)];
+	myInfo.main.framebuffer 	 = "FRAME BUFFER NAME:"+(gl.getParameter(gl.FRAMEBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.FRAMEBUFFER_BINDING))._name : null);
+	myInfo.main.renderbuffer 	 = "RENDER BUFFER NAME:"+(gl.getParameter(gl.RENDERBUFFER_BINDING)!=null ? eval(gl.getParameter(gl.RENDERBUFFER_BINDING))._name : null);
+	myInfo.main.framebufferstatus 	 = "FRAME BUFFER STATUS:"+gl[gl.checkFramebufferStatus(gl.FRAMEBUFFER)];
+	myInfo.main.stencilwritemask 	 = "stencil mask front:"+gl.getParameter(gl.STENCIL_WRITEMASK).toString(16);
+	myInfo.main.stencilbackwritemask = "stencil mask back:"+gl.getParameter(gl.STENCIL_BACK_WRITEMASK).toString(16);
+	myInfo.main.stencilbits 	 = "stencil bit length: "+gl.getParameter(gl.STENCIL_BITS);
+	myInfo.main.stencilfunc 	 = "stencilFunc("+gl[gl.getParameter(gl.STENCIL_FUNC)]+","+gl.getParameter(gl.STENCIL_REF).toString(2)+","+gl.getParameter(gl.STENCIL_VALUE_MASK).toString(2)+")";
+*/
+};
+
+
 
 
 
@@ -120,6 +183,7 @@ if(false){
 var FR=libFileRelationship;
 FR.create('main');
 FR.main.relatedTo='myTextures';
+FR.main.relatedTo='myInfo';
 FR.main.relatedTo='myFBOs';
 FR.main.relatedTo='myShaders';
 FR.main.relatedTo='myColorName';
@@ -153,7 +217,7 @@ onload=function(){
 		}
 		if(flag){
 			clearInterval(hoge);
-			start(pp);		//This is the start of all in case of all relationship are well reading.
+			start(pp);
 		}else if(++count>30){
 			clearInterval(hoge);
 			console.error(nameP,"で使用する外部ファイル",nameC,"が読み込まれていません");
@@ -167,7 +231,7 @@ onload=function(){
 
 
 
-//:start : This function is called from libFileRelationship in onload function
+//:start
 function start(infoWindowP){
 
 	/** write information on sub screen **/
@@ -265,8 +329,23 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);	//Clear to black,fully opaque
 //	gl.clearColor(1.0, 1.0, 1.0, 1.0);	//White out
 
-
-
+{
+//	//https://stackoverflow.com/questions/47216022/webgl-gl-fragcolor-alpha-behave-differently-in-chrome-with-firefox
+//	//i've been thanking David Guan
+//	gl.enable(gl.BLEND);
+//	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+};
+{
+//	//not available in webgl2
+//	//https://stackoverflow.com/questions/24499321/using-gl-fragdepth-in-webgl
+//	//https://www.khronos.org/registry/webgl/sdk/tests/conformance/extensions/ext-frag-depth.html
+//	gl.getExtension("EXT_frag_depth");
+//	if(gl.getSupportedExtensions().indexOf("EXT_frag_depth") >= 0){
+//		PRINT_CAUTION.innerHTML+="you CAN use extention gl_FragDepth in frag-shader<br>";
+//	}else{
+//		PRINT_CAUTION.innerHTML+="you CAN'T use extention gl_FragDepth in frag-shader<br>";
+//	}
+};
 
 	//** rectangle test **
 	//{
@@ -281,19 +360,37 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 
 	// caution // caution // caution // caution // caution // caution // caution // caution // caution // caution
 	// caution // caution									// caution // caution
-	// caution // caution   +Have you prepared shader and FBO setting file in 'shader' folda?    // caution // caution
-	// caution // caution   +Have you read both scripts by using ＜script＞ tag?             // caution // caution
+	// caution // caution   +Did you make shader and FBO setting file in 'shader' folda?    // caution // caution
+	// caution // caution   +Did you read it using ＜script＞ tag?                          // caution // caution
 	// caution // caution									// caution // caution
 	// caution // caution // caution // caution // caution // caution // caution // caution // caution // caution
 
 //●	myInfo.main.info = "max render buffer size ="+gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
 	var wide = 512;
 	var aNameShader = [
-		"spaceShip"
+		"spaceShip",
+		"drawTextureOnClipSpace",
+		"mixTwoTexturesWithDepthes",
+		"makeStencilFromTextureOnBlack",
+		"drawPolygonOffStencil",
+		"makeStencilFromShadowUsingSaturnAndRing", //
+		"makeStencilFromTwoStencilTextures", //2つのステンシルテクスチャーを1つのステンシルテクスチャーとしてまとめて描く
+		"drawPolygonMoreTransparentlyOnStencil", //ステンシルバッファにより透明なポリゴンを描く
+		"makeTextureOfSaturnFromLightPointOfViewForSaturn", //光源から見た土星をテクスチャーに描く
+		"makeTextureOfSaturnFromLightPointOfViewForShadow", //光源から見た土星の影をテクスチャーに描く
+		"drawSaturnWithRoundedTextureOnLightSide", //光が当たっている部分を影を含めて描く
+		"drawSaturnWithRectangleTextureOnDarkSide" //土星の暗い部分を描く
 	];
 	for(var ii in aNameShader){ //シェーダーとFBOは対応する
 		myShaders[aNameShader[ii]].attach(gl);
 		myFBOs[aNameShader[ii]].initialize(gl,wide,wide);
+	}
+	myShaderBIT = { }; //それぞれのシェーダーに固有のbit桁を付ける
+	var n = 1;
+	for(var ii in aNameShader){
+		Object.defineProperty(myShaderBIT,aNameShader[ii],{value:n,writable:false,enumerable:true,configurable:false});
+		Object.defineProperty(myShaderBIT,n.toString(16),{value:aNameShader[ii],enumerable:true,configurable:false}); //逆検索用
+		n *= 2;
 	}
 //HINT	var nn = gl.getProgramParameter(gl.getParameter(gl.CURRENT_PROGRAM),gl.ACTIVE_ATTRIBUTES);if(nn!=null)for(var ii=0;ii<nn;ii++){gl.disableVertexAttribArray(ii);};
 
@@ -304,8 +401,8 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 
 
 
-	console.log("gl.DEPTH_STENCIL=",gl.DEPTH_STENCIL);
-	console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
+console.log("gl.DEPTH_STENCIL=",gl.DEPTH_STENCIL);
+console.log("gl.DEPTH24_STENCIL8=",gl.DEPTH24_STENCIL8);
 
 
 
@@ -316,18 +413,41 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 
 
 
-	var nameTexture;
+
+	var nameTextureObserve = "niku_stand2";
+	myTextures.join(gl,nameTextureObserve);
+	myTextures.niku_stand2.readFile("niku_stand2.png");
 
 	/** texture for axis and atomosphere **/
-	nameTexture = "white";
-	myTextures.join(gl,nameTexture);
+	const nameTextureWhite = "white";
+	myTextures.join(gl,nameTextureWhite);
 	myTextures.white.readFile("white.png");
 
-	nameTexture = "green";
-	myTextures.join(gl,nameTexture);
+	const nameTextureGreen = "green";
+	myTextures.join(gl,nameTextureGreen);
 	myTextures.green.readFile("green.png");
 
+	//void textures for mixing textures in shader of mixTwoTexturesWithDepthes
+	myTextures.join(gl,"ringColorBuffer");//the object be going to be drawn//こういうのが増えるといまのままでは意味もなくサーバーに負担をかけてしまうな
+	myTextures.join(gl,"ringDepthBuffer");
+	myTextures.join(gl,"ringStencilBuffer");
+	myTextures.join(gl,"opaquesColorBuffer");//the base
+	myTextures.join(gl,"opaquesDepthBuffer");
+	myTextures.join(gl,"opaquesStencilBuffer");
+	myTextures.join(gl,"cassiniAlphaColorBuffer");
+	//不要myTextures.join(gl,"cassiniAlphaDepthBuffer");
+	//不要myTextures.join(gl,"cassiniAlphaStencilBuffer");
+	myTextures.join(gl,"roundedTextureWithShadow");//光源からの眺め
+	myTextures.join(gl,"forDrawingClipSpace");
+	myTextures.join(gl,"stencilCassini_R8");//the stencil of cassini(see also the variable 'refStencilCassini')
+	myTextures.join(gl,"stencilShadowOfSaturn_R8");//the stencil of cassini(see also the variable 'refStencilShadowOfSaturn')
+	myTextures.join(gl,"stencil_Cassini_ShadowOfSaturn_R8");//the stencil of cassini(see also the variable 'refStencilShadowOfSaturn')
+
 	//エラー対策しておかないとどこをどう修正/追加すればよいのかわからず、後で使えなくなる恐れがある
+
+	var _front_=false;
+	var _frontLength_ = 11;//->UI
+
 
 	var colorName = myColorName.white(0.5);
 	const xyz = { };
@@ -335,23 +455,28 @@ console.log("viewport size:",gl.canvas.width.toString()+" x "+gl.canvas.height.t
 
 ////////////////////////////////////////// PLANETS /////////////////////////////////////////////////////////////
 
-
+{
 let m1,m2,m3,m4,m5,m6,m7;
 
 //**************** JUPITER *****************************************************************
 	name = "jupiter";
 	var nameJupiter = name;//the Jupiter has sattelites
 	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZRevolutions.createMember(name,revRad,revRad,myFacts.planets[name].periodRevolution);
 
 	/** matrix **/
 	m1 = myXYZ.rotate(1,0,0,90);
 	m2 = myXYZ.rotation(0,1,0,myFacts.planets[name].rotationHour,0);
-	m3 = myXYZ.translate(0,0,-1111150);
+	m3 = myXYZ.trans(xyz[name]);//惑星の公転revolution of planet self
+	m4 = myXYZ.trans(xyz[nameSun]);//太陽の公転revoluton of sun around galaxy
+	m5 = myXYZ.replaceView(xyz[namePlane]);//manipulate
+	m6 = myXYZ.translate(0,0,-_frontLength_);
+	m7 = myXYZ.replaceViewNotTranslated(xyz[namePlane]);
 	var oMatrices = {
-		modelView:[m1,m2,m3],	//all matrices
-		manipulatedRotation:[],	//accumeLightDirectional  rotation matrices in manipulated matrices
-		manipulated:[],		//accumeLightPoint        all manipulated matrices
-		notManipulated:[m1,m2]	//not manipulated matrices // not necessary
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
 	};
 
 	/** value **/
@@ -367,11 +492,41 @@ let m1,m2,m3,m4,m5,m6,m7;
 	myTextures.join(gl,name);
 	myTextures[name].readFile(name+".png");
 
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,0,0,name,colorName);
+
 	/** shape **/
 	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
-	//var shape = myShape.cylindricalCalumn(gl,myFacts.planets[name].radius);
-	//var shape = myShape.cylindricalCalumn(gl,100000,100000);
-	console.log("name=",name)
+
+	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
+//****************************************************************************************
+
+//**************** URANUS *****************************************************************
+	name = "uranus";
+	var revRad = myFacts.planets[name].revRadius;
+	xyz[name] = myXYZRevolutions.createMember(name,revRad,revRad,myFacts.planets[name].periodRevolution);
+
+	/** matrices **/
+	m2 = myXYZ.rotation(0,1,0,myFacts.planets[name].rotationHour,0);
+	m3 = myXYZ.trans(xyz[name]);//revolution公転
+	var oMatrices = {
+		modelView:[m1,m2,m3,m4,m5,m6],	//all matrices
+		manipulatedRotation:[m7],	//accumeLightDirectional  rotation matrices in manipulated matrices
+		manipulated:[m5],		//accumeLightPoint        all manipulated matrices
+		notManipulated:[m1,m2,m3,m4]	//not manipulated matrices // not necessary
+	};
+
+	/** texture **/
+	myTextures.join(gl,name);
+	myTextures[name].readFile(name+".png");
+
+	/** label **/
+	myLabel.join(name);
+	myLabel[name].addText(0,-5,0,name,colorName);
+
+	/** shape **/
+	var shape = myShape.sphere(gl,myFacts.planets[name].radius);
 
 	UnitsToDraw.join(gl,name,name,shape,oMatrices,oValuesForShader);
 //****************************************************************************************
@@ -382,16 +537,27 @@ let m1,m2,m3,m4,m5,m6,m7;
 	let rTimeInitial = void 0;//real time
 	let rTimeBefore=0;
 	let convertRtoV_minute = 1/1000/60*(365*24);//現実の1時間が仮想宇宙では地球の1恒星周期
+	let beforeDETECT = "earth";
 	function render(rTimeStamp){
 		if(!rTimeInitial)rTimeInitial = rTimeStamp;
 		vTimeTotal_minute = (rTimeStamp - rTimeInitial)*convertRtoV_minute;
 		vTimeDiff_minute = (rTimeStamp - rTimeBefore)*convertRtoV_minute;
 
 		/** repositioning **/
+		myXYZRevolutions.reposAll(vTimeTotal_minute);// This line must be in front of myXYZManipulation.move() because of using planet positions to calculate gravity force.
+		myXYZManipulation.move(vTimeDiff_minute);
 
 		/** change shapes **/
+		UnitsToDraw.velocity.changeShape(myShape.line(gl,[0,0,0],[xyz[namePlane].speedX*5,xyz[namePlane].speedY*5,xyz[namePlane].speedZ*5],myColorName.magenta(1)));
+		UnitsToDraw.flame.changeShape(myShape.flame(gl,1,1));
+		UnitsToDraw.footMark.changeShape(UnitsToDraw.footMark.shape.addPoint([xyz["plane"].posX,xyz["plane"].posY,xyz["plane"].posZ]));
 
 		/** report **/
+		infoWindowP.innerHTML  = (Math.floor(vTimeTotal_minute/60/60/24/365)).toString()+"年"+(Math.floor(vTimeTotal_minute/60/24%365)).toString()+"日"+(Math.floor(vTimeTotal_minute/60%24)).toString()+"時間"+(Math.floor(vTimeTotal_minute%60)).toString()+"分<br>";
+		if(beforeDETECT && beforeDETECT != 'direction'){
+			infoWindowP.innerHTML += "Distance<br>"+beforeDETECT+":"+Math.floor(calcDistance(beforeDETECT))+"km<br>"
+			if(myXYZManipulation.buttonDETECT && beforeDETECT != 'direction')beforeDETECT = myXYZManipulation.buttonDETECT;
+		}
 		drawScene(gl,vTimeTotal_minute);
 		rTimeBefore = rTimeStamp;
 		window.requestAnimationFrame(render);
@@ -399,6 +565,14 @@ let m1,m2,m3,m4,m5,m6,m7;
 	window.requestAnimationFrame(render);
 };//start
 
+	function calcDistance(sName) {
+		/**spacecraft**/
+		const dx = myXYZManipulation.member.posX - myXYZRevolutions[sName].x;
+		const dy = myXYZManipulation.member.posY - myXYZRevolutions[sName].y;
+		const dz = myXYZManipulation.member.posZ - myXYZRevolutions[sName].z;
+
+		return Math.sqrt(dx*dx + dy*dy + dz*dz);
+	};
 </script>
 
 </head>
